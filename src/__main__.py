@@ -3,11 +3,9 @@ import os
 
 import tensorflow as tf
 
-# hide tf logs
-from tqdm import tqdm
+from network import NNetwork
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # or any {'0', '1', '2'}
-# 0 (default) shows all, 1 to filter out INFO logs, 2 to additionally filter out WARNING logs, and 3 to additionally filter out ERROR logs
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 import scipy.optimize
 import scipy.io
 import numpy as np
@@ -18,8 +16,8 @@ import time
 from pyDOE import lhs  # Latin Hypercube Sampling
 
 # generates same random numbers each time
-np.random.seed(1234)
-tf.random.set_seed(1234)
+np.random.seed(42)
+tf.random.set_seed(42)
 
 print("TensorFlow version: {}".format(tf.__version__))
 
@@ -85,167 +83,6 @@ def trainingdata(N_u, N_f):
         (X_f_train, X_u_train))  # append training points to collocation points
 
     return X_f_train, X_u_train, u_train
-
-
-class Sequentialmodel(tf.Module):
-
-    def __init__(self, layers, name=None):
-
-        self.W = []  # Weights and biases
-        self.parameters = 0  # total number of parameters
-
-        for i in range(len(layers) - 1):
-            input_dim = layers[i]
-            output_dim = layers[i + 1]
-
-            # Xavier standard deviation
-            std_dv = np.sqrt((2.0 / (input_dim + output_dim)))
-
-            # weights = normal distribution * Xavier standard deviation + 0
-            w = tf.random.normal([input_dim, output_dim],
-                                 dtype='float64') * std_dv
-
-            w = tf.Variable(w, trainable=True, name='w' + str(i + 1))
-
-            b = tf.Variable(tf.cast(tf.zeros([output_dim]), dtype='float64'),
-                            trainable=True,
-                            name='b' + str(i + 1))
-
-            self.W.append(w)
-            self.W.append(b)
-
-            self.parameters += input_dim * output_dim + output_dim
-
-    def evaluate(self, x):
-
-        x = (x - lb) / (ub - lb)
-
-        a = x
-
-        for i in range(len(layers) - 2):
-            z = tf.add(tf.matmul(a, self.W[2 * i]), self.W[2 * i + 1])
-            a = tf.nn.tanh(z)
-
-        a = tf.add(tf.matmul(a, self.W[-2]),
-                   self.W[-1])  # For regression, no activation to last layer
-        return a
-
-    def get_weights(self):
-
-        parameters_1d = []  # [.... W_i,b_i.....  ] 1d array
-
-        for i in range(len(layers) - 1):
-            w_1d = tf.reshape(self.W[2 * i], [-1])  # flatten weights
-            b_1d = tf.reshape(self.W[2 * i + 1], [-1])  # flatten biases
-
-            parameters_1d = tf.concat([parameters_1d, w_1d],
-                                      0)  # concat weights
-            parameters_1d = tf.concat([parameters_1d, b_1d], 0)  # concat biases
-
-        return parameters_1d
-
-    def set_weights(self, parameters):
-
-        for i in range(len(layers) - 1):
-            shape_w = tf.shape(self.W[2 *
-                                      i]).numpy()  # shape of the weight tensor
-            size_w = tf.size(self.W[2 * i]).numpy()  # size of the weight tensor
-
-            shape_b = tf.shape(self.W[2 * i +
-                                      1]).numpy()  # shape of the bias tensor
-            size_b = tf.size(self.W[2 * i +
-                                    1]).numpy()  # size of the bias tensor
-
-            pick_w = parameters[0:size_w]  # pick the weights
-            self.W[2 * i].assign(tf.reshape(pick_w, shape_w))  # assign
-            parameters = np.delete(parameters, np.arange(size_w), 0)  # delete
-
-            pick_b = parameters[0:size_b]  # pick the biases
-            self.W[2 * i + 1].assign(tf.reshape(pick_b, shape_b))  # assign
-            parameters = np.delete(parameters, np.arange(size_b), 0)  # delete
-
-    def loss_BC(self, x, y):
-
-        loss_u = tf.reduce_mean(tf.square(y - self.evaluate(x)))
-        return loss_u
-
-    def loss_PDE(self, x_to_train_f):
-
-        g = tf.Variable(x_to_train_f, dtype='float64', trainable=False)
-
-        nu = 0.01 / np.pi
-
-        x_f = g[:, 0:1]
-        t_f = g[:, 1:2]
-
-        with tf.GradientTape(persistent=True) as tape:
-            tape.watch(x_f)
-            tape.watch(t_f)
-
-            g = tf.stack([x_f[:, 0], t_f[:, 0]], axis=1)
-
-            z = self.evaluate(g)
-            u_x = tape.gradient(z, x_f)
-
-        u_t = tape.gradient(z, t_f)
-        u_xx = tape.gradient(u_x, x_f)
-
-        del tape
-
-        f = u_t + (self.evaluate(g)) * (u_x) - (nu) * u_xx
-
-        loss_f = tf.reduce_mean(tf.square(f))
-
-        return loss_f
-
-    def loss(self, x, y, g):
-
-        loss_u = self.loss_BC(x, y)
-        loss_f = self.loss_PDE(g)
-
-        loss = loss_u + loss_f
-
-        return loss, loss_u, loss_f
-
-    def optimizerfunc(self, parameters):
-
-        self.set_weights(parameters)
-
-        with tf.GradientTape() as tape:
-            tape.watch(self.trainable_variables)
-
-            loss_val, loss_u, loss_f = self.loss(X_u_train, u_train, X_f_train)
-
-        grads = tape.gradient(loss_val, self.trainable_variables)
-
-        del tape
-
-        grads_1d = []  # flatten grads
-
-        for i in range(len(layers) - 1):
-            grads_w_1d = tf.reshape(grads[2 * i], [-1])  # flatten weights
-            grads_b_1d = tf.reshape(grads[2 * i + 1], [-1])  # flatten biases
-
-            grads_1d = tf.concat([grads_1d, grads_w_1d],
-                                 0)  # concat grad_weights
-            grads_1d = tf.concat([grads_1d, grads_b_1d],
-                                 0)  # concat grad_biases
-
-        return loss_val.numpy(), grads_1d.numpy()
-
-    def optimizer_callback(self, parameters):
-
-        loss_value, loss_u, loss_f = self.loss(X_u_train, u_train, X_f_train)
-
-        u_pred = self.evaluate(X_u_test)
-        error_vec = np.linalg.norm((u - u_pred), 2) / np.linalg.norm(u, 2)
-
-        # tf.print(loss_value, loss_u, loss_f, error_vec)
-        tqdm.write(f'{loss_value.numpy():.16f}, '
-                   f'{loss_u.numpy():.16f}, '
-                   f'{loss_f.numpy():.16f}, '
-                   f'{error_vec:.16f}')
-        pbar.update(1)
 
 
 def solutionplot(u_pred, X_u_train, u_train):
@@ -331,9 +168,9 @@ def solutionplot(u_pred, X_u_train, u_train):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='main')
     parser.add_argument(
-        '--maxiter',
+        '--iter',
         type=int,
-        metavar='<maxiter>',
+        metavar='<iter>',
         default=5000,
     )
     args = parser.parse_args()
@@ -344,25 +181,22 @@ if __name__ == "__main__":
     # Training data
     X_f_train, X_u_train, u_train = trainingdata(N_u, N_f)
 
-    layers = np.array([2, 20, 20, 20, 20, 20, 20, 20, 20, 1])  # 8 hidden layers
-
-    PINN = Sequentialmodel(layers)
+    PINN = NNetwork(args.iter, ub, lb, X_u_train, u_train, X_f_train, X_u_test,
+                    u)
 
     init_params = PINN.get_weights().numpy()
 
     start_time = time.time()
 
-    pbar = tqdm(total=args.maxiter, position=0, leave=True)
-
     # train the model with Scipy L-BFGS optimizer
     results = scipy.optimize.minimize(
-        fun=PINN.optimizerfunc,
+        fun=PINN.optimize,
         x0=init_params,
         args=(),
         method='L-BFGS-B',
         jac=
         True,  # If jac is True, fun is assumed to return the gradient along with the objective function
-        callback=PINN.optimizer_callback,
+        callback=PINN.callback,
         options={
             'disp': None,
             'maxcor': 200,
@@ -370,9 +204,9 @@ if __name__ == "__main__":
                 float
             ).eps,  # The iteration stops when (f^k - f^{k+1})/max{|f^k|,|f^{k+1}|,1} <= ftol
             'gtol': 5e-8,
-            'maxfun': args.maxiter * 10,
-            'maxiter': args.maxiter,
-            'iprint': -1,  # print update every 50 iterations
+            'maxfun': args.iter * 10,
+            'maxiter': args.iter,
+            'iprint': -1,
             'maxls': 50
         })
 
@@ -381,7 +215,7 @@ if __name__ == "__main__":
 
     print(results)
 
-    PINN.set_weights(results.x)
+    PINN._set_weights(results.x)
     ''' Model Accuracy '''
     u_pred = PINN.evaluate(X_u_test)
 
@@ -393,30 +227,3 @@ if __name__ == "__main__":
                         order='F')  # Fortran Style ,stacked column wise!
     ''' Solution Plot '''
     solutionplot(u_pred, X_u_train, u_train)
-
-    # N_u = 100  # Total number of data points for 'u'
-    # N_f = 10000  # Total number of collocation points
-    #
-    # # Training data
-    # X_f_train, X_u_train, u_train = trainingdata(N_u, N_f)
-    #
-    # fig, ax = plt.subplots()
-    #
-    # plt.plot(X_u_train[:, 1],
-    #          X_u_train[:, 0],
-    #          '*',
-    #          color='red',
-    #          markersize=5,
-    #          label='Boundary collocation = 100')
-    # plt.plot(X_f_train[:, 1],
-    #          X_f_train[:, 0],
-    #          'o',
-    #          markersize=0.5,
-    #          label='PDE collocation = 10,000')
-    #
-    # plt.xlabel('t')
-    # plt.ylabel('x')
-    # plt.title('Collocation points')
-    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    #
-    # fig.savefig('collocation_points_Burgers.png', dpi=500, bbox_inches='tight')
