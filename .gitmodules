@@ -1,6 +1,6 @@
 [submodule "PINNs"]
 	path = PINNs
-	url = git@github.com:maziarraissi/PINNs.git
+	url = https://github.com/maziarraissi/PINNs.git
 [submodule "Physics-Informed-Neural-Networks"]
 	path = Physics-Informed-Neural-Networks
-	url = git@github.com:omniscientoctopus/Physics-Informed-Neural-Networks.git
+	url = https://github.com/omniscientoctopus/Physics-Informed-Neural-Networks.git
