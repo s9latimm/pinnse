@@ -4,3 +4,4 @@ nu: Zähigkeit des Mediums
 
 
 ToDO:  PyFoam   bring das mit Python zum Laufen
+	Wie gibt man den Detailgrad des Grids an
