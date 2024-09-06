@@ -9,29 +9,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
 class Network(tf.Module):
 
-    def __init__(self, iterations, ub, lb, X_u_train, u_train, X_f_train,
-                 X_u_test, u, loss_pde):
+    def __init__(self, iterations, border, train, loss):
 
         super().__init__()
         self._layers = np.array([2, 20, 20, 20, 20, 20, 20, 20, 20, 1])
 
         # border points
-        self.border_x_train = X_u_train
-        self.border_y_train = u_train
+        self._f_border = border
 
         # training
-        self.fun_x_train = X_f_train
-
-        # domain bounds
-        self.lower_bound = lb
-        self.upper_bound = ub
-
-        # test
-        self.border_x_test = X_u_test
-        self.border_y_test = u
+        self._x_train = train
 
         # loss function
-        self.loss_part_diff_eq = loss_pde
+        self._loss_pde = loss
 
         # network
         self._activation = tf.nn.tanh
@@ -54,7 +44,7 @@ class Network(tf.Module):
             self._weights.append(b)
 
     def evaluate(self, x):
-        y = (x - self.upper_bound) / (self.lower_bound - self.upper_bound)
+        y = x
         for i in range(self._depth - 1):
             y = self._activation(
                 tf.add(tf.matmul(y, self._weights[2 * i]),
@@ -83,12 +73,13 @@ class Network(tf.Module):
             self._weights[2 * i + 1].assign(tf.reshape(pick_b, shape_b))
             parameters = np.delete(parameters, np.arange(size_b), 0)
 
-    def _loss_border(self, x, y):
-        return tf.reduce_mean(tf.square(y - self.evaluate(x)))
+    def _loss_border(self, border):
+        return tf.reduce_mean(
+            tf.square(border[:, 2:3] - self.evaluate(border[:, 0:2])))
 
     def loss(self):
-        loss_u = self._loss_border(self.border_x_train, self.border_y_train)
-        loss_f = self.loss_part_diff_eq(self, self.fun_x_train)
+        loss_u = self._loss_border(self._f_border)
+        loss_f = self._loss_pde(self, self._x_train)
         return loss_u + loss_f
 
     def optimize(self, parameters):
@@ -107,10 +98,4 @@ class Network(tf.Module):
         return loss.numpy(), grads_1d.numpy()
 
     def callback(self, _):
-        prediction = self.evaluate(self.border_x_test)
-        err = np.linalg.norm(
-            (self.border_y_test - prediction), 2) / np.linalg.norm(
-                self.border_y_test, 2)
-        tqdm.write(f'{self.loss().numpy():.16f}, '
-                   f'{err:.16f}')
         self._pbar.update(1)

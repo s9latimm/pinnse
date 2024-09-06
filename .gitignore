@@ -1,6 +1,8 @@
+__pycache__/
+
 .venv/
 .idea/
 
-__pycache__/
-
+__pycache_
 *.png
+*.pdf
