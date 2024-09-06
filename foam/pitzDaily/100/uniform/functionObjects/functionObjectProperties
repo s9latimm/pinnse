@@ -16,21 +16,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-streamlines
-{
-    U
-    {
-        file            "<case>/postProcessing/sets/streamlines/100/track0.vtp";
-    }
-    k
-    {
-        file            "<case>/postProcessing/sets/streamlines/100/track0.vtp";
-    }
-    p
-    {
-        file            "<case>/postProcessing/sets/streamlines/100/track0.vtp";
-    }
-}
 
 
 // ************************************************************************* //
