@@ -4,3 +4,6 @@
 [submodule "Physics-Informed-Neural-Networks"]
 	path = Physics-Informed-Neural-Networks
 	url = https://github.com/omniscientoctopus/Physics-Informed-Neural-Networks.git
+[submodule "pinns-tf2"]
+	path = pinns-tf2
+	url = https://github.com/rezaakb/pinns-tf2.git

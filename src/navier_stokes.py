@@ -5,7 +5,6 @@ import typing as tp
 import numpy as np
 import scipy.optimize
 import tensorflow as tf
-from multipledispatch import dispatch
 
 from foam.pitzDaily.get_foam_results import get_normalized_maps
 from network import Network
@@ -72,8 +71,8 @@ def data(
 
 
 def _loss_pde_2(network, fun_x_train):
-    lambda_1 = .1
-    lambda_2 = .1
+    lambda_1 = 1
+    lambda_2 = 1
 
     g = tf.Variable(fun_x_train, dtype='float64', trainable=False)
 

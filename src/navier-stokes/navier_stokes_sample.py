@@ -54,13 +54,29 @@ if __name__ == "__main__":
         '--sample',
         type=float,
         metavar='<sample>',
-        default=.01,
+        default=.1,
     )
     args = parser.parse_args()
 
     ref_shape, uvp_ref, uvp_train = data(args.sample)
 
+
+    # Plot.scatter_3d('velocity_ref',
+    #                 ('u_ref', np.hstack([uvp_ref[:, 0:2], uvp_ref[:, [2]]])),
+    #                 ('v_ref', np.hstack([uvp_ref[:, 0:2], uvp_ref[:, [3]]])))
+    #
+    #
+    # Plot.scatter_3d('abs-velocity_ref',
+    #                 ('uv_ref',
+    #                  np.hstack([
+    #                      uvp_ref[:, 0:2],
+    #                      np.abs(uvp_ref[:, [2]]) + np.abs(uvp_ref[:, [3]])
+    #                  ])))
+
     pinn = Network(args.iter, uvp_train, uvp_train)
+
+    for v in pinn.trainable_variables:
+        print(v.name)
 
     results = scipy.optimize.minimize(fun=pinn.optimize,
                                       x0=pinn.get_weights().numpy(),
@@ -81,17 +97,6 @@ if __name__ == "__main__":
 
     print(results)
 
-    # Plot.scatter_3d('velocity_ref',
-    #                 ('u_ref', np.hstack([uvp_ref[:, 0:2], uvp_ref[:, [2]]])),
-    #                 ('v_ref', np.hstack([uvp_ref[:, 0:2], uvp_ref[:, [3]]])))
-    #
-    Plot.scatter_3d('abs-velocity_train',
-                    ('uv_ref',
-                     np.hstack([
-                         uvp_train[:, 0:2],
-                         np.abs(uvp_train[:, [2]]) + np.abs(uvp_train[:, [3]])
-                     ])))
-
     pinn._set_weights(results.x)
 
     g = tf.Variable(uvp_ref, dtype='float64', trainable=False)
@@ -102,7 +107,7 @@ if __name__ == "__main__":
     u_pred, v_pred, p_pred, _, _ = pinn.evaluate(
         tf.stack([x[:, 0], y[:, 0]], axis=1))
 
-    Plot.scatter_3d('velocity_pred',
+    Plot.scatter_3d(f'velocity_pred_{args.iter}',
                     ('u_pred', np.hstack([uvp_ref[:, 0:2], u_pred])),
                     ('v_pred', np.hstack([uvp_ref[:, 0:2], v_pred])))
 

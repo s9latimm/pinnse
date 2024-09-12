@@ -6,7 +6,6 @@ from tqdm import tqdm
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
-
 class Network(tf.Module):
 
     def __init__(self, iterations, border, train):
@@ -37,9 +36,12 @@ class Network(tf.Module):
             self._weights.append(w)
             self._weights.append(b)
 
+        self._lambda_1 = tf.Variable(.1, dtype='float64', trainable=True, name='l1')
+        self._lambda_2 = tf.Variable(.1, dtype='float64', trainable=True, name='l2')
+
     def evaluate(self, x_train):
-        lambda_1 = tf.Variable(.9, dtype='float64', trainable=False)
-        lambda_2 = tf.Variable(.01, dtype='float64', trainable=False)
+        lambda_1 = self._lambda_1
+        lambda_2 = self._lambda_2
 
         g = tf.Variable(x_train, dtype='float64', trainable=False)
 
@@ -125,8 +127,7 @@ class Network(tf.Module):
 
     def _loss_border(self, border):
         return tf.reduce_mean(
-            tf.square(
-                self.forward(border[:, 0:2]) - self.forward(border[:, 0:2])))
+                self.forward(border[:, 0:2]))
 
     def loss(self):
         loss_u = self._loss_border(self._x_train[:1])
@@ -138,7 +139,10 @@ class Network(tf.Module):
         with tf.GradientTape() as tape:
             tape.watch(self.trainable_variables)
             loss = self.loss()
-        grads = tape.gradient(loss, self.trainable_variables)
+        grads = tape.gradient(loss, self.trainable_variables[2:])
+
+        # print(grads)
+
         del tape
         grads_1d = []
         for i in range(self._depth):
@@ -146,6 +150,7 @@ class Network(tf.Module):
             grads_b_1d = tf.reshape(grads[2 * i + 1], [-1])
             grads_1d = tf.concat([grads_1d, grads_w_1d], 0)
             grads_1d = tf.concat([grads_1d, grads_b_1d], 0)
+
         return loss.numpy(), grads_1d.numpy()
 
     def callback(self, _):
