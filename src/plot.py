@@ -33,8 +33,6 @@ class Plot:
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(0, 1)
         ax.set_title(title)
 
         fig.tight_layout()
@@ -42,13 +40,22 @@ class Plot:
         plt.show()
 
     @staticmethod
-    def scatter_3d(title, *data):
-        fig = plt.figure(figsize=(2048 / Plot.DPI, 2048 / Plot.DPI),
-                         dpi=Plot.DPI)
-        ax = fig.add_subplot(projection='3d', computed_zorder=False)
+    def scatter_3d(title, *args):
 
-        for i, dat in enumerate(data):
-            x, y, z = zip(*dat)
+        fig = plt.figure(figsize=(4096 / Plot.DPI * len(args), 4096 / Plot.DPI),
+                         dpi=Plot.DPI)
+
+        for idx, plot in enumerate(args):
+            label, data = plot
+
+            ax = fig.add_subplot(1,
+                                 len(args),
+                                 idx + 1,
+                                 projection='3d',
+                                 computed_zorder=False)
+            ax.view_init(elev=45, azim=45, roll=0)
+
+            x, y, z = zip(*data)
             x = np.asarray(x)
             y = np.asarray(y)
             z = np.asarray(z)
@@ -56,20 +63,23 @@ class Plot:
                        y,
                        z,
                        marker='.',
-                       c=Plot.COLORS[i],
-                       zorder=-i,
+                       c=Plot.COLORS[idx],
+                       zorder=-idx,
                        depthshade=False)
 
-        ax.set_xlabel('x')
-        ax.set_ylabel('t')
-        ax.set_zlabel('u')
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(0, 1)
-        ax.set_zlim(-1, 1)
-        ax.set_title(title)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel(label)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.set_title(label)
 
+        fig.suptitle(title)
         fig.tight_layout()
-        # fig.savefig(f'{title}.png', format='png', transparent=True, dpi=DPI)
+        fig.savefig(f'../images/{title}.png',
+                    format='png',
+                    transparent=False,
+                    dpi=Plot.DPI)
         plt.show()
 
 

@@ -9,19 +9,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
 class Network(tf.Module):
 
-    def __init__(self, iterations, border, train, loss):
+    def __init__(self, iterations, border, train):
 
         super().__init__()
         self._layers = np.array([2, 20, 20, 20, 20, 20, 20, 20, 20, 1])
 
-        # border points
-        self._f_border = border
-
         # training
         self._x_train = train
-
-        # loss function
-        self._loss_pde = loss
 
         # network
         self._activation = tf.nn.tanh
@@ -43,7 +37,63 @@ class Network(tf.Module):
             self._weights.append(w)
             self._weights.append(b)
 
-    def evaluate(self, x):
+    def evaluate(self, x_train):
+        lambda_1 = tf.Variable(.9, dtype='float64', trainable=False)
+        lambda_2 = tf.Variable(.01, dtype='float64', trainable=False)
+
+        g = tf.Variable(x_train, dtype='float64', trainable=False)
+
+        x = g[:, 0:1]
+        y = g[:, 1:2]
+
+        with tf.GradientTape(persistent=True) as tape:
+            tape.watch(x)
+            tape.watch(y)
+
+            psi_and_p = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
+
+            psi = psi_and_p[:, 0:1]
+            p = psi_and_p[:, 1:2]
+
+            u = tape.gradient(psi, y)
+            v = -tape.gradient(psi, x)
+
+            u_x = tape.gradient(u, x)
+            u_xx = tape.gradient(u_x, x)
+            u_y = tape.gradient(u, y)
+            u_yy = tape.gradient(u_y, y)
+
+            v_x = tape.gradient(v, x)
+            v_xx = tape.gradient(v_x, x)
+            v_y = tape.gradient(v, y)
+            v_yy = tape.gradient(v_y, y)
+
+            p_x = tape.gradient(p, x)
+            p_y = tape.gradient(p, y)
+
+        del tape
+
+        f_u = lambda_1 * (u * u_x + v * u_y) + lambda_2 * p_x - (u_xx + u_yy)
+        f_v = lambda_1 * (u * v_x + v * v_y) + lambda_2 * p_x - (v_xx + v_yy)
+
+        return u, v, p, f_u, f_v
+
+    def _loss_pde(self, uvp_train):
+        x = uvp_train[:, 0:1]
+        y = uvp_train[:, 1:2]
+        u_tf = uvp_train[:, 2:3]
+        v_tf = uvp_train[:, 3:4]
+        p_tf = uvp_train[:, 4:5]
+
+        u_pred, v_pred, p_pred, f_u_pred, f_v_pred = self.evaluate(
+            tf.stack([x[:, 0], y[:, 0]], axis=1))
+
+        return tf.reduce_sum(tf.square(u_tf - u_pred)) + \
+            tf.reduce_sum(tf.square(v_tf - v_pred)) + \
+            tf.reduce_sum(tf.square(f_u_pred)) + \
+            tf.reduce_sum(tf.square(f_v_pred))
+
+    def forward(self, x):
         y = x
         for i in range(self._depth - 1):
             y = self._activation(
@@ -75,12 +125,13 @@ class Network(tf.Module):
 
     def _loss_border(self, border):
         return tf.reduce_mean(
-            tf.square(border[:, 2:3] - self.evaluate(border[:, 0:2])))
+            tf.square(
+                self.forward(border[:, 0:2]) - self.forward(border[:, 0:2])))
 
     def loss(self):
-        loss_u = self._loss_border(self._f_border)
-        loss_f = self._loss_pde(self, self._x_train)
-        return loss_u
+        loss_u = self._loss_border(self._x_train[:1])
+        loss_f = self._loss_pde(self._x_train)
+        return loss_u + loss_f
 
     def optimize(self, parameters):
         self._set_weights(parameters)
