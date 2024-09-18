@@ -36,13 +36,10 @@ class Network(tf.Module):
             self._weights.append(w)
             self._weights.append(b)
 
-        self._lambda_1 = tf.Variable(.1, dtype='float64', trainable=True, name='l1')
-        self._lambda_2 = tf.Variable(.1, dtype='float64', trainable=True, name='l2')
+        self._viscosity = .08
+        self._density = 1.
 
     def evaluate(self, x_train):
-        lambda_1 = self._lambda_1
-        lambda_2 = self._lambda_2
-
         g = tf.Variable(x_train, dtype='float64', trainable=False)
 
         x = g[:, 0:1]
@@ -75,10 +72,12 @@ class Network(tf.Module):
 
         del tape
 
-        f_u = lambda_1 * (u * u_x + v * u_y) + lambda_2 * p_x - (u_xx + u_yy)
-        f_v = lambda_1 * (u * v_x + v * v_y) + lambda_2 * p_x - (v_xx + v_yy)
+        f = self._density * (u * u_x + v * u_y) + p_x - self._viscosity * (u_xx + u_yy)
+        g = self._density * (u * v_x + v * v_y) + p_y - self._viscosity * (v_xx + v_yy)
 
-        return u, v, p, f_u, f_v
+        m = v_x - v_y
+
+        return u, v, p, f, g, m
 
     def _loss_pde(self, uvp_train):
         x = uvp_train[:, 0:1]
@@ -87,13 +86,14 @@ class Network(tf.Module):
         v_tf = uvp_train[:, 3:4]
         p_tf = uvp_train[:, 4:5]
 
-        u_pred, v_pred, p_pred, f_u_pred, f_v_pred = self.evaluate(
+        u_pred, v_pred, p_pred, f_u_pred, f_v_pred, m_pred = self.evaluate(
             tf.stack([x[:, 0], y[:, 0]], axis=1))
 
         return tf.reduce_sum(tf.square(u_tf - u_pred)) + \
             tf.reduce_sum(tf.square(v_tf - v_pred)) + \
             tf.reduce_sum(tf.square(f_u_pred)) + \
-            tf.reduce_sum(tf.square(f_v_pred))
+            tf.reduce_sum(tf.square(f_v_pred)) + \
+            tf.reduce_sum(tf.square(m_pred))
 
     def forward(self, x):
         y = x
@@ -139,7 +139,7 @@ class Network(tf.Module):
         with tf.GradientTape() as tape:
             tape.watch(self.trainable_variables)
             loss = self.loss()
-        grads = tape.gradient(loss, self.trainable_variables[2:])
+        grads = tape.gradient(loss, self.trainable_variables)
 
         # print(grads)
 
