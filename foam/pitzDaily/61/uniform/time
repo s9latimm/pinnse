@@ -10,15 +10,21 @@ FoamFile
     version     2.0;
     format      ascii;
     arch        "LSB;label=32;scalar=64";
-    class       uniformDimensionedScalarField;
-    location    "50/uniform";
-    object      cumulativeContErr;
+    class       dictionary;
+    location    "61/uniform";
+    object      time;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 0 0 0 0];
-value           0.0625473;
+value           61;
 
+name            "61";
+
+index           61;
+
+deltaT          1;
+
+deltaT0         1;
 
 
 // ************************************************************************* //
