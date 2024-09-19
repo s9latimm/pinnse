@@ -10,7 +10,7 @@ from network import BaseNetwork
 from src.plot import Plot
 
 NU = 0.08
-ITER = 100
+ITER = 1000
 SAMPLE = .3
 SEED = 42
 

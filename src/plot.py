@@ -1,4 +1,4 @@
-import matplotlib.colors as mcolors
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter
@@ -7,7 +7,7 @@ from matplotlib.ticker import FuncFormatter
 
 
 class Plot:
-    COLORS = ['black'] + list(mcolors.TABLEAU_COLORS.keys())[1:]
+    COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
 
     DPI = 96
 
@@ -61,17 +61,23 @@ class Plot:
 
             ax = fig.add_subplot(len(plots), 1, i + 1)
 
+            cmap = 'bwr'
+
             if z.min() < 0 < z.max():
-                slope = mcolors.TwoSlopeNorm(vmin=np.floor(z.min()),
-                                             vcenter=0.,
-                                             vmax=np.ceil(z.max()))
-                cmap = 'seismic'
+                slope = colors.TwoSlopeNorm(vmin=np.floor(z.min()),
+                                            vcenter=0.,
+                                            vmax=np.ceil(z.max()))
+
             elif z.max() < 0:
-                slope = mcolors.Normalize(vmin=np.floor(z.min()), vmax=0)
-                cmap = 'Reds'
+                slope = colors.Normalize(vmin=np.floor(z.min()), vmax=0)
+                cmap = colors.LinearSegmentedColormap.from_list(
+                    'seismic_pos',
+                    plt.get_cmap(cmap)(np.linspace(0., .5, 50)))
             else:
-                slope = mcolors.Normalize(vmin=0, vmax=np.ceil(z.max()))
-                cmap = 'Reds'
+                slope = colors.Normalize(vmin=0, vmax=np.ceil(z.max()))
+                cmap = colors.LinearSegmentedColormap.from_list(
+                    'seismic_pos',
+                    plt.get_cmap(cmap)(np.linspace(.5, 1., 50)))
 
             img = ax.pcolormesh(
                 x,
