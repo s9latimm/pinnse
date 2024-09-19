@@ -17,7 +17,8 @@ from src.plotter import Plotter
 from src.timer import CallbackTimer
 
 NU = 0.08
-ITER = 100
+RHO = 1
+ITER = 1000
 SAMPLE = 0
 SEED = 42
 TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -132,8 +133,8 @@ class NavierStokesNetwork(BaseNetwork):
         self.m_err = []
         self.t_err = []
 
-        self.__viscosity = NU
-        self.__density = 1.0
+        self.__nu = NU
+        self.__rho = RHO
 
         self.__data = data
 
@@ -142,17 +143,17 @@ class NavierStokesNetwork(BaseNetwork):
     def evaluate(self, frame):
         g = tf.Variable(frame, dtype='float64', trainable=False)
 
-        x = g[:, 0:1]
-        y = g[:, 1:2]
+        x = g[:, 0]
+        y = g[:, 1]
 
         with tf.GradientTape(persistent=True) as tape:
             tape.watch(x)
             tape.watch(y)
 
-            r = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
-            u = r[:, 0:1]
-            v = -r[:, 1:2]
-            p = r[:, 2:3]
+            r = self.forward(tf.stack([x, y], axis=1))
+            u = r[:, 0]
+            v = -r[:, 1]
+            p = r[:, 2]
 
             u_x = tape.gradient(u, x)
             u_xx = tape.gradient(u_x, x)
@@ -169,19 +170,29 @@ class NavierStokesNetwork(BaseNetwork):
 
         del tape
 
-        f = self.__density * (u * u_x +
-                              v * u_y) + p_x - self.__viscosity * (u_xx + u_yy)
-        g = self.__density * (u * v_x +
-                              v * v_y) + p_y - self.__viscosity * (v_xx + v_yy)
+        f = self.__rho * (u * u_x + v * u_y) + p_x - self.__nu * (u_xx + u_yy)
+        g = self.__rho * (u * v_x + v * v_y) + p_y - self.__nu * (v_xx + v_yy)
 
         m = u_x + v_y
 
         return u, v, p, f, g, m
 
-    def loss(self):
+    def __loss_pde(self):
+        *_, f, g, m = self.evaluate(self.__data.train)
+
+        f_err = tf.reduce_sum(tf.square(f))
+        g_err = tf.reduce_sum(tf.square(g))
+        m_err = tf.reduce_sum(tf.square(m))
+
+        self.f_err.append(f_err.numpy())
+        self.g_err.append(g_err.numpy())
+        self.m_err.append(m_err.numpy())
+
+        return f_err + g_err + m_err
+
+    def __loss_border(self):
         frames = [
             self.__data.border,
-            self.__data.train,
             self.__data.intake,
             self.__data.outtake,
         ]
@@ -190,40 +201,29 @@ class NavierStokesNetwork(BaseNetwork):
         for frame in frames:
             off.append(off[-1] + len(frame))
 
-        u, v, p, f, g, m = self.evaluate(np.vstack(frames))
+        r = self.forward(np.vstack(frames)[:, [0, 1]])
+        u = r[:, 0]
+        v = -r[:, 1]
 
         # border
-        assert len(u[off[0]:off[1]]) == len(self.__data.border)
-
-        u_err = tf.reduce_sum(tf.square(self.__data.border[:, 2:3] -
-                                        u[:off[1]]))
+        u_err = tf.reduce_sum(
+            tf.square(self.__data.border[:, 2] - u[off[0]:off[1]]))
         v_err = tf.reduce_sum(
-            tf.square(self.__data.border[:, 3:4] - v[off[0]:off[1]]))
+            tf.square(self.__data.border[:, 3] - v[off[0]:off[1]]))
 
         self.u_err.append(u_err.numpy())
         self.v_err.append(v_err.numpy())
 
-        # PDE
-        assert len(u[off[1]:off[2]]) == len(self.__data.train)
-
-        f_err = tf.reduce_sum(tf.square(f[off[1]:off[2]]))
-        g_err = tf.reduce_sum(tf.square(g[off[1]:off[2]]))
-        m_err = tf.reduce_sum(tf.square(m[off[1]:off[2]]))
-
-        self.f_err.append(f_err.numpy())
-        self.g_err.append(g_err.numpy())
-        self.m_err.append(m_err.numpy())
-
         # transport
-        assert len(u[off[2]:off[3]]) == len(self.__data.intake)
-        assert len(u[off[3]:off[4]]) == len(self.__data.outtake)
-
         t_err = tf.square(
-            tf.reduce_sum(u[off[2]:off[3]]) - tf.reduce_sum(u[off[3]:off[4]]))
+            tf.reduce_sum(u[off[1]:off[2]]) - tf.reduce_sum(u[off[2]:off[3]]))
 
         self.t_err.append(t_err.numpy())
 
-        return u_err + v_err + f_err + g_err + m_err + t_err
+        return u_err + v_err + t_err
+
+    def loss(self):
+        return self.__loss_pde() + self.__loss_border()
 
 
 def main():
