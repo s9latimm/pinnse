@@ -17,8 +17,8 @@ from src.plotter import Plotter
 from src.timer import CallbackTimer
 
 NU = 0.08
-ITER = 10000
-SAMPLE = 0.3
+ITER = 100
+SAMPLE = 0
 SEED = 42
 TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 DIR = Path('..') / 'output' / 'navier-stokes' / TIMESTAMP
@@ -34,9 +34,9 @@ class NavierStokesData:
         def refine(x, step):
             return x[::step].transpose()[::step].transpose()
 
-        self.u = refine(u, 10)[::-1].transpose()
-        self.v = refine(v, 10)[::-1].transpose()
-        self.p = refine(p, 10)[::-1].transpose()
+        self.u = refine(u, 10).transpose()
+        self.v = refine(v, 10).transpose()
+        self.p = refine(p, 10).transpose()
 
         self.grid = np.dstack(np.mgrid[0:80, 0:20])
 
@@ -48,46 +48,62 @@ class NavierStokesData:
             self.p.flatten()[:, None],
         ])
 
+        self.intake = np.hstack([
+            self.grid[0, 0:20, 0][:, None],
+            self.grid[0, 0:20, 1][:, None],
+            np.zeros(20)[:, None],
+            np.zeros(20)[:, None],
+            np.zeros(20)[:, None],
+        ])
+        self.outtake = np.hstack([
+            self.grid[-1, 0:20, 0][:, None],
+            self.grid[-1, 0:20, 1][:, None],
+            np.zeros(20)[:, None],
+            np.zeros(20)[:, None],
+            np.zeros(20)[:, None],
+        ])
+
         border = np.vstack([
             np.hstack([
-                self.grid[:, 0, 0][:, None],
-                self.grid[:, 0, 1][:, None],
-                self.u[:, 0][:, None],
-                self.v[:, 0][:, None],
-                self.p[:, 0][:, None],
+                self.grid[0, 0:10, 0][:, None],
+                self.grid[0, 0:10, 1][:, None],
+                np.full(10, 10)[:, None],
+                np.zeros(10)[:, None],
+                np.zeros(10)[:, None],
             ]),
             np.hstack([
-                self.grid[:, -1, 0][:, None],
-                self.grid[:, -1, 1][:, None],
-                self.u[:, -1][:, None],
-                self.v[:, -1][:, None],
-                self.p[:, -1][:, None],
+                self.grid[0, 10:20, 0][:, None],
+                self.grid[0, 10:20, 1][:, None],
+                np.zeros(10)[:, None],
+                np.zeros(10)[:, None],
+                np.zeros(10)[:, None],
             ]),
             np.hstack([
-                self.grid[0, :, 0][:, None],
-                self.grid[0, :, 1][:, None],
-                self.u[0, :][:, None],
-                self.v[0, :][:, None],
-                self.p[0, :][:, None],
+                self.grid[1:, 0, 0][:, None],
+                self.grid[1:, 0, 1][:, None],
+                np.zeros(79)[:, None],
+                np.zeros(79)[:, None],
+                np.zeros(79)[:, None],
             ]),
             np.hstack([
-                self.grid[-1, :, 0][:, None],
-                self.grid[-1, :, 1][:, None],
-                self.u[-1, :][:, None],
-                self.v[-1, :][:, None],
-                self.p[-1, :][:, None],
+                self.grid[1:, -1, 0][:, None],
+                self.grid[1:, -1, 1][:, None],
+                np.zeros(79)[:, None],
+                np.zeros(79)[:, None],
+                np.zeros(79)[:, None],
             ]),
         ])
 
+        # corner
         for i in range(1, 10):
             border = np.vstack([
                 border,
                 np.hstack([
-                    self.grid[i, 1:10, 0][:, None],
-                    self.grid[i, 1:10, 1][:, None],
-                    self.u[i, 1:10][:, None],
-                    self.v[i, 1:10][:, None],
-                    self.p[i, 1:10][:, None],
+                    self.grid[i, -10:-1, 0][:, None],
+                    self.grid[i, -10:-1, 1][:, None],
+                    np.zeros(9)[:, None],
+                    np.zeros(9)[:, None],
+                    np.zeros(9)[:, None],
                 ]),
             ])
 
@@ -98,7 +114,7 @@ class NavierStokesData:
             x for x in set(tuple(x) for x in self.foam) -
             set(tuple(x) for x in self.border)
         ])
-        assert (len(self.train) == len(self.foam) - len(self.border))
+        # assert (len(self.train) == len(self.foam) - len(self.border))
 
         if sample > 0:
             self.train = self.train[np.random.choice(
@@ -114,17 +130,17 @@ class NavierStokesNetwork(BaseNetwork):
         self.f_err = []
         self.g_err = []
         self.m_err = []
+        self.t_err = []
 
         self.__viscosity = NU
         self.__density = 1.0
 
-        self.__border = data.border
-        self.__train = data.train
+        self.__data = data
 
         super().__init__([2, 20, 20, 20, 20, 20, 20, 20, 20, 3], tf.nn.tanh)
 
-    def evaluate(self, x_train):
-        g = tf.Variable(x_train, dtype='float64', trainable=False)
+    def evaluate(self, frame):
+        g = tf.Variable(frame, dtype='float64', trainable=False)
 
         x = g[:, 0:1]
         y = g[:, 1:2]
@@ -135,7 +151,7 @@ class NavierStokesNetwork(BaseNetwork):
 
             r = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
             u = r[:, 0:1]
-            v = r[:, 1:2]
+            v = -r[:, 1:2]
             p = r[:, 2:3]
 
             u_x = tape.gradient(u, x)
@@ -162,32 +178,52 @@ class NavierStokesNetwork(BaseNetwork):
 
         return u, v, p, f, g, m
 
-    def __loss_border(self):
-        u, v, p, f, g, m_pred = self.evaluate(self.__border)
+    def loss(self):
+        frames = [
+            self.__data.border,
+            self.__data.train,
+            self.__data.intake,
+            self.__data.outtake,
+        ]
 
-        u_err = tf.reduce_sum(tf.square(self.__border[:, 2:3] - u))
-        v_err = tf.reduce_sum(tf.square(self.__border[:, 3:4] - v))
+        off = [0]
+        for frame in frames:
+            off.append(off[-1] + len(frame))
+
+        u, v, p, f, g, m = self.evaluate(np.vstack(frames))
+
+        # border
+        assert len(u[off[0]:off[1]]) == len(self.__data.border)
+
+        u_err = tf.reduce_sum(tf.square(self.__data.border[:, 2:3] -
+                                        u[:off[1]]))
+        v_err = tf.reduce_sum(
+            tf.square(self.__data.border[:, 3:4] - v[off[0]:off[1]]))
 
         self.u_err.append(u_err.numpy())
         self.v_err.append(v_err.numpy())
 
-        return u_err + v_err
+        # PDE
+        assert len(u[off[1]:off[2]]) == len(self.__data.train)
 
-    def __loss_pde(self):
-        _, _, _, f, g, m = self.evaluate(self.__train)
-
-        f_err = tf.reduce_sum(tf.square(f))
-        g_err = tf.reduce_sum(tf.square(g))
-        m_err = tf.reduce_sum(tf.square(m))
+        f_err = tf.reduce_sum(tf.square(f[off[1]:off[2]]))
+        g_err = tf.reduce_sum(tf.square(g[off[1]:off[2]]))
+        m_err = tf.reduce_sum(tf.square(m[off[1]:off[2]]))
 
         self.f_err.append(f_err.numpy())
         self.g_err.append(g_err.numpy())
         self.m_err.append(m_err.numpy())
 
-        return f_err + g_err + m_err
+        # transport
+        assert len(u[off[2]:off[3]]) == len(self.__data.intake)
+        assert len(u[off[3]:off[4]]) == len(self.__data.outtake)
 
-    def loss(self):
-        return self.__loss_border() + self.__loss_pde()
+        t_err = tf.square(
+            tf.reduce_sum(u[off[2]:off[3]]) - tf.reduce_sum(u[off[3]:off[4]]))
+
+        self.t_err.append(t_err.numpy())
+
+        return u_err + v_err + f_err + g_err + m_err + t_err
 
 
 def main():
@@ -296,7 +332,6 @@ def main():
         ],
         grids=[
             data.border[:, [0, 1]],
-            data.train[:, [0, 1]],
         ],
         out=DIR / f'diff_{args.iter}.png',
     )
@@ -309,6 +344,7 @@ def main():
             ('f', pinn.f_err),
             ('g', pinn.g_err),
             ('m', pinn.m_err),
+            ('l', pinn.t_err),
         ],
         out=DIR / f'err_{args.iter}.png',
     )

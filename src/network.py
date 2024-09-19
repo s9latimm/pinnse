@@ -7,7 +7,7 @@ import tensorflow as tf
 class BaseNetwork(tf.Module):
 
     @abstractmethod
-    def evaluate(self):
+    def evaluate(self, values):
         ...
 
     @abstractmethod

@@ -59,35 +59,40 @@ class Plotter:
                                   3 * .2 * 2048 / Plotter.DPI),
                          dpi=Plotter.DPI)
 
-        for i, d in enumerate(plots):
-            l, z = d
+        for i, plot in enumerate(plots):
+            label, z = plot
 
             ax = fig.add_subplot(len(plots), 1, i + 1)
 
-            cmap = 'bwr'
+            cmap = 'seismic'
 
             if z.min() < 0 < z.max():
-                slope = colors.TwoSlopeNorm(vmin=np.floor(z.min()),
-                                            vcenter=0.,
-                                            vmax=np.ceil(z.max()))
+                slope = colors.Normalize(vmin=min(z.min(), -1),
+                                         vmax=max(z.max(), 1))
+                m = max(-min(z.min(), -1), max(z.max(), 1))
+                start = .5 - -min(z.min(), -1) / m * .5
+                stop = .5 + max(z.max(), 1) / m * .5
+                cmap = colors.LinearSegmentedColormap.from_list(
+                    f'seismic_{i}',
+                    plt.get_cmap(cmap)(np.linspace(start, stop, 100)))
 
             elif z.max() < 0:
-                slope = colors.Normalize(vmin=np.floor(z.min()), vmax=0)
+                slope = colors.Normalize(vmin=min(z.min(), -1), vmax=0)
                 cmap = colors.LinearSegmentedColormap.from_list(
-                    'seismic_pos',
-                    plt.get_cmap(cmap)(np.linspace(0., .5, 50)))
+                    f'seismic_{i}',
+                    plt.get_cmap(cmap)(np.linspace(0., .5, 100)))
             else:
-                slope = colors.Normalize(vmin=0, vmax=np.ceil(z.max()))
+                slope = colors.Normalize(vmin=0, vmax=max(z.max(), 1))
                 cmap = colors.LinearSegmentedColormap.from_list(
-                    'seismic_pos',
-                    plt.get_cmap(cmap)(np.linspace(.5, 1., 50)))
+                    f'seismic_{i}',
+                    plt.get_cmap(cmap)(np.linspace(.5, 1., 100)))
 
             img = ax.pcolormesh(
                 x,
                 y,
                 z,
                 cmap=cmap,
-                # shading='gouraud',
+                shading='nearest',
                 norm=slope,
                 zorder=1,
             )
@@ -103,12 +108,13 @@ class Plotter:
                     )
 
             ax.set_xlabel('')
-            ax.set_ylabel('')
-
-            ax.set_title(l)
-
             ax.set_xticks([])
+
+            ax.set_ylabel('')
             ax.set_yticks([])
+            ax.yaxis.set_inverted(True)
+
+            ax.set_title(label)
 
             cbar = fig.colorbar(img,
                                 ax=ax,
@@ -117,12 +123,13 @@ class Plotter:
                                 pad=0.04,
                                 format=FuncFormatter(lambda x, pos: f'{x:.0f}'))
 
-            if z.min() < 0 < z.max():
-                cbar.set_ticks([np.floor(z.min()), 0., np.ceil(z.max())])
-            elif z.max() < 0:
-                cbar.set_ticks([np.floor(z.min()), 0.])
-            else:
-                cbar.set_ticks([0., np.ceil(z.max())])
+            ticks = list()
+            if z.min() < 0:
+                ticks.append(min(z.min(), -1))
+            ticks.append(0)
+            if z.max() > 0:
+                ticks.append(max(z.max(), 1))
+            cbar.set_ticks(ticks)
 
         fig.suptitle(title)
 
