@@ -1,25 +1,35 @@
-import numpy as np
 import os
 
+import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
+
 class Network(tf.Module):
 
-    def __init__(self, iterations, border, train):
+    def __init__(self, layers, iterations, border, train):
 
         super().__init__()
-        self._layers = np.array([2, 20, 20, 20, 20, 20, 20, 20, 20, 1])
+        self._layers = layers
 
         # training
         self._x_train = train
+
+        # border
+        self._border = border
 
         # network
         self._activation = tf.nn.tanh
         self._pbar = tqdm(total=iterations, position=0, leave=True)
         self._depth = len(self._layers) - 1
+
+        self.u_err = []
+        self.v_err = []
+        self.f_err = []
+        self.g_err = []
+        self.m_err = []
 
         # initialize network
         self._weights = []
@@ -36,7 +46,7 @@ class Network(tf.Module):
             self._weights.append(w)
             self._weights.append(b)
 
-        self._viscosity = .08
+        self._viscosity = 0.08
         self._density = 1.
 
     def evaluate(self, x_train):
@@ -49,13 +59,16 @@ class Network(tf.Module):
             tape.watch(x)
             tape.watch(y)
 
-            psi_and_p = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
+            psi = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
+            u = psi[:, 0:1]
+            v = psi[:, 1:2]
+            p = psi[:, 2:3]
 
-            psi = psi_and_p[:, 0:1]
-            p = psi_and_p[:, 1:2]
-
-            u = tape.gradient(psi, y)
-            v = -tape.gradient(psi, x)
+            # psi = psi_and_p[:, 0:1]
+            # p = psi_and_p[:, 1:2]
+            #
+            # u = tape.gradient(psi, y)
+            # v = -tape.gradient(psi, x)
 
             u_x = tape.gradient(u, x)
             u_xx = tape.gradient(u_x, x)
@@ -72,28 +85,14 @@ class Network(tf.Module):
 
         del tape
 
-        f = self._density * (u * u_x + v * u_y) + p_x - self._viscosity * (u_xx + u_yy)
-        g = self._density * (u * v_x + v * v_y) + p_y - self._viscosity * (v_xx + v_yy)
+        f = self._density * (u * u_x +
+                             v * u_y) + p_x - self._viscosity * (u_xx + u_yy)
+        g = self._density * (u * v_x +
+                             v * v_y) + p_y - self._viscosity * (v_xx + v_yy)
 
         m = v_x - v_y
 
         return u, v, p, f, g, m
-
-    def _loss_pde(self, uvp_train):
-        x = uvp_train[:, 0:1]
-        y = uvp_train[:, 1:2]
-        u_tf = uvp_train[:, 2:3]
-        v_tf = uvp_train[:, 3:4]
-        p_tf = uvp_train[:, 4:5]
-
-        u_pred, v_pred, p_pred, f_u_pred, f_v_pred, m_pred = self.evaluate(
-            tf.stack([x[:, 0], y[:, 0]], axis=1))
-
-        return tf.reduce_sum(tf.square(u_tf - u_pred)) + \
-            tf.reduce_sum(tf.square(v_tf - v_pred)) + \
-            tf.reduce_sum(tf.square(f_u_pred)) + \
-            tf.reduce_sum(tf.square(f_v_pred)) + \
-            tf.reduce_sum(tf.square(m_pred))
 
     def forward(self, x):
         y = x
@@ -125,14 +124,34 @@ class Network(tf.Module):
             self._weights[2 * i + 1].assign(tf.reshape(pick_b, shape_b))
             parameters = np.delete(parameters, np.arange(size_b), 0)
 
-    def _loss_border(self, border):
-        return tf.reduce_mean(
-                self.forward(border[:, 0:2]))
+    def _loss_border(self):
+        u, v, p, f, g, m_pred = self.evaluate(self._border)
+
+        u_err = tf.reduce_sum(tf.square(self._border[:, 2:3] - u))
+        v_err = tf.reduce_sum(tf.square(self._border[:, 3:4] - v))
+
+        self.u_err.append(u_err.numpy())
+        self.v_err.append(v_err.numpy())
+
+        return u_err + v_err
+
+    def _loss_pde(self):
+        _, _, _, f, g, m = self.evaluate(self._x_train)
+
+        f_err = tf.reduce_sum(tf.square(f))
+        g_err = tf.reduce_sum(tf.square(g))
+        m_err = tf.reduce_sum(tf.square(m))
+
+        self.f_err.append(f_err.numpy())
+        self.g_err.append(g_err.numpy())
+        self.m_err.append(m_err.numpy())
+
+        return f_err + g_err + m_err
 
     def loss(self):
-        loss_u = self._loss_border(self._x_train[:1])
-        loss_f = self._loss_pde(self._x_train)
-        return loss_u + loss_f
+        loss_u = self._loss_border()
+        loss_f = self._loss_pde()
+        return loss_f + loss_u
 
     def optimize(self, parameters):
         self._set_weights(parameters)
@@ -140,10 +159,8 @@ class Network(tf.Module):
             tape.watch(self.trainable_variables)
             loss = self.loss()
         grads = tape.gradient(loss, self.trainable_variables)
-
-        # print(grads)
-
         del tape
+
         grads_1d = []
         for i in range(self._depth):
             grads_w_1d = tf.reshape(grads[2 * i], [-1])
@@ -153,5 +170,6 @@ class Network(tf.Module):
 
         return loss.numpy(), grads_1d.numpy()
 
-    def callback(self, _):
+    def callback(self, loss):
+        # self._pbar.write(f'loss: {loss}')
         self._pbar.update(1)

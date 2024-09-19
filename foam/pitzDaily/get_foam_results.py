@@ -209,7 +209,7 @@ def get_highest_numbered_directory(data_path):
     # Return the full path of the directory with the highest number
     return str(highest_number)
 
-def get_normalized_maps():
+def get_foam():
 
     # Path to the OpenFOAM results
     data_path = os.path.dirname(os.path.abspath(__file__))
@@ -223,15 +223,14 @@ def get_normalized_maps():
 
     # transform the data into 2D arrays
     model = [(0,0,100,100),(100,100,800,200),(100,0,800,100)] # discribes, how the model is build, every block is a tupel
-    max_xy = max([-np.min(ux_data), np.max(ux_data), -np.min(uy_data), np.max(uy_data)])
-    ux_map = convert_data_to_map(ux_data, model) / max_xy
-    uy_map = convert_data_to_map(uy_data, model) / max_xy
-    p_map = convert_data_to_map(p_data, model) / max([-np.min(p_data), np.max(p_data)])
+    ux_map = convert_data_to_map(ux_data, model)
+    uy_map = convert_data_to_map(uy_data, model)
+    p_map = convert_data_to_map(p_data, model)
 
     return ux_map, uy_map, p_map
 
 if __name__ == "__main__":
-    ux_map, uy_map, p_map = get_normalized_maps()
+    ux_map, uy_map, p_map = get_maps()
     u_map = np.sqrt(ux_map**2 + uy_map**2)
     # Plot results
     plot_stacked_images([ux_map,uy_map,u_map,p_map], figsize=(8, 2), cmap='plasma', titles=['velocity X','velocity Y','velocity magnitude','pressure'])
