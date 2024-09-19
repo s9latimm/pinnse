@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,15 +8,15 @@ from matplotlib.ticker import FuncFormatter
 # plt.rcParams['text.usetex'] = True
 
 
-class Plot:
+class Plotter:
     COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
 
     DPI = 96
 
     @staticmethod
-    def error(title, plots, path=None):
-        fig = plt.figure(figsize=(1024 / Plot.DPI, 512 / Plot.DPI),
-                         dpi=Plot.DPI)
+    def error(title: str, plots, out: Path = None):
+        fig = plt.figure(figsize=(1024 / Plotter.DPI, 512 / Plotter.DPI),
+                         dpi=Plotter.DPI)
 
         ax = fig.add_subplot()
 
@@ -25,7 +27,7 @@ class Plot:
                               len(y) + 1, 1),
                     y,
                     label=l,
-                    color=Plot.COLORS[i])
+                    color=Plotter.COLORS[i])
 
         ax.set_xlabel('iter')
         ax.set_ylabel('err')
@@ -41,20 +43,21 @@ class Plot:
         ax.legend(loc='upper right')
 
         fig.tight_layout()
-        if path is not None:
-            fig.savefig(f'{path}.png',
-                        format='png',
+        if out is not None:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out,
+                        format=out.suffix[1:],
                         transparent=False,
-                        dpi=Plot.DPI)
+                        dpi=Plotter.DPI)
         plt.show()
 
     @staticmethod
-    def heatmap(title, x, y, plots, grids=None, path=None):
+    def heatmap(title: str, x, y, plots, grids=None, out: Path = None):
         if grids is None:
             grids = list()
-        fig = plt.figure(figsize=(.8 * 2048 / Plot.DPI,
-                                  3 * .2 * 2048 / Plot.DPI),
-                         dpi=Plot.DPI)
+        fig = plt.figure(figsize=(.8 * 2048 / Plotter.DPI,
+                                  3 * .2 * 2048 / Plotter.DPI),
+                         dpi=Plotter.DPI)
 
         for i, d in enumerate(plots):
             l, z = d
@@ -95,7 +98,7 @@ class Plot:
                         grid[:, 0],
                         grid[:, 1],
                         marker='+',
-                        c=Plot.COLORS[j],
+                        c=Plotter.COLORS[j],
                         zorder=2,
                     )
 
@@ -124,9 +127,10 @@ class Plot:
         fig.suptitle(title)
 
         fig.tight_layout()
-        if path is not None:
-            fig.savefig(f'{path}.png',
-                        format='png',
+        if out is not None:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(out,
+                        format=out.suffix[1:],
                         transparent=False,
-                        dpi=Plot.DPI)
+                        dpi=Plotter.DPI)
         plt.show()

@@ -3,6 +3,9 @@ __pycache__/
 .venv/
 .idea/
 
-__pycache_
-*.png
+images/
+output/
+
+__pycache_/
+
 *.pdf

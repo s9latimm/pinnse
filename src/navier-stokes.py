@@ -1,18 +1,27 @@
 import argparse
-import datetime
+import logging
+import sys
+from datetime import datetime
+from pathlib import Path
 
+import cpuinfo
 import numpy as np
+import psutil
 import scipy
 import tensorflow as tf
 from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from network import BaseNetwork
-from src.plot import Plot
+from src.plotter import Plotter
+from src.timer import CallbackTimer
 
 NU = 0.08
-ITER = 1000
-SAMPLE = .3
+ITER = 500
+SAMPLE = .1
 SEED = 42
+TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+DIR = Path('..') / 'output' / 'navier-stokes' / TIMESTAMP
 
 
 class NavierStokesData:
@@ -90,7 +99,6 @@ class NavierStokesData:
             set(tuple(x) for x in self.border)
         ])
         assert (len(self.train) == len(self.foam) - len(self.border))
-        print(len(self.train), len(np.unique(self.train, axis=0)))
 
         if sample is not None:
             self.border = np.vstack([
@@ -164,7 +172,7 @@ class NavierStokesNetwork(BaseNetwork):
         g = self.__density * (u * v_x +
                               v * v_y) + p_y - self.__viscosity * (v_xx + v_yy)
 
-        m = v_x - v_y
+        m = v_x + v_y
 
         return u, v, p, f, g, m
 
@@ -197,12 +205,6 @@ class NavierStokesNetwork(BaseNetwork):
 
 
 def main():
-    from tensorflow.python.client import device_lib
-
-    print(device_lib.list_local_devices())
-
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
     parser = argparse.ArgumentParser(prog='main')
     parser.add_argument(
         '--iter',
@@ -218,9 +220,23 @@ def main():
     )
     args = parser.parse_args()
 
+    # from tensorflow.python.client import device_lib
+    #
+    # logging.info(device_lib.list_local_devices())
+
+    logging.info(f'NU = {NU}')
+    logging.info(f'ITER = {ITER}')
+    logging.info(f'SAMPLE = {SAMPLE}')
+    logging.info(f'SEED = {SEED}')
+    logging.info(f'TIMESTAMP = {TIMESTAMP}')
+
+    logging.info(f'CPU: {cpuinfo.get_cpu_info()["brand_raw"]} ')
+    logging.info(f'LOGICAL: {psutil.cpu_count(logical=True)}')
+    logging.info(f'MEMORY: {psutil.virtual_memory().total}')
+
     data = NavierStokesData(args.sample)
 
-    Plot.heatmap(
+    Plotter.heatmap(
         'foam',
         data.grid[:, :, 0],
         data.grid[:, :, 1],
@@ -229,37 +245,40 @@ def main():
             ('v', data.v),
             ('p', data.p),
         ],
-        path='../images/navier-stokes_foam',
+        out=DIR / 'navier-stokes_foam.png',
     )
 
     pinn = NavierStokesNetwork(data)
 
     for v in pinn.trainable_variables:
-        print(v.name)
+        logging.info(f'{v.name} {v.shape}')
 
-    pbar = tqdm(total=args.iter, position=0, leave=True)
+    with tqdm(total=args.iter, position=0,
+              leave=True) as pbar, logging_redirect_tqdm():
+        with CallbackTimer(logging.info):
 
-    def callback(loss):
-        pbar.update(1)
+            def callback(loss):
+                pbar.update(1)
 
-    results = scipy.optimize.minimize(fun=pinn.optimize,
-                                      x0=pinn.get_weights().numpy(),
-                                      args=(),
-                                      method='L-BFGS-B',
-                                      jac=True,
-                                      callback=callback,
-                                      options={
-                                          'disp': None,
-                                          'maxcor': 200,
-                                          'ftol': 1 * np.finfo(float).eps,
-                                          'gtol': 5e-8,
-                                          'maxfun': args.iter * 10,
-                                          'maxiter': args.iter,
-                                          'iprint': -1,
-                                          'maxls': 50
-                                      })
-    pbar.close()
-    print(results)
+            results = scipy.optimize.minimize(
+                fun=pinn.optimize,
+                x0=pinn.get_weights().numpy(),
+                args=(),
+                method='L-BFGS-B',
+                jac=True,
+                callback=callback,
+                options={
+                    'disp': None,
+                    'maxcor': 200,
+                    'ftol': 1 * np.finfo(float).eps,
+                    'gtol': 5e-8,
+                    'maxfun': args.iter * 10,
+                    'maxiter': args.iter,
+                    'iprint': -1,
+                    'maxls': 50
+                })
+
+    logging.info(results)
     pinn.set_weights(results.x)
 
     u, v, p, f, g, m = pinn.evaluate(data.foam)
@@ -268,7 +287,7 @@ def main():
     v_pred = v.numpy().reshape(data.grid[:, :, 0].shape)
     p_pred = p.numpy().reshape(data.grid[:, :, 0].shape)
 
-    Plot.heatmap(
+    Plotter.heatmap(
         'pred',
         data.grid[:, :, 0],
         data.grid[:, :, 1],
@@ -281,10 +300,10 @@ def main():
             data.border[:, [0, 1]],
             # data.train[:, [0, 1]],
         ],
-        path=f'../images/navier-stokes_pred_{args.iter}',
+        out=DIR / f'navier-stokes_pred_{args.iter}.png',
     )
 
-    Plot.heatmap(
+    Plotter.heatmap(
         'diff',
         data.grid[:, :, 0],
         data.grid[:, :, 1],
@@ -297,10 +316,10 @@ def main():
             data.border[:, [0, 1]],
             # data.train[:, [0, 1]],
         ],
-        path=f'../images/navier-stokes_diff_{args.iter}',
+        out=DIR / f'navier-stokes_diff_{args.iter}.png',
     )
 
-    Plot.error(
+    Plotter.error(
         'error',
         [
             ('u', pinn.u_err),
@@ -309,11 +328,33 @@ def main():
             ('g', pinn.g_err),
             ('m', pinn.m_err),
         ],
-        path=f'../images/navier-stokes_err_{args.iter}',
+        out=DIR / f'navier-stokes_err_{args.iter}.png',
     )
 
 
-if __name__ == "__main__":
+class LogFilter(logging.Filter):
+
+    def __init__(self, level):
+        super().__init__()
+        self.__level = level
+
+    def filter(self, logRecord):
+        return logRecord.levelno == self.__level
+
+
+if __name__ == '__main__':
     tf.random.set_seed(SEED)
     np.random.seed(SEED)
-    main()
+    DIR.mkdir(parents=True, exist_ok=False)
+    tf.get_logger().setLevel('ERROR')
+    logging.basicConfig(format='%(message)s',
+                        handlers=[
+                            logging.FileHandler(DIR / 'log.txt', mode='w'),
+                            logging.StreamHandler(sys.stdout)
+                        ],
+                        encoding='utf-8',
+                        level=logging.INFO)
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

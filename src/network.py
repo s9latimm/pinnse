@@ -1,10 +1,7 @@
-import os
 from abc import abstractmethod
 
 import numpy as np
 import tensorflow as tf
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
 
 class BaseNetwork(tf.Module):
