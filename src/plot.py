@@ -7,7 +7,7 @@ from matplotlib.ticker import FuncFormatter
 
 
 class Plot:
-    COLORS = list(mcolors.TABLEAU_COLORS.keys())
+    COLORS = ['black'] + list(mcolors.TABLEAU_COLORS.keys())[1:]
 
     DPI = 96
 
@@ -20,8 +20,6 @@ class Plot:
 
         for i, d in enumerate(plots):
             l, y = d
-
-            # y = (y - np.min(y)) / (np.max(y) - np.min(y))
 
             ax.plot(np.arange(1,
                               len(y) + 1, 1),
@@ -46,12 +44,14 @@ class Plot:
         if path is not None:
             fig.savefig(f'{path}.png',
                         format='png',
-                        transparent=True,
+                        transparent=False,
                         dpi=Plot.DPI)
         plt.show()
 
     @staticmethod
-    def heatmap(title, x, y, plots, path=None):
+    def heatmap(title, x, y, plots, grids=None, path=None):
+        if grids is None:
+            grids = list()
         fig = plt.figure(figsize=(.8 * 2048 / Plot.DPI,
                                   3 * .2 * 2048 / Plot.DPI),
                          dpi=Plot.DPI)
@@ -65,26 +65,36 @@ class Plot:
                 slope = mcolors.TwoSlopeNorm(vmin=np.floor(z.min()),
                                              vcenter=0.,
                                              vmax=np.ceil(z.max()))
+                cmap = 'seismic'
             elif z.max() < 0:
-                slope = mcolors.TwoSlopeNorm(vmin=np.floor(z.min()),
-                                             vcenter=0.,
-                                             vmax=1)
+                slope = mcolors.Normalize(vmin=np.floor(z.min()), vmax=0)
+                cmap = 'Reds'
             else:
-                slope = mcolors.TwoSlopeNorm(vmin=-1,
-                                             vcenter=0.,
-                                             vmax=np.ceil(z.max()))
+                slope = mcolors.Normalize(vmin=0, vmax=np.ceil(z.max()))
+                cmap = 'Reds'
+
             img = ax.pcolormesh(
                 x,
                 y,
                 z,
-                cmap='bwr',
+                cmap=cmap,
                 # shading='gouraud',
                 norm=slope,
                 zorder=1,
             )
 
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
+            if grids is not None:
+                for j, grid in enumerate(grids):
+                    ax.scatter(
+                        grid[:, 0],
+                        grid[:, 1],
+                        marker='+',
+                        c=Plot.COLORS[j],
+                        zorder=2,
+                    )
+
+            ax.set_xlabel('')
+            ax.set_ylabel('')
 
             ax.set_title(l)
 
@@ -111,64 +121,6 @@ class Plot:
         if path is not None:
             fig.savefig(f'{path}.png',
                         format='png',
-                        transparent=True,
+                        transparent=False,
                         dpi=Plot.DPI)
-        plt.show()
-
-    @staticmethod
-    def arrows(title, x, y, dx, dy):
-        fig = plt.figure(figsize=(2048 / Plot.DPI, 2048 / Plot.DPI),
-                         dpi=Plot.DPI)
-        ax = fig.add_subplot()
-
-        ax.quiver(x, y, dx, dy)
-
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_title(title)
-
-        fig.tight_layout()
-        # fig.savefig(f'{title}.png', format='png', transparent=True, dpi=DPI)
-        plt.show()
-
-    @staticmethod
-    def scatter_3d(title, plots):
-
-        fig = plt.figure(figsize=(2048 / Plot.DPI * len(plots),
-                                  2048 / Plot.DPI),
-                         dpi=Plot.DPI)
-
-        for idx, plot in enumerate(plots):
-            label, data = plot
-
-            ax = fig.add_subplot(1,
-                                 len(plots),
-                                 idx + 1,
-                                 projection='3d',
-                                 computed_zorder=False)
-            ax.view_init(elev=45, azim=45, roll=0)
-
-            x, y, z = zip(*data)
-            x = np.asarray(x)
-            y = np.asarray(y)
-            z = np.asarray(z)
-            ax.scatter(x,
-                       y,
-                       z,
-                       marker='.',
-                       c=Plot.COLORS[idx],
-                       zorder=-idx,
-                       depthshade=False)
-
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
-            ax.set_zlabel(label)
-            ax.set_title(label)
-
-        fig.suptitle(title)
-        fig.tight_layout()
-        fig.savefig(f'{title}.png',
-                    format='png',
-                    transparent=False,
-                    dpi=Plot.DPI)
         plt.show()
