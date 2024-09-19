@@ -97,7 +97,7 @@ class Plotter:
                     ax.scatter(
                         grid[:, 0],
                         grid[:, 1],
-                        marker='+',
+                        marker='.',
                         c=Plotter.COLORS[j],
                         zorder=2,
                     )

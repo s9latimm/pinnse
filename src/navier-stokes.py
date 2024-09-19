@@ -17,8 +17,8 @@ from src.plotter import Plotter
 from src.timer import CallbackTimer
 
 NU = 0.08
-ITER = 500
-SAMPLE = .1
+ITER = 10000
+SAMPLE = 0.3
 SEED = 42
 TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 DIR = Path('..') / 'output' / 'navier-stokes' / TIMESTAMP
@@ -100,18 +100,10 @@ class NavierStokesData:
         ])
         assert (len(self.train) == len(self.foam) - len(self.border))
 
-        if sample is not None:
-            self.border = np.vstack([
-                self.border,
-                self.train[np.random.choice(len(self.train),
-                                            int(len(self.train) * sample),
-                                            replace=False), :],
-            ])
-            self.train = np.array([
-                x for x in set(tuple(x) for x in self.train) -
-                set(tuple(x) for x in self.border)
-            ])
-        assert (len(self.border) == len(np.unique(self.border, axis=0)))
+        if sample > 0:
+            self.train = self.train[np.random.choice(
+                len(self.train), int(len(self.train) *
+                                     sample), replace=False), :]
 
 
 class NavierStokesNetwork(BaseNetwork):
@@ -141,16 +133,10 @@ class NavierStokesNetwork(BaseNetwork):
             tape.watch(x)
             tape.watch(y)
 
-            psi = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
-            u = psi[:, 0:1]
-            v = psi[:, 1:2]
-            p = psi[:, 2:3]
-
-            # psi = psi_and_p[:, 0:1]
-            # p = psi_and_p[:, 1:2]
-            #
-            # u = tape.gradient(psi, y)
-            # v = -tape.gradient(psi, x)
+            r = self.forward(tf.stack([x[:, 0], y[:, 0]], axis=1))
+            u = r[:, 0:1]
+            v = r[:, 1:2]
+            p = r[:, 2:3]
 
             u_x = tape.gradient(u, x)
             u_xx = tape.gradient(u_x, x)
@@ -172,7 +158,7 @@ class NavierStokesNetwork(BaseNetwork):
         g = self.__density * (u * v_x +
                               v * v_y) + p_y - self.__viscosity * (v_xx + v_yy)
 
-        m = v_x + v_y
+        m = u_x + v_y
 
         return u, v, p, f, g, m
 
@@ -245,7 +231,7 @@ def main():
             ('v', data.v),
             ('p', data.p),
         ],
-        out=DIR / 'navier-stokes_foam.png',
+        out=DIR / 'foam.png',
     )
 
     pinn = NavierStokesNetwork(data)
@@ -296,11 +282,7 @@ def main():
             ('v', v_pred),
             ('p', p_pred),
         ],
-        grids=[
-            data.border[:, [0, 1]],
-            # data.train[:, [0, 1]],
-        ],
-        out=DIR / f'navier-stokes_pred_{args.iter}.png',
+        out=DIR / f'pred_{args.iter}.png',
     )
 
     Plotter.heatmap(
@@ -314,9 +296,9 @@ def main():
         ],
         grids=[
             data.border[:, [0, 1]],
-            # data.train[:, [0, 1]],
+            data.train[:, [0, 1]],
         ],
-        out=DIR / f'navier-stokes_diff_{args.iter}.png',
+        out=DIR / f'diff_{args.iter}.png',
     )
 
     Plotter.error(
@@ -328,7 +310,7 @@ def main():
             ('g', pinn.g_err),
             ('m', pinn.m_err),
         ],
-        out=DIR / f'navier-stokes_err_{args.iter}.png',
+        out=DIR / f'err_{args.iter}.png',
     )
 
 
