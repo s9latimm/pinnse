@@ -18,7 +18,7 @@ from src.timer import CallbackTimer
 
 NU = 0.08
 RHO = 1
-ITER = 1000
+ITER = 10000
 SAMPLE = 0
 SEED = 42
 TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -177,39 +177,23 @@ class NavierStokesNetwork(BaseNetwork):
 
         return u, v, p, f, g, m
 
-    def __loss_pde(self):
-        *_, f, g, m = self.evaluate(self.__data.train)
-
-        f_err = tf.reduce_sum(tf.square(f))
-        g_err = tf.reduce_sum(tf.square(g))
-        m_err = tf.reduce_sum(tf.square(m))
-
-        self.f_err.append(f_err.numpy())
-        self.g_err.append(g_err.numpy())
-        self.m_err.append(m_err.numpy())
-
-        return f_err + g_err + m_err
-
-    def __loss_border(self):
+    def loss(self):
         frames = [
             self.__data.border,
             self.__data.intake,
             self.__data.outtake,
+            self.__data.train,
         ]
 
         off = [0]
         for frame in frames:
             off.append(off[-1] + len(frame))
 
-        r = self.forward(np.vstack(frames)[:, [0, 1]])
-        u = r[:, 0]
-        v = -r[:, 1]
+        u, v, p, f, g, m = self.evaluate(np.vstack(frames))
 
         # border
-        u_err = tf.reduce_sum(
-            tf.square(self.__data.border[:, 2] - u[off[0]:off[1]]))
-        v_err = tf.reduce_sum(
-            tf.square(self.__data.border[:, 3] - v[off[0]:off[1]]))
+        u_err = tf.reduce_sum(tf.square(self.__data.border[:, 2] - u[:off[1]]))
+        v_err = tf.reduce_sum(tf.square(self.__data.border[:, 3] - v[:off[1]]))
 
         self.u_err.append(u_err.numpy())
         self.v_err.append(v_err.numpy())
@@ -220,10 +204,16 @@ class NavierStokesNetwork(BaseNetwork):
 
         self.t_err.append(t_err.numpy())
 
-        return u_err + v_err + t_err
+        # pde
+        f_err = tf.reduce_sum(tf.square(f[off[3]:]))
+        g_err = tf.reduce_sum(tf.square(g[off[3]:]))
+        m_err = tf.reduce_sum(tf.square(m[off[3]:]))
 
-    def loss(self):
-        return self.__loss_pde() + self.__loss_border()
+        self.f_err.append(f_err.numpy())
+        self.g_err.append(g_err.numpy())
+        self.m_err.append(m_err.numpy())
+
+        return u_err + v_err + t_err + f_err + g_err + m_err
 
 
 def main():
