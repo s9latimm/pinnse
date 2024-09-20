@@ -57,7 +57,7 @@ class Plotter:
                         format=out.suffix[1:],
                         transparent=False,
                         dpi=Plotter.DPI)
-        plt.show()
+        # plt.show()
 
     @staticmethod
     def heatmap(title: str, x, y, plots, grids=None, out: Path = None):
@@ -75,28 +75,28 @@ class Plotter:
             cmap = 'seismic'
 
             if z.min() < 0 < z.max():
-                slope = colors.TwoSlopeNorm(vmin=min(z.min(), -1),
+                slope = colors.TwoSlopeNorm(vmin=z.min(),
                                             vcenter=0,
-                                            vmax=max(z.max(), 1))
+                                            vmax=z.max())
                 # slope = colors.Normalize(vmin=min(z.min(), -1),
                 #                          vmax=max(z.max(), 1))
                 # m = max(-min(z.min(), -1), max(z.max(), 1))
                 # start = .5 - -min(z.min(), -1) / m * .5
                 # stop = .5 + max(z.max(), 1) / m * .5
-                # cmap = colors.LinearSegmentedColormap.from_list(
-                #     f'seismic_{i}',
-                #     plt.get_cmap(cmap)(np.linspace(start, stop, 100)))
+                cmap = colors.LinearSegmentedColormap.from_list(
+                    f'seismic_pos',
+                    plt.get_cmap(cmap)(np.linspace(0, 1., 100)))
 
             elif z.max() < 0:
-                slope = colors.Normalize(vmin=min(z.min(), -1), vmax=0)
+                slope = colors.Normalize(vmin=z.min(), vmax=0)
                 cmap = colors.LinearSegmentedColormap.from_list(
-                    f'seismic_{i}',
-                    plt.get_cmap(cmap)(np.linspace(0., .5, 100)))
+                    f'seismic_neg',
+                    plt.get_cmap(cmap)(np.linspace(0., .5, 50)))
             else:
-                slope = colors.Normalize(vmin=0, vmax=max(z.max(), 1))
+                slope = colors.Normalize(vmin=0, vmax=z.max())
                 cmap = colors.LinearSegmentedColormap.from_list(
-                    f'seismic_{i}',
-                    plt.get_cmap(cmap)(np.linspace(.5, 1., 100)))
+                    f'seismic_pos',
+                    plt.get_cmap(cmap)(np.linspace(.5, 1., 50)))
 
             img = ax.pcolormesh(
                 x,
@@ -132,14 +132,14 @@ class Plotter:
                                 orientation='vertical',
                                 fraction=0.046,
                                 pad=0.04,
-                                format=FuncFormatter(lambda x, pos: f'{x:.0f}'))
+                                format=FuncFormatter(lambda x, pos: f'{x:.1f}'))
 
             ticks = list()
             if z.min() < 0:
-                ticks.append(min(z.min(), -1))
+                ticks.append(z.min())
             ticks.append(0)
             if z.max() > 0:
-                ticks.append(max(z.max(), 1))
+                ticks.append(z.max())
             cbar.set_ticks(ticks)
 
         fig.suptitle(title)
@@ -151,4 +151,4 @@ class Plotter:
                         format=out.suffix[1:],
                         transparent=False,
                         dpi=Plotter.DPI)
-        plt.show()
+        # plt.show()

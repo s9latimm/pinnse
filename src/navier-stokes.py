@@ -191,7 +191,9 @@ class NavierStokesNetwork(BaseNetwork):
 
         # border
         u_err = tf.reduce_sum(tf.square(self.__data.border[:, 2] - u[:off[1]]))
-        v_err = tf.reduce_sum(tf.square(self.__data.border[:, 3] - v[:off[1]]))
+        v_err = tf.reduce_sum(
+            tf.square(self.__data.border[:, 3] - v[:off[1]])) + tf.reduce_sum(
+                tf.square(self.__data.outtake[:, 3] - v[off[2]:off[3]]))
 
         error.append(u_err)
         error.append(v_err)
@@ -323,7 +325,7 @@ def main():
                     ('s', pinn.error[1:, 3]),
                 ]),
             ],
-            out=DIR / f'err.png',
+            out=DIR / f'err.svg',
         )
 
     with tqdm(total=args.steps, position=0,
