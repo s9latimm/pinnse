@@ -18,7 +18,7 @@ from src.timer import CallbackTimer
 
 NU = 0.08
 RHO = 1
-ITER = 10000
+STEPS = 10000
 SAMPLE = 0
 SEED = 42
 TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -56,6 +56,7 @@ class NavierStokesData:
             np.zeros(20)[:, None],
             np.zeros(20)[:, None],
         ])
+
         self.outtake = np.hstack([
             self.grid[-1, 0:20, 0][:, None],
             self.grid[-1, 0:20, 1][:, None],
@@ -126,12 +127,7 @@ class NavierStokesData:
 class NavierStokesNetwork(BaseNetwork):
 
     def __init__(self, data: NavierStokesData):
-        self.u_err = []
-        self.v_err = []
-        self.f_err = []
-        self.g_err = []
-        self.m_err = []
-        self.t_err = []
+        self.error = np.zeros(7)
 
         self.__nu = NU
         self.__rho = RHO
@@ -178,7 +174,7 @@ class NavierStokesNetwork(BaseNetwork):
         return u, v, p, f, g, m
 
     def loss(self):
-        frames = [
+        stack = [
             self.__data.border,
             self.__data.intake,
             self.__data.outtake,
@@ -186,43 +182,53 @@ class NavierStokesNetwork(BaseNetwork):
         ]
 
         off = [0]
-        for frame in frames:
+        for frame in stack:
             off.append(off[-1] + len(frame))
 
-        u, v, p, f, g, m = self.evaluate(np.vstack(frames))
+        u, v, p, f, g, m = self.evaluate(np.vstack(stack))
+
+        error = []
 
         # border
         u_err = tf.reduce_sum(tf.square(self.__data.border[:, 2] - u[:off[1]]))
         v_err = tf.reduce_sum(tf.square(self.__data.border[:, 3] - v[:off[1]]))
 
-        self.u_err.append(u_err.numpy())
-        self.v_err.append(v_err.numpy())
+        error.append(u_err)
+        error.append(v_err)
 
         # transport
         t_err = tf.square(
             tf.reduce_sum(u[off[1]:off[2]]) - tf.reduce_sum(u[off[2]:off[3]]))
+        s_err = tf.reduce_sum(
+            tf.square(u[off[2]:off[3]] - u[off[2]:off[3]][::-1]))
 
-        self.t_err.append(t_err.numpy())
+        error.append(t_err)
+        error.append(s_err)
 
         # pde
         f_err = tf.reduce_sum(tf.square(f[off[3]:]))
         g_err = tf.reduce_sum(tf.square(g[off[3]:]))
         m_err = tf.reduce_sum(tf.square(m[off[3]:]))
 
-        self.f_err.append(f_err.numpy())
-        self.g_err.append(g_err.numpy())
-        self.m_err.append(m_err.numpy())
+        error.append(f_err)
+        error.append(g_err)
+        error.append(m_err)
 
-        return u_err + v_err + t_err + f_err + g_err + m_err
+        self.error = np.vstack([
+            self.error,
+            [e.numpy() for e in error],
+        ])
+
+        return tf.reduce_sum(error)
 
 
 def main():
     parser = argparse.ArgumentParser(prog='main')
     parser.add_argument(
-        '--iter',
+        '--steps',
         type=int,
-        metavar='<iter>',
-        default=ITER,
+        metavar='<steps>',
+        default=STEPS,
     )
     parser.add_argument(
         '--sample',
@@ -237,7 +243,7 @@ def main():
     # logging.info(device_lib.list_local_devices())
 
     logging.info(f'NU = {NU}')
-    logging.info(f'ITER = {ITER}')
+    logging.info(f'STEPS = {STEPS}')
     logging.info(f'SAMPLE = {SAMPLE}')
     logging.info(f'SEED = {SEED}')
     logging.info(f'TIMESTAMP = {TIMESTAMP}')
@@ -262,14 +268,73 @@ def main():
 
     pinn = NavierStokesNetwork(data)
 
-    for v in pinn.trainable_variables:
-        logging.info(f'{v.name} {v.shape}')
+    for variable in pinn.trainable_variables:
+        logging.info(f'{variable.name} {variable.shape}')
 
-    with tqdm(total=args.iter, position=0,
+    def render(step, final=False):
+        u, v, p, f, g, m = pinn.evaluate(data.foam)
+
+        u_pred = u.numpy().reshape(data.grid[:, :, 0].shape)
+        v_pred = -v.numpy().reshape(data.grid[:, :, 0].shape)
+        p_pred = p.numpy().reshape(data.grid[:, :, 0].shape)
+
+        Plotter.heatmap(
+            f'pred {step}',
+            data.grid[:, :, 0],
+            data.grid[:, :, 1],
+            [
+                ('u', u_pred),
+                ('v', v_pred),
+                ('p', p_pred),
+            ],
+            out=DIR / f'pred_{step}.png',
+        )
+
+        if final:
+            Plotter.heatmap(
+                f'diff {step}',
+                data.grid[:, :, 0],
+                data.grid[:, :, 1],
+                [
+                    ('u', np.abs(u_pred - data.u)),
+                    ('v', np.abs(v_pred - data.v)),
+                    ('p', np.abs(p_pred - data.p)),
+                ],
+                grids=[
+                    data.border[:, [0, 1]],
+                ],
+                out=DIR / f'diff_{step}.png',
+            )
+
+        Plotter.error(
+            'error',
+            [
+                ('border', [
+                    ('u', pinn.error[1:, 0]),
+                    ('v', pinn.error[1:, 1]),
+                ]),
+                ('PDE', [
+                    ('f', pinn.error[1:, 4]),
+                    ('g', pinn.error[1:, 5]),
+                    ('m', pinn.error[1:, 6]),
+                ]),
+                ('transport', [
+                    ('t', pinn.error[1:, 2]),
+                    ('s', pinn.error[1:, 3]),
+                ]),
+            ],
+            out=DIR / f'err.png',
+        )
+
+    with tqdm(total=args.steps, position=0,
               leave=True) as pbar, logging_redirect_tqdm():
         with CallbackTimer(logging.info):
 
-            def callback(loss):
+            losses = []
+
+            def callback(*_):
+                if pbar.n % 100 == 0:
+                    render(pbar.n)
                 pbar.update(1)
 
             results = scipy.optimize.minimize(
@@ -284,8 +349,8 @@ def main():
                     'maxcor': 200,
                     'ftol': 1 * np.finfo(float).eps,
                     'gtol': 5e-8,
-                    'maxfun': args.iter * 10,
-                    'maxiter': args.iter,
+                    'maxfun': args.steps * 10,
+                    'maxiter': args.steps,
                     'iprint': -1,
                     'maxls': 50
                 })
@@ -293,51 +358,7 @@ def main():
     logging.info(results)
     pinn.set_weights(results.x)
 
-    u, v, p, f, g, m = pinn.evaluate(data.foam)
-
-    u_pred = u.numpy().reshape(data.grid[:, :, 0].shape)
-    v_pred = v.numpy().reshape(data.grid[:, :, 0].shape)
-    p_pred = p.numpy().reshape(data.grid[:, :, 0].shape)
-
-    Plotter.heatmap(
-        'pred',
-        data.grid[:, :, 0],
-        data.grid[:, :, 1],
-        [
-            ('u', u_pred),
-            ('v', v_pred),
-            ('p', p_pred),
-        ],
-        out=DIR / f'pred_{args.iter}.png',
-    )
-
-    Plotter.heatmap(
-        'diff',
-        data.grid[:, :, 0],
-        data.grid[:, :, 1],
-        [
-            ('u', np.abs(u_pred - data.u)),
-            ('v', np.abs(v_pred - data.v)),
-            ('p', np.abs(p_pred - data.p)),
-        ],
-        grids=[
-            data.border[:, [0, 1]],
-        ],
-        out=DIR / f'diff_{args.iter}.png',
-    )
-
-    Plotter.error(
-        'error',
-        [
-            ('u', pinn.u_err),
-            ('v', pinn.v_err),
-            ('f', pinn.f_err),
-            ('g', pinn.g_err),
-            ('m', pinn.m_err),
-            ('l', pinn.t_err),
-        ],
-        out=DIR / f'err_{args.iter}.png',
-    )
+    render(args.steps, final=True)
 
 
 class LogFilter(logging.Filter):

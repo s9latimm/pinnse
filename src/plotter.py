@@ -15,32 +15,40 @@ class Plotter:
 
     @staticmethod
     def error(title: str, plots, out: Path = None):
-        fig = plt.figure(figsize=(1024 / Plotter.DPI, 512 / Plotter.DPI),
+        fig = plt.figure(figsize=(2048 / Plotter.DPI,
+                                  len(plots) * 512 / Plotter.DPI),
                          dpi=Plotter.DPI)
 
-        ax = fig.add_subplot()
+        for i, plot in enumerate(plots):
+            label, lines = plot
 
-        for i, d in enumerate(plots):
-            l, y = d
+            ax = fig.add_subplot(len(plots), 1, i + 1)
 
-            ax.plot(np.arange(1,
-                              len(y) + 1, 1),
-                    y,
-                    label=l,
-                    color=Plotter.COLORS[i])
+            for j, line in enumerate(lines):
+                l, y = line
 
-        ax.set_xlabel('iter')
-        ax.set_ylabel('err')
-        ax.set_title(title)
+                ax.plot(np.arange(1,
+                                  len(y) + 1, 1),
+                        y,
+                        label=l,
+                        color=Plotter.COLORS[j])
 
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+            ax.set_xlabel('iter')
+            ax.set_ylabel('err')
+            ax.set_title(label)
 
-        ax.set_yscale('log')
-        ax.set_xticks([1, len(plots[0][1])])
-        # ax.set_yticks([0., .5, 1])
+            ax.axhline(y=1, color='black', linestyle='--')
 
-        ax.legend(loc='upper right')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+
+            ax.set_yscale('log')
+            ax.set_xticks([1, len(lines[0][1])])
+            # ax.set_yticks([0., .5, 1])
+
+            ax.legend(loc='upper right')
+
+        fig.suptitle(title)
 
         fig.tight_layout()
         if out is not None:
@@ -55,8 +63,8 @@ class Plotter:
     def heatmap(title: str, x, y, plots, grids=None, out: Path = None):
         if grids is None:
             grids = list()
-        fig = plt.figure(figsize=(.8 * 2048 / Plotter.DPI,
-                                  3 * .2 * 2048 / Plotter.DPI),
+        fig = plt.figure(figsize=(2048 / Plotter.DPI,
+                                  len(plots) * 512 / Plotter.DPI),
                          dpi=Plotter.DPI)
 
         for i, plot in enumerate(plots):
@@ -67,14 +75,17 @@ class Plotter:
             cmap = 'seismic'
 
             if z.min() < 0 < z.max():
-                slope = colors.Normalize(vmin=min(z.min(), -1),
-                                         vmax=max(z.max(), 1))
-                m = max(-min(z.min(), -1), max(z.max(), 1))
-                start = .5 - -min(z.min(), -1) / m * .5
-                stop = .5 + max(z.max(), 1) / m * .5
-                cmap = colors.LinearSegmentedColormap.from_list(
-                    f'seismic_{i}',
-                    plt.get_cmap(cmap)(np.linspace(start, stop, 100)))
+                slope = colors.TwoSlopeNorm(vmin=min(z.min(), -1),
+                                            vcenter=0,
+                                            vmax=max(z.max(), 1))
+                # slope = colors.Normalize(vmin=min(z.min(), -1),
+                #                          vmax=max(z.max(), 1))
+                # m = max(-min(z.min(), -1), max(z.max(), 1))
+                # start = .5 - -min(z.min(), -1) / m * .5
+                # stop = .5 + max(z.max(), 1) / m * .5
+                # cmap = colors.LinearSegmentedColormap.from_list(
+                #     f'seismic_{i}',
+                #     plt.get_cmap(cmap)(np.linspace(start, stop, 100)))
 
             elif z.max() < 0:
                 slope = colors.Normalize(vmin=min(z.min(), -1), vmax=0)
