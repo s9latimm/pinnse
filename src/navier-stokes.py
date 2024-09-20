@@ -18,6 +18,7 @@ from src.timer import CallbackTimer
 
 NU = 0.08
 RHO = 1
+SHAPE = (100, 20)
 STEPS = 10000
 SAMPLE = 0
 SEED = 42
@@ -32,14 +33,14 @@ class NavierStokesData:
         from foam.pitzDaily.get_foam_results import get_foam
         u, v, p = get_foam()
 
-        def refine(x, step):
-            return x[::step].transpose()[::step].transpose()
+        self.u = u.transpose()
+        self.v = v.transpose()
+        self.p = p.transpose()
 
-        self.u = refine(u, 10).transpose()
-        self.v = refine(v, 10).transpose()
-        self.p = refine(p, 10).transpose()
+        width, height = SHAPE
+        half = int(height / 2)
 
-        self.grid = np.dstack(np.mgrid[0:80, 0:20])
+        self.grid = np.dstack(np.mgrid[0:width, 0:height])
 
         foam = np.hstack([
             self.grid[:, :, 0].flatten()[:, None],
@@ -50,49 +51,49 @@ class NavierStokesData:
         ])
 
         self.intake = np.hstack([
-            self.grid[0, 0:20, 0][:, None],
-            self.grid[0, 0:20, 1][:, None],
-            np.zeros(20)[:, None],
-            np.zeros(20)[:, None],
-            np.zeros(20)[:, None],
+            self.grid[0, 0:height, 0][:, None],
+            self.grid[0, 0:height, 1][:, None],
+            np.zeros(height)[:, None],
+            np.zeros(height)[:, None],
+            np.zeros(height)[:, None],
         ])
 
         self.outtake = np.hstack([
-            self.grid[-1, 0:20, 0][:, None],
-            self.grid[-1, 0:20, 1][:, None],
-            np.zeros(20)[:, None],
-            np.zeros(20)[:, None],
-            np.zeros(20)[:, None],
+            self.grid[-1, 0:height, 0][:, None],
+            self.grid[-1, 0:height, 1][:, None],
+            np.zeros(height)[:, None],
+            np.zeros(height)[:, None],
+            np.zeros(height)[:, None],
         ])
 
         border = np.vstack([
             np.hstack([
-                self.grid[0, 0:10, 0][:, None],
-                self.grid[0, 0:10, 1][:, None],
-                np.full(10, 10)[:, None],
-                np.zeros(10)[:, None],
-                np.zeros(10)[:, None],
+                self.grid[0, 0:half, 0][:, None],
+                self.grid[0, 0:half, 1][:, None],
+                np.full(half, 10)[:, None],
+                np.zeros(half)[:, None],
+                np.zeros(half)[:, None],
             ]),
             np.hstack([
-                self.grid[0, 10:20, 0][:, None],
-                self.grid[0, 10:20, 1][:, None],
-                np.zeros(10)[:, None],
-                np.zeros(10)[:, None],
-                np.zeros(10)[:, None],
+                self.grid[0, half:height, 0][:, None],
+                self.grid[0, half:height, 1][:, None],
+                np.zeros(half)[:, None],
+                np.zeros(half)[:, None],
+                np.zeros(half)[:, None],
             ]),
             np.hstack([
                 self.grid[1:, 0, 0][:, None],
                 self.grid[1:, 0, 1][:, None],
-                np.zeros(79)[:, None],
-                np.zeros(79)[:, None],
-                np.zeros(79)[:, None],
+                np.zeros(width - 1)[:, None],
+                np.zeros(width - 1)[:, None],
+                np.zeros(width - 1)[:, None],
             ]),
             np.hstack([
                 self.grid[1:, -1, 0][:, None],
                 self.grid[1:, -1, 1][:, None],
-                np.zeros(79)[:, None],
-                np.zeros(79)[:, None],
-                np.zeros(79)[:, None],
+                np.zeros(width - 1)[:, None],
+                np.zeros(width - 1)[:, None],
+                np.zeros(width - 1)[:, None],
             ]),
         ])
 
@@ -101,11 +102,11 @@ class NavierStokesData:
             border = np.vstack([
                 border,
                 np.hstack([
-                    self.grid[i, -10:-1, 0][:, None],
-                    self.grid[i, -10:-1, 1][:, None],
-                    np.zeros(9)[:, None],
-                    np.zeros(9)[:, None],
-                    np.zeros(9)[:, None],
+                    self.grid[i, -half:-1, 0][:, None],
+                    self.grid[i, -half:-1, 1][:, None],
+                    np.zeros(half - 1)[:, None],
+                    np.zeros(half - 1)[:, None],
+                    np.zeros(half - 1)[:, None],
                 ]),
             ])
 
@@ -113,8 +114,8 @@ class NavierStokesData:
         self.foam = np.unique(foam, axis=0)
 
         self.train = np.array([
-            x for x in set(tuple(x) for x in self.foam) -
-            set(tuple(x) for x in self.border)
+            i for i in set(tuple(i) for i in self.foam) -
+            set(tuple(i) for i in self.border)
         ])
         # assert (len(self.train) == len(self.foam) - len(self.border))
 
@@ -245,6 +246,8 @@ def main():
     # logging.info(device_lib.list_local_devices())
 
     logging.info(f'NU = {NU}')
+    logging.info(f'RHO = {RHO}')
+    logging.info(f'SHAPE = {SHAPE}')
     logging.info(f'STEPS = {STEPS}')
     logging.info(f'SAMPLE = {SAMPLE}')
     logging.info(f'SEED = {SEED}')
