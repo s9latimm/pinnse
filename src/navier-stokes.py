@@ -12,9 +12,10 @@ import tensorflow as tf
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
+from foam import get_foam
 from network import BaseNetwork
-from src.plotter import Plotter
-from src.timer import CallbackTimer
+from plotter import Plotter
+from timer import CallbackTimer
 
 NU = 0.08
 RHO = 1
@@ -23,14 +24,13 @@ STEPS = 10000
 SAMPLE = 0
 SEED = 42
 TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-DIR = Path('..') / 'output' / 'navier-stokes' / TIMESTAMP
+DIR = Path(__file__).parents[1] / 'output' / 'navier-stokes' / TIMESTAMP
 
 
 class NavierStokesData:
 
     def __init__(self, sample: float = None):
 
-        from foam.pitzDaily.get_foam_results import get_foam
         u, v, p = get_foam()
 
         self.u = u.transpose()
