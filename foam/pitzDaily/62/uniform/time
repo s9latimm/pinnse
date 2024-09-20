@@ -10,44 +10,21 @@ FoamFile
     version     2.0;
     format      ascii;
     arch        "LSB;label=32;scalar=64";
-    class       volScalarField;
-    location    "61";
-    object      epsilon;
+    class       dictionary;
+    location    "62/uniform";
+    object      time;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -3 0 0 0 0];
+value           62;
 
-internalField   uniform 14.855;
+name            "62";
 
-boundaryField
-{
-    inlet
-    {
-        type            fixedValue;
-        value           uniform 14.855;
-    }
-    outlet
-    {
-        type            zeroGradient;
-    }
-    upperWall
-    {
-        type            epsilonWallFunction;
-        blending        stepwise;
-        value           uniform 14.855;
-    }
-    lowerWall
-    {
-        type            epsilonWallFunction;
-        blending        stepwise;
-        value           uniform 14.855;
-    }
-    frontAndBack
-    {
-        type            empty;
-    }
-}
+index           62;
+
+deltaT          1;
+
+deltaT0         1;
 
 
 // ************************************************************************* //

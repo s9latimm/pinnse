@@ -11,20 +11,11 @@ FoamFile
     format      ascii;
     arch        "LSB;label=32;scalar=64";
     class       dictionary;
-    location    "61/uniform";
-    object      time;
+    location    "62/uniform/functionObjects";
+    object      functionObjectProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-value           61;
-
-name            "61";
-
-index           61;
-
-deltaT          1;
-
-deltaT0         1;
 
 
 // ************************************************************************* //

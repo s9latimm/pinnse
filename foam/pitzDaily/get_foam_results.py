@@ -143,7 +143,7 @@ def plot_single_map(array, cmap='viridis', colorbar=True, title="Array Image"):
     plt.axis('off')  # Turn off axis labels
     plt.show()
 
-def plot_stacked_images(arrays, figsize=(15, 3), cmap='bwr', colorbar=True, titles=None):
+def plot_stacked_images(arrays, figsize=(18, 3), cmap='bwr', colorbar=True, titles=None):
     """
     Plots multiple 2D numpy arrays as images stacked vertically.
     
@@ -232,14 +232,13 @@ def get_normalized_maps(iteration = 0):
     p_data = read_pressure_data(filename_p)
 
     # transform the data into 2D arrays
-    model = [(0,0,1,1),(1,1,8,2),(1,0,8,1)] # discribes, how the model is build, every block is a tupel
+    model = [(0,0,1,1),(1,1,10,2),(1,0,10,1)] # discribes, how the model is build, every block is a tupel
     scale = 10
     model = scale_model(model, scale)
-    print(model)
-    #max_xy = max([-np.min(ux_data), np.max(ux_data), -np.min(uy_data), np.max(uy_data)])
-    ux_map = convert_data_to_map(ux_data, model) #/ max_xy
-    uy_map = convert_data_to_map(uy_data, model)# / max_xy
-    p_map = convert_data_to_map(p_data, model) #/ max([-np.min(p_data), np.max(p_data)])
+    #print(model)
+    ux_map = convert_data_to_map(ux_data, model) 
+    uy_map = convert_data_to_map(uy_data, model) 
+    p_map = convert_data_to_map(p_data, model) 
 
     return ux_map, uy_map, p_map
 
@@ -247,4 +246,4 @@ if __name__ == "__main__":
     ux_map, uy_map, p_map = get_normalized_maps()
     u_map = np.sqrt(ux_map**2 + uy_map**2)
     # Plot results
-    plot_stacked_images([ux_map, uy_map, u_map, p_map], figsize=(8, 2), cmap='bwr', titles=['velocity X','velocity Y','velocity magnitude','pressure']) # plasma / bwr
+    plot_stacked_images([ux_map, uy_map, u_map, p_map], figsize=(9, 2), cmap='bwr', titles=['velocity X','velocity Y','velocity magnitude','pressure']) # plasma / bwr
