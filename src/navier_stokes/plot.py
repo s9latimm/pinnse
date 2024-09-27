@@ -115,8 +115,8 @@ def plot_history(n, geometry: NavierStokesGeometry, model: NavierStokesModel, id
                 ('f', model.history[1:, 0]),
                 ('g', model.history[1:, 1]),
             ]),
-            ('Mass', [
-                ('m', model.history[1:, 2]),
+            ('Sum', [
+                ('$\Sigma$', model.history[1:, 2]),
             ]),
         ],
         path=config.OUTPUT_DIR / identifier / f'err.pdf',

@@ -14,7 +14,7 @@ from src.navier_stokes.plot import plot_foam, plot_prediction, plot_diff, plot_h
 from src.utils.timer import Stopwatch
 
 
-def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bool, intake: float):
+def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bool, intake: float, save: bool):
     data = NavierStokesGeometry(args.nu, args.rho, intake)
 
     logging.info(f'NU:        {data.nu:.3E}')
@@ -32,9 +32,11 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
     logging.info(f'MEMORY:    {psutil.virtual_memory().total / (1024 ** 3):.2f} GB')
 
     if foam:
+        logging.info('PLOT: OPENFOAM')
         plot_foam(data, identifier)
 
     if plot:
+        logging.info('PLOT: GEOMETRY')
         plot_geometry(data, identifier)
 
     model = NavierStokesModel(data, device, n)
@@ -52,15 +54,19 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
                                 change = history[-1].mean() - history[-2].mean()
                                 logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():20.16f} {change:+20.16f}')
                             if plot and pbar.n % 1e3 == 0:
+                                logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, data, model, identifier)
                                 plot_history(pbar.n, data, model, identifier)
+                            if hires and pbar.n % 1e5 == 0:
+                                logging.info('PLOT: HIRES PREDICTION')
+                                plot_hires(pbar.n, data, model, identifier)
                         pbar.update(1)
 
                 logging.info(f'TRAINING: START {n}')
                 model.train(callback)
                 logging.info(f'TRAINING: END {pbar.n}')
 
-        if plot:
+        if save:
             model.save(config.OUTPUT_DIR / identifier / 'model.pt')
 
     model.eval()
@@ -132,6 +138,11 @@ if __name__ == '__main__':
         default=False,
     )
     parser.add_argument(
+        '--save',
+        action='store_true',
+        default=False,
+    )
+    parser.add_argument(
         '-f',
         '--foam',
         action='store_true',
@@ -154,7 +165,7 @@ if __name__ == '__main__':
                             encoding='utf-8',
                             level=logging.INFO)
     try:
-        main(args.train, args.plot, args.id, args.device, args.foam, args.hires, args.intake)
+        main(args.train, args.plot, args.id, args.device, args.foam, args.hires, args.intake, args.save)
         logging.info('EXIT: SUCCESS')
     except KeyboardInterrupt:
         logging.info('EXIT: ABORT')
