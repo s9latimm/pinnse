@@ -163,9 +163,9 @@ def plot_geometry(geometry: NavierStokesGeometry, identifier: str):
         x,
         y,
         [
-            ('u', geometry.intake[:, [0, 1, 2]]),
-            ('v', geometry.intake[:, [0, 1, 3]]),
-            ('p', geometry.intake[:, [0, 1, 4]]),
+            ('u', geometry.i_stack[:, [0, 1, 2]]),
+            ('v', geometry.i_stack[:, [0, 1, 3]]),
+            ('p', geometry.i_stack[:, [0, 1, 4]]),
         ],
         path=config.OUTPUT_DIR / identifier / 'model' / 'intake.pdf',
     )
@@ -175,10 +175,11 @@ def plot_geometry(geometry: NavierStokesGeometry, identifier: str):
         x,
         y,
         [
-            ('u', geometry.border[:, [0, 1, 2]]),
-            ('v', geometry.border[:, [0, 1, 3]]),
-            ('p', geometry.border[:, [0, 1, 4]]),
+            ('u', geometry.b_stack[:, [0, 1, 2]]),
+            ('v', geometry.b_stack[:, [0, 1, 3]]),
+            ('p', geometry.b_stack[:, [0, 1, 4]]),
         ],
+        grid=geometry.b_stack,
         path=config.OUTPUT_DIR / identifier / 'model' / 'border.pdf',
     )
 
@@ -187,9 +188,9 @@ def plot_geometry(geometry: NavierStokesGeometry, identifier: str):
         x,
         y,
         [
-            ('u', geometry.geometry[:, [0, 1, 2]]),
-            ('v', geometry.geometry[:, [0, 1, 3]]),
-            ('p', geometry.geometry[:, [0, 1, 4]]),
+            ('u', geometry.g_stack[:, [0, 1, 2]]),
+            ('v', geometry.g_stack[:, [0, 1, 3]]),
+            ('p', geometry.g_stack[:, [0, 1, 4]]),
         ],
         grid=geometry.t_stack,
         path=config.OUTPUT_DIR / identifier / 'model' / 'geometry.pdf',

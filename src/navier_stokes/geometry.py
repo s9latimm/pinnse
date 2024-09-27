@@ -78,35 +78,35 @@ class NavierStokesGeometry:
         ])
 
         self.intake = np.hstack([
-            self.o_grid[:2, o_h:-1, 0].flatten()[:, None],
-            self.o_grid[:2, o_h:-1, 1].flatten()[:, None],
-            np.full(o_h * 2, intake)[:, None],
-            np.full(o_h * 2, 0)[:, None],
-            np.full(o_h * 2, np.nan)[:, None],
+            self.o_grid[:2, o_h + 1:-2, 0].flatten()[:, None],
+            self.o_grid[:2, o_h + 1:-2, 1].flatten()[:, None],
+            np.full((o_h - 2) * 2, intake)[:, None],
+            np.full((o_h - 2) * 2, 0)[:, None],
+            np.full((o_h - 2) * 2, np.nan)[:, None],
         ])
 
-        self.border = np.vstack([
+        self.b_stack = np.vstack([
             self.intake,
             np.hstack([
-                self.o_grid[2:, :2, 0].flatten()[:, None],
-                self.o_grid[2:, :2, 1].flatten()[:, None],
-                np.zeros((o_x - 2) * 2)[:, None],
-                np.zeros((o_x - 2) * 2)[:, None],
-                np.full((o_x - 2) * 2, np.nan)[:, None],
+                self.o_grid[:, :2, 0].flatten()[:, None],
+                self.o_grid[:, :2, 1].flatten()[:, None],
+                np.zeros(o_x * 2)[:, None],
+                np.zeros(o_x * 2)[:, None],
+                np.full(o_x * 2, np.nan)[:, None],
             ]),
             np.hstack([
-                self.o_grid[2:, -2:, 0].flatten()[:, None],
-                self.o_grid[2:, -2:, 1].flatten()[:, None],
-                np.zeros((o_x - 2) * 2)[:, None],
-                np.zeros((o_x - 2) * 2)[:, None],
-                np.full((o_x - 2) * 2, np.nan)[:, None],
+                self.o_grid[:, -2:, 0].flatten()[:, None],
+                self.o_grid[:, -2:, 1].flatten()[:, None],
+                np.zeros(o_x * 2)[:, None],
+                np.zeros(o_x * 2)[:, None],
+                np.full(o_x * 2, np.nan)[:, None],
             ]),
         ])
 
         print(o_h)
 
-        self.border = np.vstack([
-            self.border,
+        self.b_stack = np.vstack([
+            self.b_stack,
             # np.hstack([
             #     self.o_grid[0, :o_h, 0][:, None],
             #     self.o_grid[0, :o_h, 1][:, None],
@@ -115,28 +115,28 @@ class NavierStokesGeometry:
             #     np.full(o_h, np.nan)[:, None],
             # ]),
             np.hstack([
-                self.o_grid[2:o_h + 1, :o_h + 1, 0].flatten()[:, None],
-                self.o_grid[2:o_h + 1, :o_h + 1, 1].flatten()[:, None],
-                np.zeros((o_h - 1) * (o_h + 1))[:, None],
-                np.zeros((o_h - 1) * (o_h + 1))[:, None],
-                np.full((o_h - 1) * (o_h + 1), np.nan)[:, None],
+                self.o_grid[1:o_h + 1, :o_h + 1, 0].flatten()[:, None],
+                self.o_grid[1:o_h + 1, :o_h + 1, 1].flatten()[:, None],
+                np.zeros(o_h * (o_h + 1))[:, None],
+                np.zeros(o_h * (o_h + 1))[:, None],
+                np.full(o_h * (o_h + 1), np.nan)[:, None],
             ]),
         ])
 
         self.exclude = np.vstack([
             np.hstack([
-                self.o_grid[:2, -1:, 0].flatten()[:, None],
-                self.o_grid[:2, -1:, 1].flatten()[:, None],
+                self.o_grid[:1, -2:, 0].flatten()[:, None],
+                self.o_grid[:1, -2:, 1].flatten()[:, None],
                 np.full(2, np.nan)[:, None],
                 np.full(2, np.nan)[:, None],
                 np.full(2, np.nan)[:, None],
             ]),
             np.hstack([
-                self.o_grid[:2, :o_h, 0].flatten()[:, None],
-                self.o_grid[:2, :o_h, 1].flatten()[:, None],
-                np.full(o_h * 2, np.nan)[:, None],
-                np.full(o_h * 2, np.nan)[:, None],
-                np.full(o_h * 2, np.nan)[:, None],
+                self.o_grid[:1, :o_h + 1, 0].flatten()[:, None],
+                self.o_grid[:1, :o_h + 1, 1].flatten()[:, None],
+                np.full(o_h + 1, np.nan)[:, None],
+                np.full(o_h + 1, np.nan)[:, None],
+                np.full(o_h + 1, np.nan)[:, None],
             ]),
             # np.hstack([
             #     self.o_grid[0, o_h - 1, 0].flatten()[:, None],
@@ -196,12 +196,14 @@ class NavierStokesGeometry:
             ]),
         ])
 
-        self.geometry = np.vstack([
+        self.g_stack = np.vstack([
             self.intake,
-            self.border,
+            self.b_stack,
         ])
 
         self.t_stack = self.__invert(self.o_stack, self.exclude)
+
+        self.b_stack = self.__invert(self.b_stack, self.__invert(self.o_stack, self.t_stack))
 
     @staticmethod
     def __invert(ctx, itm):

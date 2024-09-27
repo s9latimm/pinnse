@@ -52,7 +52,7 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
                         if pbar.n > 0:
                             if pbar.n % 1e2 == 0:
                                 change = history[-1].mean() - history[-2].mean()
-                                logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():20.16f} {change:+20.16f}')
+                                logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():20.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, data, model, identifier)
