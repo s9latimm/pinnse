@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torch import nn
 
 from src.model import SequentialModel
 from src.navier_stokes.geometry import NavierStokesGeometry
@@ -7,9 +8,9 @@ from src.navier_stokes.geometry import NavierStokesGeometry
 
 class NavierStokesModel(SequentialModel):
 
-    def __init__(self, geometry: NavierStokesGeometry, device, steps):
+    def __init__(self, geometry: NavierStokesGeometry, device, steps, supervised=False):
 
-        layers = [2, 20, 20, 20, 20, 20, 20, 2]
+        layers = [2, 20, 20, 20, 20, 20, 2]
 
         super().__init__(layers, device)
 
@@ -26,10 +27,13 @@ class NavierStokesModel(SequentialModel):
         self.__losses = np.asarray([np.zeros(5)])
 
         self.__null = torch.zeros(self.__geometry.t_stack.shape[0], 1, dtype=torch.float64, device=self.device)
-        self.__u_in = torch.tensor(self.__geometry.intake[:, [2]], dtype=torch.float64, device=self.device)
-        self.__v_in = torch.tensor(self.__geometry.intake[:, [3]], dtype=torch.float64, device=self.device)
-        self.__u_border = torch.tensor(self.__geometry.border[:, [2]], dtype=torch.float64, device=self.device)
-        self.__v_border = torch.tensor(self.__geometry.border[:, [3]], dtype=torch.float64, device=self.device)
+        self.__u = torch.tensor(self.__geometry.border[:, [2]], dtype=torch.float64, device=self.device)
+        self.__v = torch.tensor(self.__geometry.border[:, [3]], dtype=torch.float64, device=self.device)
+
+        if supervised:
+            self.nu = nn.Parameter(data=torch.Tensor(1), requires_grad=True)
+        else:
+            self.nu = self.__geometry.nu
 
     def train(self, callback):
 
@@ -40,20 +44,14 @@ class NavierStokesModel(SequentialModel):
         self._model.train()
         self.__optimizer.step(closure)
 
-    def __loss_pde(self, f, g, m):
+    def __loss_pde(self, f, g):
         f_loss = self._mse(f, self.__null)
         g_loss = self._mse(g, self.__null)
-        m_loss = self._mse(m, self.__null)
-        return f_loss, g_loss, m_loss
+        return f_loss, g_loss
 
     def __loss_brdr(self, u, v):
-        u_loss = self._mse(u, self.__u_border)
-        v_loss = self._mse(v, self.__v_border)
-        return u_loss, v_loss
-
-    def __loss_in(self, u, v):
-        u_loss = self._mse(u, self.__u_in)
-        v_loss = self._mse(v, self.__v_in)
+        u_loss = self._mse(u, self.__u)
+        v_loss = self._mse(v, self.__v)
         return u_loss, v_loss
 
     @property
@@ -66,32 +64,25 @@ class NavierStokesModel(SequentialModel):
         stack = [
             self.__geometry.t_stack,
             self.__geometry.border,
-            self.__geometry.intake,
         ]
 
-        stitches = [0]
-        for item in stack:
-            stitches.append(stitches[-1] + len(item))
+        split = len(stack[0])
 
-        u, v, _, f, g, m = self.predict(np.vstack(stack))
+        u, v, _, f, g, = self.predict(np.vstack(stack))
 
-        f_loss, g_loss, m_loss = self.__loss_pde(f[:stitches[1]], g[:stitches[1]], m[:stitches[1]])
-        u_brdr_loss, v_brdr_loss = self.__loss_brdr(u[stitches[1]:stitches[2]], v[stitches[1]:stitches[2]])
-        u_in_loss, v_in_loss = self.__loss_in(u[stitches[2]:stitches[3]], v[stitches[2]:stitches[3]])
+        f_loss, g_loss = self.__loss_pde(f[:split], g[:split])
+        u_loss, v_loss = self.__loss_brdr(u[split:], v[split:])
 
-        u_brdr_loss = u_brdr_loss + u_in_loss
-        v_brdr_loss = v_brdr_loss + v_in_loss
-
-        loss = f_loss + g_loss + m_loss + u_brdr_loss + v_brdr_loss
+        loss = 1. * (f_loss + g_loss) + 1.5 * (u_loss + v_loss)
 
         self.__losses = np.vstack([
             self.__losses,
             np.asarray([
                 f_loss.detach().cpu().numpy(),
                 g_loss.detach().cpu().numpy(),
-                m_loss.detach().cpu().numpy(),
-                u_brdr_loss.detach().cpu().numpy(),
-                v_brdr_loss.detach().cpu().numpy(),
+                u_loss.detach().cpu().numpy(),
+                v_loss.detach().cpu().numpy(),
+                loss.detach().cpu().numpy(),
             ]),
         ])
 
@@ -121,8 +112,7 @@ class NavierStokesModel(SequentialModel):
         p_x = torch.autograd.grad(p, x, grad_outputs=torch.ones_like(p), create_graph=True)[0]
         p_y = torch.autograd.grad(p, y, grad_outputs=torch.ones_like(p), create_graph=True)[0]
 
-        f = u * u_x + v * u_y + p_x - self.__geometry.nu * (u_xx + u_yy)
-        g = u * v_x + v * v_y + p_y - self.__geometry.nu * (v_xx + v_yy)
-        m = u_x + v_y
+        f = u * u_x + v * u_y + p_x - self.nu * (u_xx + u_yy)
+        g = u * v_x + v * v_y + p_y - self.nu * (v_xx + v_yy)
 
-        return u, v, p, f, g, m
+        return u, v, p, f, g
