@@ -10,7 +10,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 import src.navier_stokes.config as config
 from src.navier_stokes.geometry import NavierStokesGeometry
 from src.navier_stokes.model import NavierStokesModel
-from src.navier_stokes.plot import plot_foam, plot_geometry, plot_prediction, plot_diff, plot_hires, plot_history
+from src.navier_stokes.plot import plot_foam, plot_prediction, plot_diff, plot_hires, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
 
