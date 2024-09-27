@@ -25,7 +25,7 @@ class NavierStokesModel(SequentialModel):
                                              line_search_fn="strong_wolfe")
         self.__losses = np.asarray([np.zeros(5)])
 
-        self.__null = torch.zeros(self.__geometry.train.shape[0], 1, dtype=torch.float64, device=self.device)
+        self.__null = torch.zeros(self.__geometry.t_stack.shape[0], 1, dtype=torch.float64, device=self.device)
         self.__u_in = torch.tensor(self.__geometry.intake[:, [2]], dtype=torch.float64, device=self.device)
         self.__v_in = torch.tensor(self.__geometry.intake[:, [3]], dtype=torch.float64, device=self.device)
         self.__u_border = torch.tensor(self.__geometry.border[:, [2]], dtype=torch.float64, device=self.device)
@@ -64,7 +64,7 @@ class NavierStokesModel(SequentialModel):
         self.__optimizer.zero_grad()
 
         stack = [
-            self.__geometry.train,
+            self.__geometry.t_stack,
             self.__geometry.border,
             self.__geometry.intake,
         ]

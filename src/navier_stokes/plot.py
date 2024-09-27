@@ -7,7 +7,7 @@ from src.utils.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows,
 
 
 def plot_diff(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
-    x, y = geometry.grid[:, :, 0], geometry.grid[:, :, 1]
+    x, y = geometry.i_grid[:, :, 0], geometry.i_grid[:, :, 1]
     u, v, p, *_ = model.predict(geometry.all)
 
     u = u.detach().cpu().numpy().reshape(x.shape)
@@ -28,22 +28,19 @@ def plot_diff(n, geometry: NavierStokesGeometry, model: NavierStokesModel, ident
 
 
 def plot_hires(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
-    u, v, p, *_ = model.predict(
-        np.hstack([
-            geometry.mesh[:, :, 0].flatten()[:, None],
-            geometry.mesh[:, :, 1].flatten()[:, None],
-        ]))
+    x, y = geometry.h_grid[:, :, 0], geometry.h_grid[:, :, 1]
+    u, v, p, *_ = model.predict(geometry.h_stack)
 
-    u = u.detach().cpu().numpy().reshape(geometry.mesh[:, :, 0].shape)
-    v = v.detach().cpu().numpy().reshape(geometry.mesh[:, :, 0].shape)
-    p = p.detach().cpu().numpy().reshape(geometry.mesh[:, :, 0].shape)
+    u = u.detach().cpu().numpy().reshape(x.shape)
+    v = v.detach().cpu().numpy().reshape(x.shape)
+    p = p.detach().cpu().numpy().reshape(x.shape)
 
     p = p - p.min()
 
     plot_heatmaps(
         f'Prediction HiRes [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
-        geometry.mesh[:, :, 0],
-        geometry.mesh[:, :, 1],
+        x,
+        y,
         [
             ('u', u),
             ('v', v),
@@ -54,8 +51,8 @@ def plot_hires(n, geometry: NavierStokesGeometry, model: NavierStokesModel, iden
 
 
 def plot_prediction(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
-    x, y = geometry.grid[:, :, 0], geometry.grid[:, :, 1]
-    u, v, p, *_ = model.predict(geometry.all)
+    x, y = geometry.i_grid[:, :, 0], geometry.i_grid[:, :, 1]
+    u, v, p, *_ = model.predict(geometry.i_stack)
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -127,7 +124,7 @@ def plot_history(n, geometry: NavierStokesGeometry, model: NavierStokesModel, id
 
 
 def plot_foam(geometry: NavierStokesGeometry, identifier: str):
-    x, y = geometry.grid[:, :, 0], geometry.grid[:, :, 1]
+    x, y = geometry.i_grid[:, :, 0], geometry.i_grid[:, :, 1]
     plot_heatmaps(
         'OpenFOAM',
         x,
@@ -160,7 +157,7 @@ def plot_foam(geometry: NavierStokesGeometry, identifier: str):
 
 
 def plot_geometry(geometry: NavierStokesGeometry, identifier: str):
-    x, y = geometry.grid[:, :, 0], geometry.grid[:, :, 1]
+    x, y = geometry.o_grid[:, :, 0], geometry.o_grid[:, :, 1]
     plot_clouds(
         "Intake",
         x,
@@ -194,6 +191,6 @@ def plot_geometry(geometry: NavierStokesGeometry, identifier: str):
             ('v', geometry.geometry[:, [0, 1, 3]]),
             ('p', geometry.geometry[:, [0, 1, 4]]),
         ],
-        grid=geometry.train,
+        grid=geometry.t_stack,
         path=config.OUTPUT_DIR / identifier / 'model' / 'geometry.pdf',
     )

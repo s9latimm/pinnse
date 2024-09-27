@@ -173,8 +173,11 @@ def plot_clouds(title: str, x, y, clouds, grid=None, path: Path = None):
         mask = np.full(x.shape, .5)
         for c in cloud:
             if not np.isnan(c[2]):
-                plot[int(c[0] * 10)][int(c[1] * 10)] += c[2]
-                mask[int(c[0] * 10)][int(c[1] * 10)] = -1
+                for i in range(x.shape[0]):
+                    for j in range(x.shape[1]):
+                        if x[i][j] == c[0] and y[i][j] == c[1]:
+                            plot[i][j] += c[2]
+                            mask[i][j] = -1
         plots.append((label, plot))
         masks.append(mask)
 
