@@ -27,8 +27,8 @@ class NavierStokesModel(SequentialModel):
         self.__losses = np.asarray([np.zeros(5)])
 
         self.__null = torch.zeros(self.__geometry.t_stack.shape[0], 1, dtype=torch.float64, device=self.device)
-        self.__u = torch.tensor(self.__geometry.border[:, [2]], dtype=torch.float64, device=self.device)
-        self.__v = torch.tensor(self.__geometry.border[:, [3]], dtype=torch.float64, device=self.device)
+        self.__u = torch.tensor(self.__geometry.b_stack[:, [2]], dtype=torch.float64, device=self.device)
+        self.__v = torch.tensor(self.__geometry.b_stack[:, [3]], dtype=torch.float64, device=self.device)
 
         if supervised:
             self.nu = nn.Parameter(data=torch.Tensor(1), requires_grad=True)
@@ -63,7 +63,7 @@ class NavierStokesModel(SequentialModel):
 
         stack = [
             self.__geometry.t_stack,
-            self.__geometry.border,
+            self.__geometry.b_stack,
         ]
 
         split = len(stack[0])
@@ -73,7 +73,7 @@ class NavierStokesModel(SequentialModel):
         f_loss, g_loss = self.__loss_pde(f[:split], g[:split])
         u_loss, v_loss = self.__loss_brdr(u[split:], v[split:])
 
-        loss = 1. * (f_loss + g_loss) + 1.5 * (u_loss + v_loss)
+        loss = f_loss + g_loss + u_loss + v_loss
 
         self.__losses = np.vstack([
             self.__losses,
