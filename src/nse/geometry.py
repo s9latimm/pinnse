@@ -28,7 +28,7 @@ class NSEGeometry:
 
         return grid, cloud
 
-    def __init__(self, nu, rho, intake, foam):
+    def __init__(self, nu: float, rho: float, intake: float, foam: bool):
         self.nu = nu
         self.rho = rho
 

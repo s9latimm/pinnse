@@ -29,8 +29,8 @@ class NSEModel(SequentialModel):
                                              line_search_fn="strong_wolfe")
         self.__losses = np.asarray([np.zeros(5)])
 
-        pde = self.__geometry.pde_cloud.detach()
         rim = self.__geometry.rim_cloud.detach()
+        pde = self.__geometry.pde_cloud.detach()
 
         self.__null = torch.zeros(len(pde), 1, dtype=torch.float64, device=self.device)
         self.__u = torch.tensor([[i.u] for _, i in rim], dtype=torch.float64, device=self.device)
@@ -40,9 +40,11 @@ class NSEModel(SequentialModel):
         self.__pde = [i for i, _ in pde]
 
         if supervised:
-            self.nu = nn.Parameter(data=torch.tensor(1, dtype=torch.float64, device=self.device), requires_grad=True)
+            self.__nu = nn.Parameter(data=torch.tensor(1, dtype=torch.float64, device=self.device), requires_grad=True)
+            self.__rho = nn.Parameter(data=torch.tensor(1, dtype=torch.float64, device=self.device), requires_grad=True)
         else:
-            self.nu = self.__geometry.nu
+            self.__nu = self.__geometry.nu
+            self.__rho = self.__geometry.rho
 
     def train(self, callback):
 
@@ -79,7 +81,7 @@ class NSEModel(SequentialModel):
 
         self.__losses = np.vstack([
             self.__losses,
-            np.asarray([
+            np.array([
                 f_loss.detach().cpu().numpy(),
                 g_loss.detach().cpu().numpy(),
                 u_loss.detach().cpu().numpy(),
@@ -98,26 +100,22 @@ class NSEModel(SequentialModel):
         res = self._model(torch.hstack([x, y]))
         psi, p = res[:, 0:1], res[:, 1:2]
 
-        u = torch.autograd.grad(psi, y, grad_outputs=torch.ones_like(psi), create_graph=True)[0]
-        v = -1. * torch.autograd.grad(psi, x, grad_outputs=torch.ones_like(psi), create_graph=True)[0]
+        u = self.gradient(psi, y)
+        v = -self.gradient(psi, x)
 
         if not nse:
             return u, v, p
 
-        u_x = torch.autograd.grad(u, x, grad_outputs=torch.ones_like(u), create_graph=True)[0]
-        u_xx = torch.autograd.grad(u_x, x, grad_outputs=torch.ones_like(u_x), create_graph=True)[0]
-        u_y = torch.autograd.grad(u, y, grad_outputs=torch.ones_like(u), create_graph=True)[0]
-        u_yy = torch.autograd.grad(u_y, y, grad_outputs=torch.ones_like(u_y), create_graph=True)[0]
+        u_x, u_xx = self.derive(u, x)
+        u_y, u_yy = self.derive(u, y)
 
-        v_x = torch.autograd.grad(v, x, grad_outputs=torch.ones_like(v), create_graph=True)[0]
-        v_xx = torch.autograd.grad(v_x, x, grad_outputs=torch.ones_like(v_x), create_graph=True)[0]
-        v_y = torch.autograd.grad(v, y, grad_outputs=torch.ones_like(v), create_graph=True)[0]
-        v_yy = torch.autograd.grad(v_y, y, grad_outputs=torch.ones_like(v_y), create_graph=True)[0]
+        v_x, v_xx = self.derive(v, x)
+        v_y, v_yy = self.derive(v, y)
 
-        p_x = torch.autograd.grad(p, x, grad_outputs=torch.ones_like(p), create_graph=True)[0]
-        p_y = torch.autograd.grad(p, y, grad_outputs=torch.ones_like(p), create_graph=True)[0]
+        p_x = self.gradient(p, x)
+        p_y = self.gradient(p, y)
 
-        f = u * u_x + v * u_y + p_x - self.nu * (u_xx + u_yy)
-        g = u * v_x + v * v_y + p_y - self.nu * (v_xx + v_yy)
+        f = self.__rho * (u * u_x + v * u_y) + p_x - self.__nu * (u_xx + u_yy)
+        g = self.__rho * (u * v_x + v * v_y) + p_y - self.__nu * (v_xx + v_yy)
 
         return u, v, p, f, g
