@@ -22,7 +22,7 @@ def save_fig(fig, path: Path):
         fig.savefig(path, format=path.suffix[1:], transparent=False, dpi=DPI / SCALE)
 
 
-def plot_losses(title: str, plots, path: Path = None):
+def plot_losses(title: str, plots, path: Path = None, decoration=None):
     fig = plt.figure(figsize=(5 * SCALE, SCALE * len(plots)))
 
     for i, plot in enumerate(plots):
@@ -30,25 +30,29 @@ def plot_losses(title: str, plots, path: Path = None):
 
         ax = fig.add_subplot(len(plots), 1, i + 1)
 
+        m = np.infty
         for j, line in enumerate(lines):
             l, y = line
 
             ax.plot(np.arange(1, len(y) + 1, 1), y, label=l, color=COLORS[j])
+            ax.axhline(y=np.median(y), color=COLORS[j], linestyle='--')
+            m = min(m, y.min())
 
         ax.set_xlabel('iter')
         ax.set_ylabel('err')
         ax.set_title(label)
-
-        ax.axhline(y=1, color='black', linestyle='--')
 
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
         ax.set_yscale('log')
         ax.set_xticks([1, len(lines[0][1])])
-        # ax.set_yticks([0., .5, 1])
+        ax.set_yticks([10**np.floor(np.log10(m)), 10**np.ceil(np.log10(m))])
 
         ax.legend(loc='upper right')
+
+        if decoration is not None:
+            decoration(ax)
 
     fig.suptitle(title)
 
@@ -65,7 +69,7 @@ seismic_pos = colors.LinearSegmentedColormap.from_list('seismic_pos', plt.get_cm
 seismic_dis = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cmap('seismic')(np.linspace(.55, 1., 45)))
 
 
-def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = None):
+def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = None, decoration=None):
     fig = plt.figure(figsize=(5 * SCALE, len(plots) * SCALE))
 
     for i, plot in enumerate(plots):
@@ -75,11 +79,6 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
 
         if z.min() < 0 < z.max():
             slope = colors.TwoSlopeNorm(vmin=z.min(), vcenter=0, vmax=z.max())
-            # slope = colors.Normalize(vmin=min(z.min(), -1),
-            #                          vmax=max(z.max(), 1))
-            # m = max(-min(z.min(), -1), max(z.max(), 1))
-            # start = .5 - -min(z.min(), -1) / m * .5
-            # stop = .5 + max(z.max(), 1) / m * .5
             cmap = seismic
         elif z.min() == z.max():
             slope = colors.Normalize(vmin=z.min(), vmax=z.max())
@@ -136,9 +135,6 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
 
         ax.set_title(label)
 
-        # ax.hlines(10, xmin=0, xmax=9, colors='black', linestyles='dotted')
-        # ax.vlines(9, ymin=10, ymax=19, colors='black', linestyles='dotted')
-
         cbar = fig.colorbar(
             img,
             ax=ax,
@@ -156,6 +152,9 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
             ticks.append(z.max())
         cbar.set_ticks(ticks)
 
+        if decoration is not None:
+            decoration(ax)
+
     fig.suptitle(title)
 
     fig.tight_layout()
@@ -165,26 +164,27 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
     plt.close()
 
 
-def plot_clouds(title: str, x, y, clouds, grid=None, path: Path = None):
+def plot_clouds(title: str, x, y, cloud, labels=(), grid=None, path: Path = None, decoration=None):
     plots = []
     masks = []
-    for label, cloud in clouds:
+
+    for p, label, in enumerate(labels):
         plot = np.zeros(x.shape)
         mask = np.full(x.shape, .5)
-        for c in cloud:
-            if not np.isnan(c[2]):
+        for k, v in cloud:
+            if not np.isnan(v[p]):
                 for i in range(x.shape[0]):
                     for j in range(x.shape[1]):
-                        if x[i][j] == c[0] and y[i][j] == c[1]:
-                            plot[i][j] += c[2]
+                        if x[i][j] == k.x and y[i][j] == k.y:
+                            plot[i][j] += v[p]
                             mask[i][j] = -1
         plots.append((label, plot))
         masks.append(mask)
 
-    plot_heatmaps(title, x, y, plots, grid=grid, masks=masks, path=path)
+    plot_heatmaps(title, x, y, plots, grid=grid, masks=masks, path=path, decoration=decoration)
 
 
-def plot_streamlines(title: str, x, y, u, v, path: Path = None):
+def plot_streamlines(title: str, x, y, u, v, path: Path = None, decoration=None):
     fig = plt.figure(figsize=(5 * SCALE, SCALE))
 
     ax = fig.add_subplot()
@@ -194,38 +194,36 @@ def plot_streamlines(title: str, x, y, u, v, path: Path = None):
 
     ax.set_ylabel('y')
     ax.set_yticks([0, 1])
-
+    ax.pcolormesh(
+        x,
+        y,
+        np.zeros(x.shape, dtype=bool),
+        shading='nearest',
+        alpha=0.1,
+        cmap='binary',
+        zorder=1,
+        rasterized=True,
+        antialiased=True,
+    )
     speed = np.sqrt(np.square(u) + np.square(v))
-    speed = 1 + 5 * speed / speed.max()
+    speed = 1 + 4 * speed / speed.max()
 
     ax.streamplot(
         x.transpose(),
         y.transpose(),
         u.transpose(),
         v.transpose(),
-        broken_streamlines=False,
+        broken_streamlines=True,
         arrowsize=2,
         color=COLORS[0],
         density=.5,
         linewidth=speed.transpose(),
     )
 
-    mask = np.zeros(x.shape, dtype=bool)
-    mask[0:10, 10:20] = True
-
-    ax.pcolormesh(
-        x,
-        y,
-        ~mask,
-        shading='nearest',
-        alpha=0.1,
-        cmap='gray',
-        zorder=1,
-        rasterized=True,
-        antialiased=True,
-    )
-
     ax.set_title(title)
+
+    if decoration is not None:
+        decoration(ax)
 
     fig.tight_layout()
     save_fig(fig, path)
@@ -234,7 +232,7 @@ def plot_streamlines(title: str, x, y, u, v, path: Path = None):
     plt.close()
 
 
-def plot_arrows(title: str, x, y, u, v, path: Path = None):
+def plot_arrows(title: str, x, y, u, v, path: Path = None, decoration=None):
     fig = plt.figure(figsize=(5 * SCALE, SCALE))
 
     ax = fig.add_subplot()
@@ -245,16 +243,13 @@ def plot_arrows(title: str, x, y, u, v, path: Path = None):
     ax.set_ylabel('y')
     ax.set_yticks([0, 1])
 
-    mask = np.zeros(x.shape, dtype=bool)
-    mask[0:10, 10:20] = True
-
     ax.pcolormesh(
         x,
         y,
-        ~mask,
+        np.zeros(x.shape, dtype=bool),
         shading='nearest',
         alpha=0.1,
-        cmap='gray',
+        cmap='binary',
         zorder=1,
         rasterized=True,
         antialiased=True,
@@ -276,6 +271,9 @@ def plot_arrows(title: str, x, y, u, v, path: Path = None):
             )
 
     ax.set_title(title)
+
+    if decoration is not None:
+        decoration(ax)
 
     fig.tight_layout()
     save_fig(fig, path)

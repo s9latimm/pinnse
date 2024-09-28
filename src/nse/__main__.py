@@ -7,18 +7,18 @@ import psutil
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-import src.navier_stokes.config as config
-from src.navier_stokes.geometry import NavierStokesGeometry
-from src.navier_stokes.model import NavierStokesModel
-from src.navier_stokes.plot import plot_foam, plot_prediction, plot_diff, plot_hires, plot_history, plot_geometry
+import src.nse.config as config
+from src.nse.geometry import NSEGeometry
+from src.nse.model import NSEModel
+from src.nse.plot import plot_foam, plot_prediction, plot_hires, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
 
 def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bool, intake: float, save: bool):
-    data = NavierStokesGeometry(args.nu, args.rho, intake)
+    geometry = NSEGeometry(args.nu, args.rho, intake, foam)
 
-    logging.info(f'NU:        {data.nu:.3E}')
-    logging.info(f'RHO:       {data.rho:.3E}')
+    logging.info(f'NU:        {geometry.nu:.3E}')
+    logging.info(f'RHO:       {geometry.rho:.3E}')
     logging.info(f'INTAKE:    {intake:.3E}')
     logging.info(f'GRID:      {config.GRID}')
     logging.info(f'GEOMETRY:  {config.GEOMETRY}')
@@ -33,13 +33,13 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
 
     if foam:
         logging.info('PLOT: OPENFOAM')
-        plot_foam(data, identifier)
+        plot_foam(geometry, identifier)
 
     if plot:
         logging.info('PLOT: GEOMETRY')
-        plot_geometry(data, identifier)
+        plot_geometry(geometry, identifier)
 
-    model = NavierStokesModel(data, device, n)
+    model = NSEModel(geometry, device, n)
 
     logging.info(model)
 
@@ -55,11 +55,11 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
                                 logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():20.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: PREDICTION')
-                                plot_prediction(pbar.n, data, model, identifier)
-                                plot_history(pbar.n, data, model, identifier)
+                                plot_prediction(pbar.n, geometry, model, identifier)
+                                plot_history(pbar.n, geometry, model, identifier)
                             if hires and pbar.n % 1e5 == 0:
                                 logging.info('PLOT: HIRES PREDICTION')
-                                plot_hires(pbar.n, data, model, identifier)
+                                plot_hires(pbar.n, geometry, model, identifier)
                         pbar.update(1)
 
                 logging.info(f'TRAINING: START {n}')
@@ -73,16 +73,16 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
 
     if plot:
         logging.info('PLOT: PREDICTION')
-        plot_prediction(n, data, model, identifier)
-        plot_history(pbar.n, data, model, identifier)
+        plot_prediction(n, geometry, model, identifier)
+        plot_history(pbar.n, geometry, model, identifier)
 
     if hires:
         logging.info('PLOT: HIRES PREDICTION')
-        plot_hires(n, data, model, identifier)
+        plot_hires(n, geometry, model, identifier)
 
-    if foam:
-        logging.info('PLOT: DIFFERENCE')
-        plot_diff(n, data, model, identifier)
+    # if foam:
+    #     logging.info('PLOT: DIFFERENCE')
+    #     plot_diff(n, data, model, identifier)
 
 
 if __name__ == '__main__':
