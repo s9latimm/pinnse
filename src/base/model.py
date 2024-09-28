@@ -1,3 +1,4 @@
+import typing as tp
 from abc import abstractmethod
 from pathlib import Path
 
@@ -7,7 +8,17 @@ from torch import nn
 
 class SequentialModel:
 
-    def __init__(self, layers, device):
+    @staticmethod
+    def gradient(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        return torch.autograd.grad(f, x, grad_outputs=torch.ones_like(f), create_graph=True)[0]
+
+    @staticmethod
+    def derive(f: torch.Tensor, x: torch.Tensor) -> tp.Tuple[torch.Tensor, torch.Tensor]:
+        f_x = SequentialModel.gradient(f, x)
+        f_xx = SequentialModel.gradient(f_x, x)
+        return f_x, f_xx
+
+    def __init__(self, layers: tp.Sequence[int], device: str):
         self.device = torch.device(device)
 
         modules = [nn.Linear(layers[0], layers[1], bias=True, dtype=torch.float64)]
@@ -29,7 +40,7 @@ class SequentialModel:
 
         self._mse = nn.MSELoss()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._model)
 
     @property
@@ -38,7 +49,7 @@ class SequentialModel:
         ...
 
     @abstractmethod
-    def train(self, callback):
+    def train(self, callback) -> None:
         ...
 
     @abstractmethod
@@ -48,9 +59,9 @@ class SequentialModel:
     def eval(self):
         self._model.eval()
 
-    def save(self, path: Path):
+    def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(self._model.state_dict(), path)
 
-    def load(self, path: Path):
+    def load(self, path: Path) -> None:
         self._model.load_state_dict(torch.load(path))
