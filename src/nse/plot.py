@@ -19,7 +19,7 @@ def decoration_hires(ax):
 def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     grid = geometry.default_grid
     x, y = grid.x.numpy(), grid.y.numpy()
-    u, v, p = model.predict(grid.flatten())
+    u, v, p, *_ = model.predict(grid.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -42,7 +42,7 @@ def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
 def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     grid = geometry.hires_grid
     x, y = grid.x.numpy(), grid.y.numpy()
-    u, v, p = model.predict(grid.flatten())
+    u, v, p, *_ = model.predict(grid.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -67,7 +67,7 @@ def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
 def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     grid = geometry.default_grid
     x, y = grid.x.numpy(), grid.y.numpy()
-    u, v, p = model.predict(grid.flatten())
+    u, v, p, *_ = model.predict(grid.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)

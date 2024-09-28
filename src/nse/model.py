@@ -11,7 +11,7 @@ from src.nse.geometry import NSEGeometry
 
 class NSEModel(SequentialModel):
 
-    def __init__(self, geometry: NSEGeometry, device, steps, rim=False):
+    def __init__(self, geometry: NSEGeometry, device, steps, supervised=False):
 
         layers = [2, 20, 20, 20, 20, 20, 2]
 
@@ -39,8 +39,8 @@ class NSEModel(SequentialModel):
         self.__rim = [i for i, _ in rim]
         self.__pde = [i for i, _ in pde]
 
-        if rim:
-            self.nu = nn.Parameter(data=torch.Tensor(1), requires_grad=True)
+        if supervised:
+            self.nu = nn.Parameter(data=torch.tensor(1, dtype=torch.float64, device=self.device), requires_grad=True)
         else:
             self.nu = self.__geometry.nu
 
@@ -91,7 +91,7 @@ class NSEModel(SequentialModel):
         loss.backward()
         return loss
 
-    def predict(self, sample: tp.List[Coordinate], pde=False):
+    def predict(self, sample: tp.List[Coordinate], nse=False):
         x = torch.tensor([[i.x] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
         y = torch.tensor([[i.y] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
 
@@ -101,7 +101,7 @@ class NSEModel(SequentialModel):
         u = torch.autograd.grad(psi, y, grad_outputs=torch.ones_like(psi), create_graph=True)[0]
         v = -1. * torch.autograd.grad(psi, x, grad_outputs=torch.ones_like(psi), create_graph=True)[0]
 
-        if not pde:
+        if not nse:
             return u, v, p
 
         u_x = torch.autograd.grad(u, x, grad_outputs=torch.ones_like(u), create_graph=True)[0]
