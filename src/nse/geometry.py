@@ -61,9 +61,9 @@ class NSEGeometry:
         for c in self.rimmed_grid[1:-2, :2]:
             self.rim_cloud.add(c, u=0, v=0)
 
-        # # corner
-        # for c in self.rimmed_grid[1:step + 1, 2:step + 1]:
-        #     self.rim_cloud.add(c, u=0, v=0)
+        # corner
+        for c in self.rimmed_grid[1:step + 1, 2:step + 1]:
+            self.rim_cloud.add(c, u=0, v=0)
 
         # training
         for c in self.default_grid[:, :]:
