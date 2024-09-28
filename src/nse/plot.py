@@ -1,14 +1,25 @@
 import numpy as np
 
-import src.navier_stokes.config as config
-from src.navier_stokes.geometry import NavierStokesGeometry
-from src.navier_stokes.model import NavierStokesModel
-from src.utils.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
+import src.nse.config as config
+from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
+from src.nse.geometry import NSEGeometry
+from src.nse.model import NSEModel
 
 
-def plot_diff(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
-    x, y = geometry.i_grid[:, :, 0], geometry.i_grid[:, :, 1]
-    u, v, p, *_ = model.predict(geometry.all)
+def decoration(ax):
+    ax.hlines(y=.95, xmin=-.05, xmax=.95, colors='black', linestyles='dotted')
+    ax.vlines(x=.95, ymin=-.05, ymax=.95, colors='black', linestyles='dotted')
+
+
+def decoration_hires(ax):
+    ax.hlines(y=.995, xmin=-.005, xmax=.995, colors='black', linestyles='dotted')
+    ax.vlines(x=.995, ymin=-.005, ymax=.995, colors='black', linestyles='dotted')
+
+
+def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
+    grid = geometry.default_grid
+    x, y = grid.x.numpy(), grid.y.numpy()
+    u, v, p = model.predict(grid.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -24,12 +35,14 @@ def plot_diff(n, geometry: NavierStokesGeometry, model: NavierStokesModel, ident
             ('p', np.abs(p - geometry.p)),
         ],
         path=config.OUTPUT_DIR / identifier / f'diff_uvp.pdf',
+        decoration=decoration,
     )
 
 
-def plot_hires(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
-    x, y = geometry.h_grid[:, :, 0], geometry.h_grid[:, :, 1]
-    u, v, p, *_ = model.predict(geometry.h_stack)
+def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
+    grid = geometry.hires_grid
+    x, y = grid.x.numpy(), grid.y.numpy()
+    u, v, p = model.predict(grid.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -47,12 +60,14 @@ def plot_hires(n, geometry: NavierStokesGeometry, model: NavierStokesModel, iden
             ('p', p),
         ],
         path=config.OUTPUT_DIR / identifier / f'pred_uvp_hires.pdf',
+        decoration=decoration_hires,
     )
 
 
-def plot_prediction(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
-    x, y = geometry.i_grid[:, :, 0], geometry.i_grid[:, :, 1]
-    u, v, p, *_ = model.predict(geometry.i_stack)
+def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
+    grid = geometry.default_grid
+    x, y = grid.x.numpy(), grid.y.numpy()
+    u, v, p = model.predict(grid.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -70,6 +85,7 @@ def plot_prediction(n, geometry: NavierStokesGeometry, model: NavierStokesModel,
             ('p', p),
         ],
         path=config.OUTPUT_DIR / identifier / f'pred_uvp.pdf',
+        decoration=decoration,
     )
 
     plot_heatmaps(
@@ -82,6 +98,7 @@ def plot_prediction(n, geometry: NavierStokesGeometry, model: NavierStokesModel,
             ('p', p),
         ],
         path=config.OUTPUT_DIR / identifier / 'steps' / f'pred_uvp_{n}.pdf',
+        decoration=decoration,
     )
 
     plot_streamlines(
@@ -91,6 +108,7 @@ def plot_prediction(n, geometry: NavierStokesGeometry, model: NavierStokesModel,
         u,
         v,
         path=config.OUTPUT_DIR / identifier / 'steps' / f'pred_str_{n}.pdf',
+        decoration=decoration,
     )
 
     plot_arrows(
@@ -100,10 +118,11 @@ def plot_prediction(n, geometry: NavierStokesGeometry, model: NavierStokesModel,
         u,
         v,
         path=config.OUTPUT_DIR / identifier / 'steps' / f'pred_arr_{n}.pdf',
+        decoration=decoration,
     )
 
 
-def plot_history(n, geometry: NavierStokesGeometry, model: NavierStokesModel, identifier: str):
+def plot_history(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     plot_losses(
         f'Loss [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
         [
@@ -123,75 +142,59 @@ def plot_history(n, geometry: NavierStokesGeometry, model: NavierStokesModel, id
     )
 
 
-def plot_foam(geometry: NavierStokesGeometry, identifier: str):
-    x, y = geometry.i_grid[:, :, 0], geometry.i_grid[:, :, 1]
+def plot_foam(geometry: NSEGeometry, identifier: str):
+    grid = geometry.foam_grid
+    x, y = grid.x.numpy(), grid.y.numpy()
+
+    data = grid.transform(lambda i: geometry.foam_cloud[i])
+    u, v, p = data.u.numpy(), data.v.numpy(), data.p.numpy()
+
     plot_heatmaps(
         'OpenFOAM',
         x,
         y,
         [
-            ('u', geometry.u),
-            ('v', geometry.v),
-            ('p', geometry.p - geometry.p.min()),
+            ('u', u),
+            ('v', v),
+            ('p', p - p.min()),
         ],
         path=config.OUTPUT_DIR / identifier / 'foam' / 'foam_uvp.pdf',
+        decoration=decoration,
     )
 
     plot_streamlines(
         'OpenFOAM Streamlines',
         x,
         y,
-        geometry.u.reshape(x.shape),
-        geometry.v.reshape(x.shape),
+        u,
+        v,
         path=config.OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
+        decoration=decoration,
     )
 
     plot_arrows(
         'OpenFOAM Arrows',
         x,
         y,
-        geometry.u.reshape(x.shape),
-        geometry.v.reshape(x.shape),
+        u,
+        v,
         path=config.OUTPUT_DIR / identifier / 'foam' / f'foam_arr.pdf',
+        decoration=decoration,
     )
 
 
-def plot_geometry(geometry: NavierStokesGeometry, identifier: str):
-    x, y = geometry.o_grid[:, :, 0], geometry.o_grid[:, :, 1]
-    plot_clouds(
-        "Intake",
-        x,
-        y,
-        [
-            ('u', geometry.i_stack[:, [0, 1, 2]]),
-            ('v', geometry.i_stack[:, [0, 1, 3]]),
-            ('p', geometry.i_stack[:, [0, 1, 4]]),
-        ],
-        path=config.OUTPUT_DIR / identifier / 'model' / 'intake.pdf',
-    )
+def plot_geometry(geometry: NSEGeometry, identifier: str):
 
-    plot_clouds(
-        "Border",
-        x,
-        y,
-        [
-            ('u', geometry.b_stack[:, [0, 1, 2]]),
-            ('v', geometry.b_stack[:, [0, 1, 3]]),
-            ('p', geometry.b_stack[:, [0, 1, 4]]),
-        ],
-        grid=geometry.b_stack,
-        path=config.OUTPUT_DIR / identifier / 'model' / 'border.pdf',
-    )
+    grid = geometry.rimmed_grid
+    x, y = grid.x.numpy(), grid.y.numpy()
 
     plot_clouds(
         "Geometry",
         x,
         y,
-        [
-            ('u', geometry.g_stack[:, [0, 1, 2]]),
-            ('v', geometry.g_stack[:, [0, 1, 3]]),
-            ('p', geometry.g_stack[:, [0, 1, 4]]),
-        ],
-        grid=geometry.t_stack,
+        geometry.rim_cloud,
+        ['u', 'v', 'p'],
+        grid=geometry.pde_cloud.numpy(),
         path=config.OUTPUT_DIR / identifier / 'model' / 'geometry.pdf',
+        decoration=decoration,
     )
