@@ -91,10 +91,6 @@ class NSECloud:
     def __str__(self) -> str:
         return self.__repr__()
 
-    @property
-    def keys(self) -> tp.Set[Coordinate]:
-        return set(self.__cloud.keys())
-
     def add(self, key: tp.Tuple | Coordinate, **kwargs):
         k = Coordinate(*key)
         if k in self.__cloud:

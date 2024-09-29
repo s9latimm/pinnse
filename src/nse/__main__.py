@@ -14,8 +14,18 @@ from src.nse.plot import plot_foam, plot_prediction, plot_hires, plot_history, p
 from src.utils.timer import Stopwatch
 
 
-def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bool, intake: float, save: bool):
-    geometry = NSEGeometry(args.nu, args.rho, intake, foam)
+def main(
+    n: int,
+    plot: bool,
+    identifier: str,
+    device: str,
+    foam: bool,
+    hires: bool,
+    intake: float,
+    save: bool,
+    supervised: bool,
+):
+    geometry = NSEGeometry(args.nu, args.rho, intake, foam, supervised)
 
     logging.info(f'NU:        {geometry.nu:.3E}')
     logging.info(f'RHO:       {geometry.rho:.3E}')
@@ -39,9 +49,10 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
         logging.info('PLOT: GEOMETRY')
         plot_geometry(geometry, identifier)
 
-    model = NSEModel(geometry, device, n)
+    model = NSEModel(geometry, device, n, supervised)
 
     logging.info(model)
+    logging.info(f'PARAMETERS: {len(model)}')
 
     if n > 0:
         with Stopwatch(lambda t: logging.info(f'TIME: {t}')):
@@ -56,8 +67,9 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, geometry, model, identifier)
+                                logging.info('PLOT: LOSS')
                                 plot_history(pbar.n, geometry, model, identifier)
-                            if hires and pbar.n % 1e5 == 0:
+                            if hires and pbar.n % 1e4 == 0:
                                 logging.info('PLOT: HIRES PREDICTION')
                                 plot_hires(pbar.n, geometry, model, identifier)
                         pbar.update(1)
@@ -74,11 +86,15 @@ def main(n: int, plot: bool, identifier: str, device: str, foam: bool, hires: bo
     if plot:
         logging.info('PLOT: PREDICTION')
         plot_prediction(n, geometry, model, identifier)
+        logging.info('PLOT: LOSS')
         plot_history(pbar.n, geometry, model, identifier)
 
     if hires:
         logging.info('PLOT: HIRES PREDICTION')
         plot_hires(n, geometry, model, identifier)
+
+    if supervised:
+        logging.info(f'NU: {model.nu}')
 
     # if foam:
     #     logging.info('PLOT: DIFFERENCE')
@@ -143,6 +159,11 @@ if __name__ == '__main__':
         default=False,
     )
     parser.add_argument(
+        '--supervised',
+        action='store_true',
+        default=False,
+    )
+    parser.add_argument(
         '-f',
         '--foam',
         action='store_true',
@@ -165,7 +186,17 @@ if __name__ == '__main__':
                             encoding='utf-8',
                             level=logging.INFO)
     try:
-        main(args.train, args.plot, args.id, args.device, args.foam, args.hires, args.intake, args.save)
+        main(
+            args.train,
+            args.plot,
+            args.id,
+            args.device,
+            args.foam,
+            args.hires,
+            args.intake,
+            args.save,
+            args.supervised,
+        )
         logging.info('EXIT: SUCCESS')
     except KeyboardInterrupt:
         logging.info('EXIT: ABORT')

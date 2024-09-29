@@ -28,12 +28,9 @@ class NSEGeometry:
 
         return grid, cloud
 
-    def __init__(self, nu: float, rho: float, intake: float, foam: bool):
+    def __init__(self, nu: float, rho: float, intake: float, foam: bool = False, supervised: bool = False):
         self.nu = nu
         self.rho = rho
-
-        if foam:
-            self.foam_grid, self.foam_cloud = self.init_foam()
 
         dim_x, dim_y = config.GEOMETRY
         num_x, num_y = config.GRID
@@ -48,6 +45,9 @@ class NSEGeometry:
         self.rim_cloud = NSECloud()
 
         step = int(np.floor(self.rimmed_grid.height / 2))
+
+        if foam or supervised:
+            self.foam_grid, self.foam_cloud = self.init_foam()
 
         # intake
         for c in self.rimmed_grid[:2, step + 1:-2]:
@@ -69,3 +69,9 @@ class NSEGeometry:
         for c in self.default_grid[:, :]:
             if c not in self.rim_cloud:
                 self.pde_cloud.add(c)
+
+        if supervised:
+            self.rim_cloud = NSECloud()
+            for k, _ in self.pde_cloud:
+                v = self.foam_cloud[k]
+                self.rim_cloud.add(k, u=v.u, v=v.v)

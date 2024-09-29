@@ -21,12 +21,11 @@ class SequentialModel:
     def __init__(self, layers: tp.Sequence[int], device: str):
         self.device = torch.device(device)
 
-        modules = [nn.Linear(layers[0], layers[1], bias=True, dtype=torch.float64)]
+        self._model = nn.Sequential()
+        self._model.append(nn.Linear(layers[0], layers[1], bias=True, dtype=torch.float64))
         for i in range(1, len(layers) - 1):
-            modules.append(nn.Tanh())
-            modules.append(nn.Linear(layers[i], layers[i + 1], bias=True, dtype=torch.float64))
-
-        self._model = nn.Sequential(*modules)
+            self._model.append(nn.Tanh())
+            self._model.append(nn.Linear(layers[i], layers[i + 1], bias=True, dtype=torch.float64))
 
         def init_weights(m):
             if isinstance(m, nn.Linear):
