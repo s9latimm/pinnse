@@ -101,76 +101,103 @@ def main(
     #     plot_diff(n, data, model, identifier)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='main')
-    parser.add_argument(
-        '-n',
-        '--train',
-        type=int,
-        metavar='<train>',
-        default=config.DEFAULT_STEPS,
-    )
-    parser.add_argument(
-        '--device',
-        type=str,
-        metavar='<device>',
-        default='cpu',
-    )
-    parser.add_argument(
-        '--nu',
-        type=float,
-        metavar='<nu>',
-        default=config.DEFAULT_NU,
-    )
-    parser.add_argument(
-        '--rho',
-        type=float,
-        metavar='<rho>',
-        default=config.DEFAULT_RHO,
-    )
-    parser.add_argument(
-        '--id',
-        type=str,
-        metavar='<id>',
-        default=config.TIMESTAMP,
-    )
-    parser.add_argument(
+def parse_cmd():
+    parser = argparse.ArgumentParser(prog='nse')
+
+    initialization = parser.add_argument_group('initialization')
+    initialization.add_argument(
         '-i',
         '--intake',
         type=float,
         metavar='<intake>',
         default=1.,
+        help='set intake [m/s]',
     )
-    parser.add_argument(
-        '-p',
-        '--plot',
-        action='store_true',
-        default=False,
+    initialization.add_argument(
+        '--nu',
+        type=float,
+        metavar='<nu>',
+        default=config.DEFAULT_NU,
+        help='set viscosity [m^2/s]',
     )
-    parser.add_argument(
-        '-r',
-        '--hires',
-        action='store_true',
-        default=False,
+    initialization.add_argument(
+        '--rho',
+        type=float,
+        metavar='<rho>',
+        default=config.DEFAULT_RHO,
+        help='set density [kg/m^2]',
     )
-    parser.add_argument(
-        '--save',
-        action='store_true',
-        default=False,
+
+    optimization = parser.add_argument_group('optimization')
+    optimization.add_argument(
+        '--id',
+        type=str,
+        metavar='<id>',
+        default=config.TIMESTAMP,
+        help='identifier / prefix for output directory',
     )
-    parser.add_argument(
-        '--supervised',
-        action='store_true',
-        default=False,
+    optimization.add_argument(
+        '-n',
+        '--train',
+        type=int,
+        metavar='<train>',
+        default=config.DEFAULT_STEPS,
+        help='number of optimization steps',
     )
-    parser.add_argument(
+    optimization.add_argument(
+        '-d',
+        '--device',
+        type=str,
+        choices=['cpu', 'cuda'],
+        default='cpu',
+        help='device used for training',
+    )
+    optimization.add_argument(
         '-f',
         '--foam',
         action='store_true',
         default=False,
+        help='load OpenFOAM',
     )
+    optimization.add_argument(
+        '--supervised',
+        action='store_true',
+        default=False,
+        help='set training method to supervised approach (requires OpenFOAM)',
+    )
+
+    output = parser.add_argument_group('output')
+    output.add_argument(
+        '-p',
+        '--plot',
+        action='store_true',
+        default=False,
+        help='plot NSE in output directory',
+    )
+    output.add_argument(
+        '-r',
+        '--hires',
+        action='store_true',
+        default=False,
+        help='plot NSE with high resolution grid in output directory',
+    )
+    output.add_argument(
+        '--save',
+        action='store_true',
+        default=False,
+        help='store model parameters in output directory',
+    )
+
     args = parser.parse_args()
 
+    if args.supervised and not args.foam:
+        parser.error('the following arguments are required: --foam')
+
+    return args
+
+
+if __name__ == '__main__':
+    args = parse_cmd()
     if args.plot:
         (config.OUTPUT_DIR / args.id).mkdir(parents=True, exist_ok=args.id != config.TIMESTAMP)
         logging.basicConfig(format='%(message)s',
