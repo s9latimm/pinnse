@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as tp
+import typing as t
 
 import numpy as np
 
@@ -17,7 +17,7 @@ class NSEFact:
     def __getitem__(self, key) -> float:
         return [self.u, self.v, self.p][key]
 
-    def __iter__(self) -> tp.Iterator[float]:
+    def __iter__(self) -> t.Iterator[float]:
         return iter((self.u, self.v, self.p))
 
     def __repr__(self) -> str:
@@ -65,15 +65,15 @@ class NSEFact:
 class NSECloud:
 
     def __init__(self, grid: Grid = None) -> None:
-        self.__cloud: tp.Dict[Coordinate, NSEFact] = dict()
+        self.__cloud: t.Dict[Coordinate, NSEFact] = dict()
         if grid is not None:
             for k in grid:
                 self.__cloud[k] = NSEFact()
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         return key in self.__cloud.keys()
 
-    def __getitem__(self, key: tp.Tuple | Coordinate) -> NSEFact:
+    def __getitem__(self, key: t.Tuple | Coordinate) -> NSEFact:
         k = Coordinate(*key)
         if k not in self.__cloud:
             raise KeyError(k)
@@ -82,7 +82,7 @@ class NSECloud:
     def __iter__(self):
         return iter(self.__cloud.items())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__cloud)
 
     def __repr__(self) -> str:
@@ -91,7 +91,7 @@ class NSECloud:
     def __str__(self) -> str:
         return self.__repr__()
 
-    def add(self, key: tp.Tuple | Coordinate, **kwargs):
+    def add(self, key: t.Tuple | Coordinate, **kwargs) -> NSEFact:
         k = Coordinate(*key)
         if k in self.__cloud:
             raise KeyError(k)
@@ -103,7 +103,7 @@ class NSECloud:
         cloud.__cloud = dict(self.__cloud)
         return cloud
 
-    def detach(self):
+    def detach(self) -> t.List[t.Tuple[Coordinate, NSEFact]]:
         return list(self.__cloud.copy().items())
 
     def numpy(self) -> np.ndarray:

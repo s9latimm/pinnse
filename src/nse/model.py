@@ -1,4 +1,4 @@
-import typing as tp
+import typing as t
 
 import numpy as np
 import torch
@@ -11,11 +11,11 @@ from src.nse.geometry import NSEGeometry
 
 class NSEModel(SequentialModel):
 
-    def __init__(self, geometry: NSEGeometry, device, steps, supervised):
+    def __init__(self, geometry: NSEGeometry, device, steps, supervised) -> None:
 
         # TODO normal grid
 
-        layers = [2, 40, 40, 40, 40, 40, 40, 2]
+        layers = [2, 50, 50, 50, 50, 50, 2]
 
         super().__init__(layers, device)
 
@@ -47,14 +47,14 @@ class NSEModel(SequentialModel):
                                              line_search_fn="strong_wolfe")
         self.__losses = np.asarray([np.zeros(5)])
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum(p.numel() for p in self._model.parameters() if p.requires_grad)
 
     @property
-    def nu(self):
+    def nu(self) -> float:
         return self.__nu.detach().cpu()
 
-    def train(self, callback):
+    def train(self, callback) -> None:
 
         def closure():
             callback(self.history)
@@ -63,14 +63,13 @@ class NSEModel(SequentialModel):
         self._model.train()
         self.__optimizer.step(closure)
 
-    def __loss_pde(self):
-        *_, f, g, m = self.predict(self.__pde, True)
+    def __loss_pde(self) -> t.Tuple[torch.Tensor, torch.Tensor]:
+        *_, f, g = self.predict(self.__pde, True)
         f_loss = self._mse(f, self.__null)
         g_loss = self._mse(g, self.__null)
-        m_loss = self._mse(m, self.__null)
-        return f_loss, g_loss, m_loss
+        return f_loss, g_loss
 
-    def __loss_rim(self):
+    def __loss_rim(self) -> t.Tuple[torch.Tensor, torch.Tensor]:
         u, v, *_ = self.predict(self.__rim)
         u_loss = self._mse(u, self.__u)
         v_loss = self._mse(v, self.__v)
@@ -88,10 +87,10 @@ class NSEModel(SequentialModel):
         #     weights.add_(1e-14 * torch.randn(len(weights), dtype=torch.float64))
         #     vector_to_parameters(weights, self._model.parameters())
 
-        f_loss, g_loss, m_loss = self.__loss_pde()
+        f_loss, g_loss = self.__loss_pde()
         u_loss, v_loss = self.__loss_rim()
 
-        loss = f_loss + g_loss + .5 * u_loss + 1.5 * v_loss + 2 * m_loss
+        loss = f_loss + g_loss + .5 * u_loss + 1.5 * v_loss
 
         self.__losses = np.vstack([
             self.__losses,
@@ -100,14 +99,19 @@ class NSEModel(SequentialModel):
                 g_loss.detach().cpu().numpy(),
                 u_loss.detach().cpu().numpy(),
                 v_loss.detach().cpu().numpy(),
-                m_loss.detach().cpu().numpy(),
+                loss.detach().cpu().numpy(),
             ]),
         ])
 
         loss.backward()
         return loss
 
-    def predict(self, sample: tp.List[Coordinate], nse=False):
+    def predict(
+        self,
+        sample: t.List[Coordinate],
+        nse=False
+    ) -> t.Tuple[torch.Tensor, torch.Tensor, torch.Tensor] | t.Tuple[torch.Tensor, torch.Tensor, torch.Tensor,
+                                                                     torch.Tensor, torch.Tensor]:
         x = torch.tensor([[i.x] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
         y = torch.tensor([[i.y] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
 

@@ -24,7 +24,7 @@ def main(
     intake: float,
     save: bool,
     supervised: bool,
-):
+) -> None:
     geometry = NSEGeometry(args.nu, args.rho, intake, foam, supervised)
 
     logging.info(f'NU:        {geometry.nu:.3E}')
@@ -101,7 +101,7 @@ def main(
     #     plot_diff(n, data, model, identifier)
 
 
-def parse_cmd():
+def parse_cmd() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog='nse')
 
     initialization = parser.add_argument_group('initialization')

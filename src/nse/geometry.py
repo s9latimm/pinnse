@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as t
+
 import numpy as np
 
 import src.nse.config as config
@@ -11,7 +13,7 @@ from src.nse.data import NSECloud
 class NSEGeometry:
 
     @staticmethod
-    def init_foam():
+    def init_foam() -> t.Tuple[Grid, NSECloud]:
         u, v, p = get_foam()
         u = np.flip(u, 0).transpose().flatten()
         v = np.flip(v, 0).transpose().flatten()
@@ -28,7 +30,7 @@ class NSEGeometry:
 
         return grid, cloud
 
-    def __init__(self, nu: float, rho: float, intake: float, foam: bool = False, supervised: bool = False):
+    def __init__(self, nu: float, rho: float, intake: float, foam: bool = False, supervised: bool = False) -> None:
         self.nu = nu
         self.rho = rho
 

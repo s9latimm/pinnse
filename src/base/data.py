@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as tp
+import typing as t
 
 import numpy as np
 
@@ -20,7 +20,7 @@ class Coordinate:
     def __hash__(self) -> int:
         return hash((self.x, self.y))
 
-    def __iter__(self) -> tp.Iterator[float]:
+    def __iter__(self) -> t.Iterator[float]:
         return iter((self.x, self.y))
 
     def __repr__(self) -> str:
@@ -51,7 +51,7 @@ class Grid:
             s = np.concatenate(([start - 2 * p, start - p], s, [stop - p, stop]))
         return np.sort(np.concatenate((extra, s)))
 
-    def __init__(self, xi: tp.Sequence[int | float] = (), yi: tp.Sequence[int | float] = ()) -> None:
+    def __init__(self, xi: t.Sequence[int | float] = (), yi: t.Sequence[int | float] = ()) -> None:
         self.__shape = len(xi), len(yi)
         self.__grid = np.zeros(self.__shape, dtype="object")
 
@@ -59,16 +59,16 @@ class Grid:
             for j, y in enumerate(yi):
                 self.__grid[i][j] = Coordinate(x, y)
 
-    def __getattr__(self, item) -> tp.Any:
+    def __getattr__(self, item) -> t.Any:
         return self.transform(lambda i: i.__getattribute__(item))
 
-    def __getitem__(self, key) -> tp.Any:
+    def __getitem__(self, key) -> t.Any:
         if len(key) == 2:
             return self.__grid[key].flatten()
         x, y, z, *_ = key
         return self.transform(lambda i: i[z])[x, y]
 
-    def __iter__(self) -> tp.Iterator:
+    def __iter__(self) -> t.Iterator:
         return iter(self.__grid.flatten())
 
     def __len__(self) -> int:
@@ -85,14 +85,14 @@ class Grid:
         return self.__shape[1]
 
     @property
-    def shape(self) -> tp.Tuple[int, int]:
+    def shape(self) -> t.Tuple[int, int]:
         return self.__shape
 
     @property
     def width(self) -> int:
         return self.__shape[0]
 
-    def flatten(self) -> tp.List[Coordinate]:
+    def flatten(self) -> t.List[Coordinate]:
         return list(self.__grid.flatten())
 
     def numpy(self) -> np.ndarray:
