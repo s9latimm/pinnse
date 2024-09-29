@@ -94,7 +94,7 @@ def main(
         plot_hires(n, geometry, model, identifier)
 
     if supervised:
-        logging.info(f'NU: {model.nu}')
+        logging.info(f'NU: {model.nu:20.16f}')
 
     # if foam:
     #     logging.info('PLOT: DIFFERENCE')
