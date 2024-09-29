@@ -11,23 +11,15 @@ from src.nse.geometry import NSEGeometry
 
 class NSEModel(SequentialModel):
 
-    def __init__(self, geometry: NSEGeometry, device, steps, supervised=False):
+    def __init__(self, geometry: NSEGeometry, device, steps, supervised):
 
-        layers = [2, 20, 20, 20, 20, 20, 2]
+        # TODO normal grid
+
+        layers = [2, 40, 40, 40, 40, 40, 40, 2]
 
         super().__init__(layers, device)
 
         self.__geometry = geometry
-
-        self.__optimizer = torch.optim.LBFGS(self._model.parameters(),
-                                             lr=1,
-                                             max_iter=steps,
-                                             max_eval=steps,
-                                             history_size=50,
-                                             tolerance_grad=1e-17,
-                                             tolerance_change=1e-17,
-                                             line_search_fn="strong_wolfe")
-        self.__losses = np.asarray([np.zeros(5)])
 
         rim = self.__geometry.rim_cloud.detach()
         pde = self.__geometry.pde_cloud.detach()
@@ -39,12 +31,28 @@ class NSEModel(SequentialModel):
         self.__rim = [i for i, _ in rim]
         self.__pde = [i for i, _ in pde]
 
+        self.__nu = torch.tensor(self.__geometry.nu, dtype=torch.float64, device=self.device)
+
         if supervised:
-            self.__nu = nn.Parameter(data=torch.tensor(1, dtype=torch.float64, device=self.device), requires_grad=True)
-            self.__rho = nn.Parameter(data=torch.tensor(1, dtype=torch.float64, device=self.device), requires_grad=True)
-        else:
-            self.__nu = self.__geometry.nu
-            self.__rho = self.__geometry.rho
+            self.__nu = nn.Parameter(self.__nu, requires_grad=True)
+            self._model.register_parameter('nu', self.__nu)
+
+        self.__optimizer = torch.optim.LBFGS(self._model.parameters(),
+                                             lr=1,
+                                             max_iter=steps,
+                                             max_eval=steps,
+                                             history_size=50,
+                                             tolerance_grad=1e-17,
+                                             tolerance_change=1e-17,
+                                             line_search_fn="strong_wolfe")
+        self.__losses = np.asarray([np.zeros(5)])
+
+    def __len__(self):
+        return sum(p.numel() for p in self._model.parameters() if p.requires_grad)
+
+    @property
+    def nu(self):
+        return self.__nu.detach().cpu()
 
     def train(self, callback):
 
@@ -56,10 +64,11 @@ class NSEModel(SequentialModel):
         self.__optimizer.step(closure)
 
     def __loss_pde(self):
-        *_, f, g, = self.predict(self.__pde, True)
+        *_, f, g, m = self.predict(self.__pde, True)
         f_loss = self._mse(f, self.__null)
         g_loss = self._mse(g, self.__null)
-        return f_loss, g_loss
+        m_loss = self._mse(m, self.__null)
+        return f_loss, g_loss, m_loss
 
     def __loss_rim(self):
         u, v, *_ = self.predict(self.__rim)
@@ -74,10 +83,15 @@ class NSEModel(SequentialModel):
     def __loss(self):
         self.__optimizer.zero_grad()
 
-        f_loss, g_loss = self.__loss_pde()
+        # with torch.no_grad():
+        #     weights = parameters_to_vector(self._model.parameters())
+        #     weights.add_(1e-14 * torch.randn(len(weights), dtype=torch.float64))
+        #     vector_to_parameters(weights, self._model.parameters())
+
+        f_loss, g_loss, m_loss = self.__loss_pde()
         u_loss, v_loss = self.__loss_rim()
 
-        loss = f_loss + g_loss + u_loss + v_loss
+        loss = f_loss + g_loss + .5 * u_loss + 1.5 * v_loss + 2 * m_loss
 
         self.__losses = np.vstack([
             self.__losses,
@@ -86,7 +100,7 @@ class NSEModel(SequentialModel):
                 g_loss.detach().cpu().numpy(),
                 u_loss.detach().cpu().numpy(),
                 v_loss.detach().cpu().numpy(),
-                loss.detach().cpu().numpy(),
+                m_loss.detach().cpu().numpy(),
             ]),
         ])
 
@@ -115,7 +129,7 @@ class NSEModel(SequentialModel):
         p_x = self.gradient(p, x)
         p_y = self.gradient(p, y)
 
-        f = self.__rho * (u * u_x + v * u_y) + p_x - self.__nu * (u_xx + u_yy)
-        g = self.__rho * (u * v_x + v * v_y) + p_y - self.__nu * (v_xx + v_yy)
+        f = u * u_x + v * u_y + p_x - self.__nu * (u_xx + u_yy)
+        g = u * v_x + v * v_y + p_y - self.__nu * (v_xx + v_yy)
 
         return u, v, p, f, g

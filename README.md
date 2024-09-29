@@ -40,6 +40,6 @@ This command runs a session called `test` with 10 training steps using an intake
 In addition, it plots a high-resolution prediction and compares the output to OpenFOAM.
 
 ```shell
-$ python -m src.nse --id eval -i 1.2 --nu .02 -prfn 10000
+$ python -m src.nse --id eval -i 1.2 --nu .02 -prfn 10000 --device cuda
 ```
 
