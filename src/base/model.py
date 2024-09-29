@@ -1,7 +1,8 @@
-import typing as tp
+import typing as t
 from abc import abstractmethod
 from pathlib import Path
 
+import numpy as np
 import torch
 from torch import nn
 
@@ -13,12 +14,12 @@ class SequentialModel:
         return torch.autograd.grad(f, x, grad_outputs=torch.ones_like(f), create_graph=True)[0]
 
     @staticmethod
-    def derive(f: torch.Tensor, x: torch.Tensor) -> tp.Tuple[torch.Tensor, torch.Tensor]:
+    def derive(f: torch.Tensor, x: torch.Tensor) -> t.Tuple[torch.Tensor, torch.Tensor]:
         f_x = SequentialModel.gradient(f, x)
         f_xx = SequentialModel.gradient(f_x, x)
         return f_x, f_xx
 
-    def __init__(self, layers: tp.Sequence[int], device: str):
+    def __init__(self, layers: t.Sequence[int], device: str) -> None:
         self.device = torch.device(device)
 
         self._model = nn.Sequential()
@@ -44,7 +45,7 @@ class SequentialModel:
 
     @property
     @abstractmethod
-    def history(self):
+    def history(self) -> np.ndarray:
         ...
 
     @abstractmethod
@@ -52,10 +53,10 @@ class SequentialModel:
         ...
 
     @abstractmethod
-    def predict(self, sample):
+    def predict(self, sample) -> t.Tuple:
         ...
 
-    def eval(self):
+    def eval(self) -> None:
         self._model.eval()
 
     def save(self, path: Path) -> None:
