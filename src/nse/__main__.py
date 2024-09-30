@@ -63,7 +63,7 @@ def main(
                         if pbar.n > 0:
                             if pbar.n % 1e2 == 0:
                                 change = history[-1].mean() - history[-2].mean()
-                                logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():20.16f} {change:+.3E}')
+                                logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():18.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, geometry, model, identifier)
@@ -94,7 +94,8 @@ def main(
         plot_hires(n, geometry, model, identifier)
 
     if supervised:
-        logging.info(f'NU: {model.nu:20.16f}')
+        logging.info(f'NU: {model.nu:.16f}')
+        logging.info(f'RHO: {model.rho:.16f}')
 
     # if foam:
     #     logging.info('PLOT: DIFFERENCE')
@@ -189,6 +190,9 @@ def parse_cmd() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
+
+    if args.hires and not args.plot:
+        parser.error('the following arguments are required: --plot')
 
     if args.supervised and not args.foam:
         parser.error('the following arguments are required: --foam')

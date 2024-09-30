@@ -4,21 +4,36 @@ import typing as t
 
 import numpy as np
 
+EPS = 1e-6
+
+
+def arrange(start, stop, step):
+    start, stop, step = int(start / EPS), int(stop / EPS), int(step / EPS)
+    r = []
+    while start <= stop + step / 2:
+        r.append(start * EPS)
+        start += step
+    return np.array(r)
+
 
 class Coordinate:
+
+    @staticmethod
+    def equal(a, b):
+        return Coordinate(*a) == Coordinate(*b)
 
     def __init__(self, x: float, y: float) -> None:
         self.__x = x
         self.__y = y
 
     def __eq__(self, other) -> bool:
-        return (self.x, self.y) == (other.x, other.y)
+        return int(self.x / EPS) == int(other.x / EPS) and int(self.y / EPS) == int(other.y / EPS)
 
     def __getitem__(self, key) -> float:
         return [self.x, self.y][key]
 
     def __hash__(self) -> int:
-        return hash((self.x, self.y))
+        return hash((int(self.x / EPS), int(self.y / EPS)))
 
     def __iter__(self) -> t.Iterator[float]:
         return iter((self.x, self.y))
@@ -45,10 +60,11 @@ class Grid:
 
     @staticmethod
     def axis(start, stop, num, padding=False, extra=()) -> np.ndarray:
-        s = np.linspace(start, stop, num, endpoint=False)
+        p = (stop - start) / num
         if padding:
-            p = (stop - start) / num / 2
-            s = np.concatenate(([start - 2 * p, start - p], s, [stop - p, stop]))
+            s = np.linspace(start, stop, num, endpoint=False)
+        else:
+            s = np.linspace(start, stop, num, endpoint=False)
         return np.sort(np.concatenate((extra, s)))
 
     def __init__(self, xi: t.Sequence[int | float] = (), yi: t.Sequence[int | float] = ()) -> None:
