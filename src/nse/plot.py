@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import patches
 
 import src.nse.config as config
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
@@ -7,17 +8,14 @@ from src.nse.model import NSEModel
 
 
 def decoration(ax):
-    ax.hlines(y=.95, xmin=-.05, xmax=.95, colors='black', linestyles='dotted')
-    ax.vlines(x=.95, ymin=-.05, ymax=.95, colors='black', linestyles='dotted')
-
-
-def decoration_hires(ax):
-    ax.hlines(y=.995, xmin=-.005, xmax=.995, colors='black', linestyles='dotted')
-    ax.vlines(x=.995, ymin=-.005, ymax=.995, colors='black', linestyles='dotted')
+    ax.add_patch(patches.Rectangle((0, 0), 1, 1, linewidth=1, linestyle=':', edgecolor='k', facecolor='none',
+                                   zorder=99))
+    ax.add_patch(
+        patches.Rectangle((0, 0), 10, 2, linewidth=1, linestyle=':', edgecolor='k', facecolor='none', zorder=99))
 
 
 def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
-    grid = geometry.default_grid
+    grid = geometry.pde_grid
     x, y = grid.x.numpy(), grid.y.numpy()
     u, v, p, *_ = model.predict(grid.flatten())
 
@@ -26,7 +24,7 @@ def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     p = p.detach().cpu().numpy().reshape(x.shape)
 
     plot_heatmaps(
-        f'OpenFOAM vs. Prediction [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'OpenFOAM vs. Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         [
@@ -51,7 +49,7 @@ def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     p = p - p.min()
 
     plot_heatmaps(
-        f'Prediction HiRes [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'Prediction HiRes [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         [
@@ -60,12 +58,12 @@ def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
             ('p', p),
         ],
         path=config.OUTPUT_DIR / identifier / f'pred_uvp_hires.pdf',
-        decoration=decoration_hires,
+        decoration=decoration,
     )
 
 
 def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
-    grid = geometry.default_grid
+    grid = geometry.pde_grid
     x, y = grid.x.numpy(), grid.y.numpy()
     u, v, p, *_ = model.predict(grid.flatten())
 
@@ -76,7 +74,7 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     p = p - p.min()
 
     plot_heatmaps(
-        f'Prediction [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         [
@@ -89,7 +87,7 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     )
 
     plot_heatmaps(
-        f'Prediction [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         [
@@ -102,7 +100,7 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     )
 
     plot_streamlines(
-        f'Prediction Streamlines [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         u,
@@ -112,7 +110,7 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     )
 
     plot_arrows(
-        f'Prediction Arrows [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'Prediction Arrows [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         u,
@@ -124,7 +122,7 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
 
 def plot_history(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
     plot_losses(
-        f'Loss [n={n}, $\\nu$={geometry.nu:.3E}, $\\rho$={geometry.rho:.3E}]',
+        f'Loss [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         [
             ('Border', [
                 ('u', model.history[1:, 3]),
@@ -185,7 +183,7 @@ def plot_foam(geometry: NSEGeometry, identifier: str):
 
 def plot_geometry(geometry: NSEGeometry, identifier: str):
 
-    grid = geometry.rimmed_grid
+    grid = geometry.rim_grid
     x, y = grid.x.numpy(), grid.y.numpy()
 
     plot_clouds(

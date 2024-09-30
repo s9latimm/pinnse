@@ -13,9 +13,7 @@ class NSEModel(SequentialModel):
 
     def __init__(self, geometry: NSEGeometry, device, steps, supervised) -> None:
 
-        # TODO normal grid
-
-        layers = [2, 50, 50, 50, 50, 50, 2]
+        layers = [2, 100, 100, 100, 100, 2]
 
         super().__init__(layers, device)
 
@@ -32,10 +30,14 @@ class NSEModel(SequentialModel):
         self.__pde = [i for i, _ in pde]
 
         self.__nu = torch.tensor(self.__geometry.nu, dtype=torch.float64, device=self.device)
+        self.__rho = torch.tensor(self.__geometry.rho, dtype=torch.float64, device=self.device)
 
         if supervised:
             self.__nu = nn.Parameter(self.__nu, requires_grad=True)
-            self._model.register_parameter('nu', self.__nu)
+            self._model.register_parameter('my', self.__nu)
+
+            # self.__rho = nn.Parameter(self.__rho, requires_grad=True)
+            # self._model.register_parameter('rho', self.__rho)
 
         self.__optimizer = torch.optim.LBFGS(self._model.parameters(),
                                              lr=1,
@@ -53,6 +55,10 @@ class NSEModel(SequentialModel):
     @property
     def nu(self) -> float:
         return self.__nu.detach().cpu()
+
+    @property
+    def rho(self) -> float:
+        return self.__rho.detach().cpu()
 
     def train(self, callback) -> None:
 
@@ -133,7 +139,7 @@ class NSEModel(SequentialModel):
         p_x = self.gradient(p, x)
         p_y = self.gradient(p, y)
 
-        f = u * u_x + v * u_y + p_x - self.__nu * (u_xx + u_yy)
-        g = u * v_x + v * v_y + p_y - self.__nu * (v_xx + v_yy)
+        f = self.__rho * (u * u_x + v * u_y - self.__nu * (u_xx + u_yy)) + p_x
+        g = self.__rho * (u * v_x + v * v_y - self.__nu * (v_xx + v_yy)) + p_y
 
         return u, v, p, f, g

@@ -5,7 +5,7 @@ import typing as t
 import numpy as np
 
 import src.nse.config as config
-from src.base.data import Grid
+from src.base.data import Grid, arrange
 from src.foam import get_foam
 from src.nse.data import NSECloud
 
@@ -22,7 +22,10 @@ class NSEGeometry:
         dim_x, dim_y = config.GEOMETRY
         num_x, num_y = config.GRID
 
-        grid = Grid(Grid.axis(0, dim_x, num_x), Grid.axis(0, dim_y, num_y))
+        grid = Grid(
+            arrange(.05, 9.95, .1),
+            arrange(.05, 1.95, .1),
+        )
         cloud = NSECloud()
 
         for i, c in enumerate(grid):
@@ -34,41 +37,48 @@ class NSEGeometry:
         self.nu = nu
         self.rho = rho
 
-        dim_x, dim_y = config.GEOMETRY
-        num_x, num_y = config.GRID
+        self.pde_grid = Grid(
+            arrange(.05, 9.95, .1),
+            arrange(.05, 1.95, .1),
+        )
 
-        self.default_grid = Grid(Grid.axis(0, dim_x, num_x), Grid.axis(0, dim_y, num_y))
+        self.hires_grid = Grid(
+            arrange(.005, 9.995, .01),
+            arrange(.005, 1.995, .01),
+        )
 
-        self.hires_grid = Grid(Grid.axis(0, dim_x, num_x * config.HIRES), Grid.axis(0, dim_y, num_y * config.HIRES))
-
-        self.rimmed_grid = Grid(Grid.axis(0, dim_x, num_x, True, [.95]), Grid.axis(0, dim_y, num_y, True, [.95]))
+        self.rim_grid = Grid(
+            arrange(0, 10, .05),
+            arrange(0, 2, .05),
+        )
 
         self.pde_cloud = NSECloud()
         self.rim_cloud = NSECloud()
-
-        step = int(np.floor(self.rimmed_grid.height / 2))
 
         if foam or supervised:
             self.foam_grid, self.foam_cloud = self.init_foam()
 
         # intake
-        for c in self.rimmed_grid[:2, step + 1:-2]:
-            self.rim_cloud.add(c, u=intake, v=0)
+        for i in arrange(1.05, 1.95, .05):
+            self.rim_cloud.add((0, i), u=intake, v=0)
 
-        # upper border
-        for c in self.rimmed_grid[1:-2, -2:]:
-            self.rim_cloud.add(c, u=0, v=0)
-
-        # lower border
-        for c in self.rimmed_grid[1:-2, :2]:
-            self.rim_cloud.add(c, u=0, v=0)
+        # border
+        for i in arrange(.05, 9.95, .05):
+            self.rim_cloud.add((i, 0), u=0, v=0)
+            self.rim_cloud.add((i, 2), u=0, v=0)
 
         # corner
-        for c in self.rimmed_grid[1:step + 1, 2:step + 1]:
-            self.rim_cloud.add(c, u=0, v=0)
+        for i in arrange(.05, .95, .1):
+            for j in arrange(.05, .95, .1):
+                self.rim_cloud.add((i, j), u=0, v=0)
+        self.rim_cloud.add((1, 1), u=0, v=0)
+        for i in arrange(.05, .95, .05):
+            self.rim_cloud.add((i, 1), u=0, v=0)
+        for i in arrange(.05, .95, .05):
+            self.rim_cloud.add((1, i), u=0, v=0)
 
         # training
-        for c in self.default_grid[:, :]:
+        for c in self.pde_grid[:, :]:
             if c not in self.rim_cloud:
                 self.pde_cloud.add(c)
 

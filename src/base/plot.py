@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter
 
+from src.base.data import Coordinate
+
+plt.rcParams['axes.linewidth'] = 1
 # plt.rcParams['text.usetex'] = True
 # pprint(sorted(matplotlib.font_manager.get_font_names()))
 plt.rcParams['font.family'] = 'DejaVu Sans'
@@ -35,7 +38,7 @@ def plot_losses(title: str, plots, path: Path = None, decoration=None):
             l, y = line
 
             ax.plot(np.arange(1, len(y) + 1, 1), y, label=l, color=COLORS[j])
-            ax.axhline(y=np.median(y), color=COLORS[j], linestyle='--')
+            ax.axhline(y=y[-1], color=COLORS[j], linestyle='--')
             m = min(m, y.min())
 
         ax.set_xlabel('iter')
@@ -128,10 +131,10 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
             )
 
         ax.set_xlabel('x')
-        ax.set_xticks([0, 1])
+        ax.set_xticks([0, 1, int(np.round(x.max()))])
 
         ax.set_ylabel('y')
-        ax.set_yticks([0, 1])
+        ax.set_yticks([0, 1, int(np.round(y.max()))])
 
         ax.set_title(label)
 
@@ -175,7 +178,7 @@ def plot_clouds(title: str, x, y, cloud, labels=(), grid=None, path: Path = None
             if not np.isnan(v[p]):
                 for i in range(x.shape[0]):
                     for j in range(x.shape[1]):
-                        if x[i][j] == k.x and y[i][j] == k.y:
+                        if Coordinate.equal((x[i][j], y[i][j]), k):
                             plot[i][j] += v[p]
                             mask[i][j] = -1
         plots.append((label, plot))
