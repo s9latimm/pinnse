@@ -7,10 +7,14 @@ import numpy as np
 EPS = 1e-6
 
 
+def clamp(f):
+    return int(f / EPS)
+
+
 def arrange(start, stop, step):
-    start, stop, step = int(start / EPS), int(stop / EPS), int(step / EPS)
+    start, stop, step = clamp(start), clamp(stop), clamp(step)
     r = []
-    while start <= stop + step / 2:
+    while start <= stop:
         r.append(start * EPS)
         start += step
     return np.array(r)
@@ -18,22 +22,18 @@ def arrange(start, stop, step):
 
 class Coordinate:
 
-    @staticmethod
-    def equal(a, b):
-        return Coordinate(*a) == Coordinate(*b)
-
     def __init__(self, x: float, y: float) -> None:
         self.__x = x
         self.__y = y
 
     def __eq__(self, other) -> bool:
-        return int(self.x / EPS) == int(other.x / EPS) and int(self.y / EPS) == int(other.y / EPS)
+        return clamp(self.x) == clamp(other.x) and clamp(self.y) == clamp(other.y)
 
     def __getitem__(self, key) -> float:
         return [self.x, self.y][key]
 
     def __hash__(self) -> int:
-        return hash((int(self.x / EPS), int(self.y / EPS)))
+        return hash((clamp(self.x), clamp(self.y)))
 
     def __iter__(self) -> t.Iterator[float]:
         return iter((self.x, self.y))

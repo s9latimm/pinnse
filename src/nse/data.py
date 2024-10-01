@@ -98,6 +98,9 @@ class NSECloud:
         self.__cloud[k] = NSEFact(**kwargs)
         return self.__cloud[k]
 
+    def clear(self) -> None:
+        self.__cloud.clear()
+
     def copy(self) -> NSECloud:
         cloud = NSECloud()
         cloud.__cloud = dict(self.__cloud)

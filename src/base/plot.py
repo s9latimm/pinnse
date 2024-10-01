@@ -178,7 +178,7 @@ def plot_clouds(title: str, x, y, cloud, labels=(), grid=None, path: Path = None
             if not np.isnan(v[p]):
                 for i in range(x.shape[0]):
                     for j in range(x.shape[1]):
-                        if Coordinate.equal((x[i][j], y[i][j]), k):
+                        if Coordinate(x[i][j], y[i][j]) == k:
                             plot[i][j] += v[p]
                             mask[i][j] = -1
         plots.append((label, plot))
