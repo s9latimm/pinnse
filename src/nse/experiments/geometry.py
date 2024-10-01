@@ -8,6 +8,7 @@ import src.nse.config as config
 from src.base.data import Grid, arrange
 from src.foam import get_foam
 from src.nse.data import NSECloud
+from src.nse.experiments.step import Step
 
 
 class NSEGeometry:
@@ -34,53 +35,20 @@ class NSEGeometry:
         return grid, cloud
 
     def __init__(self, nu: float, rho: float, intake: float, foam: bool = False, supervised: bool = False) -> None:
-        self.nu = nu
-        self.rho = rho
 
-        self.pde_grid = Grid(
-            arrange(.05, 9.95, .1),
-            arrange(.05, 1.95, .1),
-        )
+        experiment = Step(nu, rho, intake)
 
-        self.hires_grid = Grid(
-            arrange(.005, 9.995, .01),
-            arrange(.005, 1.995, .01),
-        )
+        self.pde_grid = experiment.finite_grid
 
-        self.rim_grid = Grid(
-            arrange(0, 10, .05),
-            arrange(0, 2, .05),
-        )
+        self.hires_grid = experiment.hires_grid
+
+        self.rim_grid = experiment.layout_grid
 
         self.pde_cloud = NSECloud()
         self.rim_cloud = NSECloud()
 
         if foam or supervised:
             self.foam_grid, self.foam_cloud = self.init_foam()
-
-        # intake
-        for i in arrange(1.05, 1.95, .05):
-            self.rim_cloud.add((0, i), u=intake, v=0)
-
-        # border
-        for i in arrange(.05, 9.95, .05):
-            self.rim_cloud.add((i, 0), u=0, v=0)
-            self.rim_cloud.add((i, 2), u=0, v=0)
-
-        # corner
-        for i in arrange(.05, .95, .1):
-            for j in arrange(.05, .95, .1):
-                self.rim_cloud.add((i, j), u=0, v=0)
-        self.rim_cloud.add((1, 1), u=0, v=0)
-        for i in arrange(.05, .95, .05):
-            self.rim_cloud.add((i, 1), u=0, v=0)
-        for i in arrange(.05, .95, .05):
-            self.rim_cloud.add((1, i), u=0, v=0)
-
-        # training
-        for c in self.pde_grid[:, :]:
-            if c not in self.rim_cloud:
-                self.pde_cloud.add(c)
 
         if supervised:
             self.rim_cloud = NSECloud()

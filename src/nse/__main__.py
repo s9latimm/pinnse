@@ -4,17 +4,20 @@ import sys
 
 import cpuinfo
 import psutil
+from src.base.experiment import Experiment
+from src.nse.geometry import NSEGeometry
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-import src.nse.config as config
-from src.nse.geometry import NSEGeometry
+from nse.experiments import EXPERIMENTS
+from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR
 from src.nse.model import NSEModel
 from src.nse.plot import plot_foam, plot_prediction, plot_hires, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
 
 def main(
+    experiment: Experiment,
     n: int,
     plot: bool,
     identifier: str,
@@ -30,12 +33,12 @@ def main(
     logging.info(f'NU:        {geometry.nu:.3E}')
     logging.info(f'RHO:       {geometry.rho:.3E}')
     logging.info(f'INTAKE:    {intake:.3E}')
-    logging.info(f'GRID:      {config.GRID}')
-    logging.info(f'GEOMETRY:  {config.GEOMETRY}')
-    logging.info(f'HIRES:     {config.HIRES}')
+    logging.info(f'GRID:      {GRID}')
+    logging.info(f'GEOMETRY:  {GEOMETRY}')
+    logging.info(f'HIRES:     {HIRES}')
     logging.info(f'STEPS:     {args.train}')
-    logging.info(f'TIMESTAMP: {config.TIMESTAMP}')
-    logging.info(f'OUTPUT:    {(config.OUTPUT_DIR / identifier).relative_to(config.ROOT_DIR)}')
+    logging.info(f'TIMESTAMP: {TIMESTAMP}')
+    logging.info(f'OUTPUT:    {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
 
     logging.info(f'CPU:       {cpuinfo.get_cpu_info()["brand_raw"]} ')
     logging.info(f'LOGICAL:   {psutil.cpu_count(logical=True)}')
@@ -79,7 +82,7 @@ def main(
                 logging.info(f'TRAINING: END {pbar.n}')
 
         if save:
-            model.save(config.OUTPUT_DIR / identifier / 'model.pt')
+            model.save(OUTPUT_DIR / identifier / 'model.pt')
 
     model.eval()
 
@@ -107,6 +110,14 @@ def parse_cmd() -> argparse.Namespace:
 
     initialization = parser.add_argument_group('initialization')
     initialization.add_argument(
+        '-e',
+        '--experiment',
+        type=str,
+        metavar='<experiment>',
+        required=True,
+        help='load experiment',
+    )
+    initialization.add_argument(
         '-i',
         '--intake',
         type=float,
@@ -118,14 +129,14 @@ def parse_cmd() -> argparse.Namespace:
         '--nu',
         type=float,
         metavar='<nu>',
-        default=config.DEFAULT_NU,
+        default=DEFAULT_NU,
         help='set viscosity [m^2/s]',
     )
     initialization.add_argument(
         '--rho',
         type=float,
         metavar='<rho>',
-        default=config.DEFAULT_RHO,
+        default=DEFAULT_RHO,
         help='set density [kg/m^2]',
     )
 
@@ -134,7 +145,7 @@ def parse_cmd() -> argparse.Namespace:
         '--id',
         type=str,
         metavar='<id>',
-        default=config.TIMESTAMP,
+        default=TIMESTAMP,
         help='identifier / prefix for output directory',
     )
     optimization.add_argument(
@@ -142,7 +153,7 @@ def parse_cmd() -> argparse.Namespace:
         '--train',
         type=int,
         metavar='<train>',
-        default=config.DEFAULT_STEPS,
+        default=DEFAULT_STEPS,
         help='number of optimization steps',
     )
     optimization.add_argument(
@@ -203,10 +214,10 @@ def parse_cmd() -> argparse.Namespace:
 if __name__ == '__main__':
     args = parse_cmd()
     if args.plot:
-        (config.OUTPUT_DIR / args.id).mkdir(parents=True, exist_ok=args.id != config.TIMESTAMP)
+        (OUTPUT_DIR / args.id).mkdir(parents=True, exist_ok=args.id != TIMESTAMP)
         logging.basicConfig(format='%(message)s',
                             handlers=[
-                                logging.FileHandler(config.OUTPUT_DIR / args.id / 'log.txt', mode='w'),
+                                logging.FileHandler(OUTPUT_DIR / args.id / 'log.txt', mode='w'),
                                 logging.StreamHandler(sys.stdout)
                             ],
                             encoding='utf-8',
@@ -216,17 +227,22 @@ if __name__ == '__main__':
                             handlers=[logging.StreamHandler(sys.stdout)],
                             encoding='utf-8',
                             level=logging.INFO)
+
     try:
         main(
+            EXPERIMENTS[args.experiment](
+                args.nu,
+                args.rho,
+                args.intake,
+                args.supervised,
+            ),
             args.train,
             args.plot,
             args.id,
             args.device,
             args.foam,
             args.hires,
-            args.intake,
             args.save,
-            args.supervised,
         )
         logging.info('EXIT: SUCCESS')
     except KeyboardInterrupt:
