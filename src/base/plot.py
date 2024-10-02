@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter
 
-from src.base.data import Coordinate, Shape
+from src.base.data import Coordinate, Shape, arrange
 
 # plt.rcParams['text.usetex'] = True
 # pprint(sorted(matplotlib.font_manager.get_font_names()))
@@ -59,7 +59,7 @@ def plot_losses(
         ax.spines['right'].set_visible(False)
 
         ax.set_yscale('log')
-        ax.set_xticks([1, len(lines[0][1])])
+        ax.set_xticks([1] + list(arrange(1000, len(lines[0][1]), 1000)))
         ax.set_yticks([10**np.floor(np.log10(m)), 10**np.ceil(np.log10(m))])
 
         ax.legend(loc='upper right')
@@ -83,8 +83,8 @@ seismic_dis = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cm
 
 def plot_heatmaps(
         title: str,
-        x: np.ndarray[np.ndarray[float]],
-        y: np.ndarray[np.ndarray[float]],
+        x: np.ndarray,
+        y: np.ndarray,
         plots: t.Sequence[t.Tuple[str, np.ndarray]],
         overlay: np.ndarray = None,
         masks: t.Sequence[np.ndarray] = None,
@@ -186,8 +186,8 @@ def plot_heatmaps(
 
 def plot_clouds(
         title: str,
-        x: np.ndarray[np.ndarray[float]],
-        y: np.ndarray[np.ndarray[float]],
+        x: np.ndarray,
+        y: np.ndarray,
         cloud: t.Dict[Coordinate, t.Any],
         labels=(),
         overlay: np.ndarray = None,
@@ -215,10 +215,10 @@ def plot_clouds(
 
 def plot_streamlines(
         title: str,
-        x: np.ndarray[np.ndarray[float]],
-        y: np.ndarray[np.ndarray[float]],
-        u: np.ndarray[np.ndarray[float]],
-        v: np.ndarray[np.ndarray[float]],
+        x: np.ndarray,
+        y: np.ndarray,
+        u: np.ndarray,
+        v: np.ndarray,
         path: Path = None,
         geometry: t.Sequence[Shape] = (),
 ):
@@ -270,10 +270,10 @@ def plot_streamlines(
 
 def plot_arrows(
         title: str,
-        x: np.ndarray[np.ndarray[float]],
-        y: np.ndarray[np.ndarray[float]],
-        u: np.ndarray[np.ndarray[float]],
-        v: np.ndarray[np.ndarray[float]],
+        x: np.ndarray,
+        y: np.ndarray,
+        u: np.ndarray,
+        v: np.ndarray,
         path: Path = None,
         geometry: t.Sequence[Shape] = (),
 ):
