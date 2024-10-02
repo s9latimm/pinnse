@@ -1,3 +1,4 @@
+import typing as t
 from pathlib import Path
 
 import matplotlib.colors as colors
@@ -5,9 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter
 
-from src.base.data import Coordinate
+from src.base.data import Coordinate, Shape
 
-plt.rcParams['axes.linewidth'] = 1
 # plt.rcParams['text.usetex'] = True
 # pprint(sorted(matplotlib.font_manager.get_font_names()))
 plt.rcParams['font.family'] = 'DejaVu Sans'
@@ -19,13 +19,23 @@ DPI = 1000
 SCALE = 5
 
 
+def decorate(ax: plt.Axes, decorations: t.Sequence[Shape]) -> None:
+    for decoration in decorations:
+        ax.plot(decoration.x, decoration.y, color='k', linestyle='--', linewidth=.8, zorder=999)
+
+
 def save_fig(fig, path: Path):
     if path is not None:
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, format=path.suffix[1:], transparent=False, dpi=DPI / SCALE)
 
 
-def plot_losses(title: str, plots, path: Path = None, decoration=None):
+def plot_losses(
+        title: str,
+        plots: t.Sequence[t.Tuple[str, t.Sequence[t.Tuple[str, np.ndarray]]]],
+        path: Path = None,
+        geometry=(),
+):
     fig = plt.figure(figsize=(5 * SCALE, SCALE * len(plots)))
 
     for i, plot in enumerate(plots):
@@ -54,8 +64,7 @@ def plot_losses(title: str, plots, path: Path = None, decoration=None):
 
         ax.legend(loc='upper right')
 
-        if decoration is not None:
-            decoration(ax)
+        decorate(ax, geometry)
 
     fig.suptitle(title)
 
@@ -72,7 +81,16 @@ seismic_pos = colors.LinearSegmentedColormap.from_list('seismic_pos', plt.get_cm
 seismic_dis = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cmap('seismic')(np.linspace(.55, 1., 45)))
 
 
-def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = None, decoration=None):
+def plot_heatmaps(
+        title: str,
+        x: np.ndarray[np.ndarray[float]],
+        y: np.ndarray[np.ndarray[float]],
+        plots: t.Sequence[t.Tuple[str, np.ndarray]],
+        overlay: np.ndarray = None,
+        masks: t.Sequence[np.ndarray] = None,
+        path: Path = None,
+        geometry: t.Sequence[Shape] = (),
+):
     fig = plt.figure(figsize=(5 * SCALE, len(plots) * SCALE))
 
     for i, plot in enumerate(plots):
@@ -121,10 +139,10 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
                 vmax=1,
             )
 
-        if grid is not None:
+        if overlay is not None:
             ax.scatter(
-                grid[:, 0],
-                grid[:, 1],
+                overlay[:, 0],
+                overlay[:, 1],
                 marker='.',
                 c=COLORS[0],
                 zorder=3,
@@ -155,8 +173,7 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
             ticks.append(z.max())
         cbar.set_ticks(ticks)
 
-        if decoration is not None:
-            decoration(ax)
+        decorate(ax, geometry)
 
     fig.suptitle(title)
 
@@ -167,7 +184,16 @@ def plot_heatmaps(title: str, x, y, plots, grid=None, masks=None, path: Path = N
     plt.close()
 
 
-def plot_clouds(title: str, x, y, cloud, labels=(), grid=None, path: Path = None, decoration=None):
+def plot_clouds(
+        title: str,
+        x: np.ndarray[np.ndarray[float]],
+        y: np.ndarray[np.ndarray[float]],
+        cloud: t.Dict[Coordinate, t.Any],
+        labels=(),
+        overlay: np.ndarray = None,
+        path: Path = None,
+        geometry: t.Sequence[Shape] = (),
+):
     plots = []
     masks = []
 
@@ -184,10 +210,18 @@ def plot_clouds(title: str, x, y, cloud, labels=(), grid=None, path: Path = None
         plots.append((label, plot))
         masks.append(mask)
 
-    plot_heatmaps(title, x, y, plots, grid=grid, masks=masks, path=path, decoration=decoration)
+    plot_heatmaps(title, x, y, plots, overlay=overlay, masks=masks, path=path, geometry=geometry)
 
 
-def plot_streamlines(title: str, x, y, u, v, path: Path = None, decoration=None):
+def plot_streamlines(
+        title: str,
+        x: np.ndarray[np.ndarray[float]],
+        y: np.ndarray[np.ndarray[float]],
+        u: np.ndarray[np.ndarray[float]],
+        v: np.ndarray[np.ndarray[float]],
+        path: Path = None,
+        geometry: t.Sequence[Shape] = (),
+):
     fig = plt.figure(figsize=(5 * SCALE, SCALE))
 
     ax = fig.add_subplot()
@@ -225,8 +259,7 @@ def plot_streamlines(title: str, x, y, u, v, path: Path = None, decoration=None)
 
     ax.set_title(title)
 
-    if decoration is not None:
-        decoration(ax)
+    decorate(ax, geometry)
 
     fig.tight_layout()
     save_fig(fig, path)
@@ -235,7 +268,15 @@ def plot_streamlines(title: str, x, y, u, v, path: Path = None, decoration=None)
     plt.close()
 
 
-def plot_arrows(title: str, x, y, u, v, path: Path = None, decoration=None):
+def plot_arrows(
+        title: str,
+        x: np.ndarray[np.ndarray[float]],
+        y: np.ndarray[np.ndarray[float]],
+        u: np.ndarray[np.ndarray[float]],
+        v: np.ndarray[np.ndarray[float]],
+        path: Path = None,
+        geometry: t.Sequence[Shape] = (),
+):
     fig = plt.figure(figsize=(5 * SCALE, SCALE))
 
     ax = fig.add_subplot()
@@ -275,8 +316,7 @@ def plot_arrows(title: str, x, y, u, v, path: Path = None, decoration=None):
 
     ax.set_title(title)
 
-    if decoration is not None:
-        decoration(ax)
+    decorate(ax, geometry)
 
     fig.tight_layout()
     save_fig(fig, path)

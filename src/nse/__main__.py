@@ -4,55 +4,51 @@ import sys
 
 import cpuinfo
 import psutil
-from src.base.experiment import Experiment
-from src.nse.geometry import NSEGeometry
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from nse.experiments import EXPERIMENTS
-from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR
+from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
+from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
+from src.nse.experiments import EXPERIMENTS
+from src.nse.experiments.experiment import NSEExperiment
 from src.nse.model import NSEModel
 from src.nse.plot import plot_foam, plot_prediction, plot_hires, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
 
 def main(
-    experiment: Experiment,
+    experiment: NSEExperiment,
     n: int,
     plot: bool,
     identifier: str,
     device: str,
     foam: bool,
     hires: bool,
-    intake: float,
     save: bool,
-    supervised: bool,
 ) -> None:
-    geometry = NSEGeometry(args.nu, args.rho, intake, foam, supervised)
+    logging.info(f'NU:         {experiment.nu:.3E}')
+    logging.info(f'RHO:        {experiment.rho:.3E}')
+    logging.info(f'INTAKE:     {experiment.flow:.3E}')
+    logging.info(f'GRID:       {experiment.training_mesh.shape}')
+    logging.info(f'DIMENSIONS: {experiment.dim}')
+    logging.info(f'HIRES:      {HIRES}')
+    logging.info(f'STEPS:      {args.train}')
+    logging.info(f'TIMESTAMP:  {TIMESTAMP}')
+    logging.info(f'OUTPUT:     {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
 
-    logging.info(f'NU:        {geometry.nu:.3E}')
-    logging.info(f'RHO:       {geometry.rho:.3E}')
-    logging.info(f'INTAKE:    {intake:.3E}')
-    logging.info(f'GRID:      {GRID}')
-    logging.info(f'GEOMETRY:  {GEOMETRY}')
-    logging.info(f'HIRES:     {HIRES}')
-    logging.info(f'STEPS:     {args.train}')
-    logging.info(f'TIMESTAMP: {TIMESTAMP}')
-    logging.info(f'OUTPUT:    {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
-
-    logging.info(f'CPU:       {cpuinfo.get_cpu_info()["brand_raw"]} ')
-    logging.info(f'LOGICAL:   {psutil.cpu_count(logical=True)}')
-    logging.info(f'MEMORY:    {psutil.virtual_memory().total / (1024 ** 3):.2f} GB')
+    logging.info(f'CPU:        {cpuinfo.get_cpu_info()["brand_raw"]} ')
+    logging.info(f'LOGICAL:    {psutil.cpu_count(logical=True)}')
+    logging.info(f'MEMORY:     {psutil.virtual_memory().total / (1024 ** 3):.2f} GB')
 
     if foam:
         logging.info('PLOT: OPENFOAM')
-        plot_foam(geometry, identifier)
+        plot_foam(experiment, identifier)
 
     if plot:
         logging.info('PLOT: GEOMETRY')
-        plot_geometry(geometry, identifier)
+        plot_geometry(experiment, identifier)
 
-    model = NSEModel(geometry, device, n, supervised)
+    model = NSEModel(experiment, device, n)
 
     logging.info(model)
     logging.info(f'PARAMETERS: {len(model)}')
@@ -69,12 +65,12 @@ def main(
                                 logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():18.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: PREDICTION')
-                                plot_prediction(pbar.n, geometry, model, identifier)
+                                plot_prediction(pbar.n, experiment, model, identifier)
                                 logging.info('PLOT: LOSS')
-                                plot_history(pbar.n, geometry, model, identifier)
+                                plot_history(pbar.n, experiment, model, identifier)
                             if hires and pbar.n % 1e4 == 0:
                                 logging.info('PLOT: HIRES PREDICTION')
-                                plot_hires(pbar.n, geometry, model, identifier)
+                                plot_hires(pbar.n, experiment, model, identifier)
                         pbar.update(1)
 
                 logging.info(f'TRAINING: START {n}')
@@ -88,15 +84,15 @@ def main(
 
     if plot:
         logging.info('PLOT: PREDICTION')
-        plot_prediction(n, geometry, model, identifier)
+        plot_prediction(n, experiment, model, identifier)
         logging.info('PLOT: LOSS')
-        plot_history(pbar.n, geometry, model, identifier)
+        plot_history(pbar.n, experiment, model, identifier)
 
     if hires:
         logging.info('PLOT: HIRES PREDICTION')
-        plot_hires(n, geometry, model, identifier)
+        plot_hires(n, experiment, model, identifier)
 
-    if supervised:
+    if experiment.supervised:
         logging.info(f'NU: {model.nu:.16f}')
         logging.info(f'RHO: {model.rho:.16f}')
 
@@ -114,6 +110,7 @@ def parse_cmd() -> argparse.Namespace:
         '--experiment',
         type=str,
         metavar='<experiment>',
+        choices=EXPERIMENTS.keys(),
         required=True,
         help='load experiment',
     )
@@ -122,7 +119,7 @@ def parse_cmd() -> argparse.Namespace:
         '--intake',
         type=float,
         metavar='<intake>',
-        default=1.,
+        default=DEFAULT_INTAKE,
         help='set intake [m/s]',
     )
     initialization.add_argument(
@@ -234,6 +231,7 @@ if __name__ == '__main__':
                 args.nu,
                 args.rho,
                 args.intake,
+                args.foam,
                 args.supervised,
             ),
             args.train,
