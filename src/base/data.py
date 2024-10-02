@@ -8,11 +8,11 @@ import numpy as np
 EPS = 1e-6
 
 
-def clamp(f):
+def clamp(f: float) -> int:
     return int(f / EPS)
 
 
-def arrange(start, stop, step):
+def arrange(start: float, stop: float, step: float) -> np.ndarray:
     start, stop, step = clamp(start), clamp(stop), clamp(step)
     r = []
     while start <= stop:
