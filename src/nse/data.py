@@ -4,7 +4,7 @@ import typing as t
 
 import numpy as np
 
-from src.base.data import Coordinate, Grid
+from src.base.data import Coordinate, Cloud
 
 
 class NSEFact:
@@ -62,52 +62,16 @@ class NSEFact:
             self.__p = p
 
 
-class NSECloud:
-
-    def __init__(self, grid: Grid = None) -> None:
-        self.__cloud: t.Dict[Coordinate, NSEFact] = dict()
-        if grid is not None:
-            for k in grid:
-                self.__cloud[k] = NSEFact()
-
-    def __contains__(self, key) -> bool:
-        return key in self.__cloud.keys()
+class NSECloud(Cloud):
 
     def __getitem__(self, key: t.Tuple | Coordinate) -> NSEFact:
-        k = Coordinate(*key)
-        if k not in self.__cloud:
-            raise KeyError(k)
-        return self.__cloud[k]
-
-    def __iter__(self):
-        return iter(self.__cloud.items())
-
-    def __len__(self) -> int:
-        return len(self.__cloud)
-
-    def __repr__(self) -> str:
-        return f'{self.__cloud}'
-
-    def __str__(self) -> str:
-        return self.__repr__()
+        return super().__getitem__(key)
 
     def add(self, key: t.Tuple | Coordinate, **kwargs) -> NSEFact:
-        k = Coordinate(*key)
-        if k in self.__cloud:
-            raise KeyError(k)
-        self.__cloud[k] = NSEFact(**kwargs)
-        return self.__cloud[k]
-
-    def clear(self) -> None:
-        self.__cloud.clear()
+        return super().add(key, NSEFact(**kwargs))
 
     def copy(self) -> NSECloud:
-        cloud = NSECloud()
-        cloud.__cloud = dict(self.__cloud)
-        return cloud
+        return super().copy()
 
     def detach(self) -> t.List[t.Tuple[Coordinate, NSEFact]]:
-        return list(self.__cloud.copy().items())
-
-    def numpy(self) -> np.ndarray:
-        return np.array([np.concatenate([k.numpy(), v.numpy()]) for k, v in self.__cloud.items()])
+        return super().detach()

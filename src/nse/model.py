@@ -6,21 +6,21 @@ from torch import nn
 
 from src.base.data import Coordinate
 from src.base.model import SequentialModel
-from src.nse.geometry import NSEGeometry
+from src.nse.experiments import NSEExperiment
 
 
 class NSEModel(SequentialModel):
 
-    def __init__(self, geometry: NSEGeometry, device, steps, supervised) -> None:
+    def __init__(self, experiment: NSEExperiment, device: str, steps: int) -> None:
 
-        layers = [2, 100, 100, 100, 100, 2]
+        layers = [2, 100, 100, 100, 2]
 
         super().__init__(layers, device)
 
-        self.__geometry = geometry
+        self.__experiment = experiment
 
-        rim = self.__geometry.rim_cloud.detach()
-        pde = self.__geometry.pde_cloud.detach()
+        rim = self.__experiment.rim_facts.detach()
+        pde = self.__experiment.pde_facts.detach()
 
         self.__null = torch.zeros(len(pde), 1, dtype=torch.float64, device=self.device)
         self.__u = torch.tensor([[i.u] for _, i in rim], dtype=torch.float64, device=self.device)
@@ -29,10 +29,10 @@ class NSEModel(SequentialModel):
         self.__rim = [i for i, _ in rim]
         self.__pde = [i for i, _ in pde]
 
-        self.__nu = torch.tensor(self.__geometry.nu, dtype=torch.float64, device=self.device)
-        self.__rho = torch.tensor(self.__geometry.rho, dtype=torch.float64, device=self.device)
+        self.__nu = torch.tensor(self.__experiment.nu, dtype=torch.float64, device=self.device)
+        self.__rho = torch.tensor(self.__experiment.rho, dtype=torch.float64, device=self.device)
 
-        if supervised:
+        if experiment.supervised:
             self.__nu = nn.Parameter(self.__nu, requires_grad=True)
             self._model.register_parameter('my', self.__nu)
 

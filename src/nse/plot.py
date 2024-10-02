@@ -1,23 +1,15 @@
 import numpy as np
-from matplotlib import patches
 
-import src.nse.config as config
+from src import OUTPUT_DIR
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
-from src.nse.geometry import NSEGeometry
+from src.nse.experiments import NSEExperiment
 from src.nse.model import NSEModel
 
 
-def decoration(ax):
-    ax.add_patch(patches.Rectangle((0, 0), 1, 1, linewidth=1, linestyle=':', edgecolor='k', facecolor='none',
-                                   zorder=99))
-    ax.add_patch(
-        patches.Rectangle((0, 0), 10, 2, linewidth=1, linestyle=':', edgecolor='k', facecolor='none', zorder=99))
-
-
-def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
-    grid = geometry.pde_grid
-    x, y = grid.x.numpy(), grid.y.numpy()
-    u, v, p, *_ = model.predict(grid.flatten())
+def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
+    mesh = experiment.finite_elements_mesh
+    x, y = mesh.x.numpy(), mesh.y.numpy()
+    u, v, p, *_ = model.predict(mesh.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -28,19 +20,19 @@ def plot_diff(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
         x,
         y,
         [
-            ('u', np.abs(u - geometry.u)),
-            ('v', np.abs(v - geometry.v)),
-            ('p', np.abs(p - geometry.p)),
+            ('u', np.abs(u - experiment.u)),
+            ('v', np.abs(v - experiment.v)),
+            ('p', np.abs(p - experiment.p)),
         ],
-        path=config.OUTPUT_DIR / identifier / f'diff_uvp.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / f'diff_uvp.pdf',
+        geometry=experiment.geometry,
     )
 
 
-def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
-    grid = geometry.hires_grid
-    x, y = grid.x.numpy(), grid.y.numpy()
-    u, v, p, *_ = model.predict(grid.flatten())
+def plot_hires(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
+    mesh = experiment.evaluation_mesh
+    x, y = mesh.x.numpy(), mesh.y.numpy()
+    u, v, p, *_ = model.predict(mesh.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -57,15 +49,15 @@ def plot_hires(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
             ('v', v),
             ('p', p),
         ],
-        path=config.OUTPUT_DIR / identifier / f'pred_uvp_hires.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / f'pred_uvp_hires.pdf',
+        geometry=experiment.geometry,
     )
 
 
-def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
-    grid = geometry.pde_grid
-    x, y = grid.x.numpy(), grid.y.numpy()
-    u, v, p, *_ = model.predict(grid.flatten())
+def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
+    mesh = experiment.finite_elements_mesh
+    x, y = mesh.x.numpy(), mesh.y.numpy()
+    u, v, p, *_ = model.predict(mesh.flatten())
 
     u = u.detach().cpu().numpy().reshape(x.shape)
     v = v.detach().cpu().numpy().reshape(x.shape)
@@ -82,8 +74,28 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
             ('v', v),
             ('p', p),
         ],
-        path=config.OUTPUT_DIR / identifier / f'pred_uvp.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'pred_uvp.pdf',
+        geometry=experiment.geometry,
+    )
+
+    plot_streamlines(
+        f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
+        x,
+        y,
+        u,
+        v,
+        path=OUTPUT_DIR / identifier / 'pred_str.pdf',
+        geometry=experiment.geometry,
+    )
+
+    plot_arrows(
+        f'Prediction Arrows [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
+        x,
+        y,
+        u,
+        v,
+        path=OUTPUT_DIR / identifier / 'pred_arr.pdf',
+        geometry=experiment.geometry,
     )
 
     plot_heatmaps(
@@ -95,8 +107,8 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
             ('v', v),
             ('p', p),
         ],
-        path=config.OUTPUT_DIR / identifier / 'steps' / f'pred_uvp_{n}.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'steps' / f'pred_uvp_{n}.pdf',
+        geometry=experiment.geometry,
     )
 
     plot_streamlines(
@@ -105,8 +117,8 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
         y,
         u,
         v,
-        path=config.OUTPUT_DIR / identifier / 'steps' / f'pred_str_{n}.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'steps' / f'pred_str_{n}.pdf',
+        geometry=experiment.geometry,
     )
 
     plot_arrows(
@@ -115,12 +127,12 @@ def plot_prediction(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
         y,
         u,
         v,
-        path=config.OUTPUT_DIR / identifier / 'steps' / f'pred_arr_{n}.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'steps' / f'pred_arr_{n}.pdf',
+        geometry=experiment.geometry,
     )
 
 
-def plot_history(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
+def plot_history(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
     plot_losses(
         f'Loss [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         [
@@ -136,15 +148,15 @@ def plot_history(n, geometry: NSEGeometry, model: NSEModel, identifier: str):
                 ('$\Sigma$', model.history[1:, 2]),
             ]),
         ],
-        path=config.OUTPUT_DIR / identifier / f'err.pdf',
+        path=OUTPUT_DIR / identifier / f'err.pdf',
     )
 
 
-def plot_foam(geometry: NSEGeometry, identifier: str):
-    grid = geometry.foam_grid
-    x, y = grid.x.numpy(), grid.y.numpy()
+def plot_foam(experiment: NSEExperiment, identifier: str):
+    mesh = experiment.finite_elements_mesh
+    x, y = mesh.x.numpy(), mesh.y.numpy()
 
-    data = grid.transform(lambda i: geometry.foam_cloud[i])
+    data = mesh.map(lambda i: experiment.foam_facts[i])
     u, v, p = data.u.numpy(), data.v.numpy(), data.p.numpy()
 
     plot_heatmaps(
@@ -156,8 +168,8 @@ def plot_foam(geometry: NSEGeometry, identifier: str):
             ('v', v),
             ('p', p - p.min()),
         ],
-        path=config.OUTPUT_DIR / identifier / 'foam' / 'foam_uvp.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'foam' / 'foam_uvp.pdf',
+        geometry=experiment.geometry,
     )
 
     plot_streamlines(
@@ -166,8 +178,8 @@ def plot_foam(geometry: NSEGeometry, identifier: str):
         y,
         u,
         v,
-        path=config.OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
+        geometry=experiment.geometry,
     )
 
     plot_arrows(
@@ -176,23 +188,23 @@ def plot_foam(geometry: NSEGeometry, identifier: str):
         y,
         u,
         v,
-        path=config.OUTPUT_DIR / identifier / 'foam' / f'foam_arr.pdf',
-        decoration=decoration,
+        path=OUTPUT_DIR / identifier / 'foam' / f'foam_arr.pdf',
+        geometry=experiment.geometry,
     )
 
 
-def plot_geometry(geometry: NSEGeometry, identifier: str):
+def plot_geometry(experiment: NSEExperiment, identifier: str):
 
-    grid = geometry.rim_grid
-    x, y = grid.x.numpy(), grid.y.numpy()
+    mesh = experiment.training_mesh
+    x, y = mesh.x.numpy(), mesh.y.numpy()
 
     plot_clouds(
         "Geometry",
         x,
         y,
-        geometry.rim_cloud,
+        experiment.rim_facts,
         ['u', 'v', 'p'],
-        grid=geometry.pde_cloud.numpy(),
-        path=config.OUTPUT_DIR / identifier / 'model' / 'geometry.pdf',
-        decoration=decoration,
+        overlay=experiment.pde_facts.numpy(),
+        path=OUTPUT_DIR / identifier / 'model' / 'experiment.pdf',
+        geometry=experiment.geometry,
     )
