@@ -1,4 +1,4 @@
-import typing as t
+import typing as tp
 
 import numpy as np
 import torch
@@ -69,13 +69,13 @@ class NSEModel(SequentialModel):
         self._model.train()
         self.__optimizer.step(closure)
 
-    def __loss_pde(self) -> t.Tuple[torch.Tensor, torch.Tensor]:
+    def __loss_pde(self) -> tp.Tuple[torch.Tensor, torch.Tensor]:
         *_, f, g = self.predict(self.__pde, True)
         f_loss = self._mse(f, self.__null)
         g_loss = self._mse(g, self.__null)
         return f_loss, g_loss
 
-    def __loss_rim(self) -> t.Tuple[torch.Tensor, torch.Tensor]:
+    def __loss_rim(self) -> tp.Tuple[torch.Tensor, torch.Tensor]:
         u, v, *_ = self.predict(self.__rim)
         u_loss = self._mse(u, self.__u)
         v_loss = self._mse(v, self.__v)
@@ -114,10 +114,10 @@ class NSEModel(SequentialModel):
 
     def predict(
         self,
-        sample: t.List[Coordinate],
+        sample: tp.List[Coordinate],
         nse=False
-    ) -> t.Tuple[torch.Tensor, torch.Tensor, torch.Tensor] | t.Tuple[torch.Tensor, torch.Tensor, torch.Tensor,
-                                                                     torch.Tensor, torch.Tensor]:
+    ) -> tp.Tuple[torch.Tensor, torch.Tensor, torch.Tensor] | tp.Tuple[torch.Tensor, torch.Tensor, torch.Tensor,
+                                                                       torch.Tensor, torch.Tensor]:
         x = torch.tensor([[i.x] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
         y = torch.tensor([[i.y] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
 

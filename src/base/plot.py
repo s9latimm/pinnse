@@ -1,4 +1,4 @@
-import typing as t
+import typing as tp
 from pathlib import Path
 
 import matplotlib.colors as colors
@@ -19,9 +19,10 @@ DPI = 1000
 SCALE = 5
 
 
-def decorate(ax: plt.Axes, decorations: t.Sequence[Shape]) -> None:
+def decorate(ax: plt.Axes, decorations: tp.Sequence[Shape]) -> None:
     for decoration in decorations:
         ax.plot(decoration.x, decoration.y, color='k', linestyle='--', linewidth=.8, zorder=999)
+        ax.scatter(decoration.x, decoration.y, color='k', marker='x', zorder=999)
 
 
 def save_fig(fig, path: Path):
@@ -32,7 +33,7 @@ def save_fig(fig, path: Path):
 
 def plot_losses(
         title: str,
-        plots: t.Sequence[t.Tuple[str, t.Sequence[t.Tuple[str, np.ndarray]]]],
+        plots: tp.Sequence[tp.Tuple[str, tp.Sequence[tp.Tuple[str, np.ndarray]]]],
         path: Path = None,
         geometry=(),
 ):
@@ -85,11 +86,11 @@ def plot_heatmaps(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
-        plots: t.Sequence[t.Tuple[str, np.ndarray]],
+        plots: tp.Sequence[tp.Tuple[str, np.ndarray]],
         overlay: np.ndarray = None,
-        masks: t.Sequence[np.ndarray] = None,
+        masks: tp.Sequence[np.ndarray] = None,
         path: Path = None,
-        geometry: t.Sequence[Shape] = (),
+        geometry: tp.Sequence[Shape] = (),
 ):
     fig = plt.figure(figsize=(5 * SCALE, len(plots) * SCALE))
 
@@ -188,11 +189,11 @@ def plot_clouds(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
-        cloud: t.Dict[Coordinate, t.Any],
+        cloud: tp.Dict[Coordinate, tp.Any],
         labels=(),
         overlay: np.ndarray = None,
         path: Path = None,
-        geometry: t.Sequence[Shape] = (),
+        geometry: tp.Sequence[Shape] = (),
 ):
     plots = []
     masks = []
@@ -220,7 +221,7 @@ def plot_streamlines(
         u: np.ndarray,
         v: np.ndarray,
         path: Path = None,
-        geometry: t.Sequence[Shape] = (),
+        geometry: tp.Sequence[Shape] = (),
 ):
     fig = plt.figure(figsize=(5 * SCALE, SCALE))
 
@@ -275,7 +276,7 @@ def plot_arrows(
         u: np.ndarray,
         v: np.ndarray,
         path: Path = None,
-        geometry: t.Sequence[Shape] = (),
+        geometry: tp.Sequence[Shape] = (),
 ):
     fig = plt.figure(figsize=(5 * SCALE, SCALE))
 

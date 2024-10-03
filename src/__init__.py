@@ -11,10 +11,10 @@ random.seed(42)
 
 np.random.seed(42)
 
-HIRES = 10
+HIRES: float = 10.
 
-TIMESTAMP = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-ROOT_DIR = Path(__file__).parents[1].absolute()
-OUTPUT_DIR = ROOT_DIR / 'output'
+TIMESTAMP: str = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+ROOT_DIR: Path = Path(__file__).parents[1].absolute()
+OUTPUT_DIR: Path = ROOT_DIR / 'output'
 
-DEVELOP_MODE = True
+DEVELOP_MODE: bool = True
