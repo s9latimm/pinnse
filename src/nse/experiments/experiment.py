@@ -1,4 +1,4 @@
-import typing as t
+import typing as tp
 
 import numpy as np
 
@@ -21,7 +21,7 @@ class NSEExperiment:
             flow: float,
             foam: bool,
             supervised: bool,
-            geometry: t.List[Shape] = (),
+            geometry: tp.List[Shape] = (),
     ) -> None:
         self.__name = name
         self.__x = x
@@ -95,11 +95,11 @@ class NSEExperiment:
         return self._foam_facts
 
     @property
-    def geometry(self) -> t.List[Shape]:
+    def geometry(self) -> tp.List[Shape]:
         return self.__geometry
 
     @property
-    def dim(self) -> t.Tuple[t.Tuple[float, float], t.Tuple[float, float]]:
+    def dim(self) -> tp.Tuple[tp.Tuple[float, float], tp.Tuple[float, float]]:
         return self.__x.dim, self.__y.dim
 
     def __foam(self) -> NSECloud:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+import typing as tp
 
 import numpy as np
 
@@ -17,7 +17,7 @@ class NSEFact:
     def __getitem__(self, key) -> float:
         return [self.u, self.v, self.p][key]
 
-    def __iter__(self) -> t.Iterator[float]:
+    def __iter__(self) -> tp.Iterator[float]:
         return iter((self.u, self.v, self.p))
 
     def __repr__(self) -> str:
@@ -64,14 +64,14 @@ class NSEFact:
 
 class NSECloud(Cloud):
 
-    def __getitem__(self, key: t.Tuple | Coordinate) -> NSEFact:
+    def __getitem__(self, key: tp.Tuple | Coordinate) -> NSEFact:
         return super().__getitem__(key)
 
-    def add(self, key: t.Tuple | Coordinate, **kwargs) -> NSEFact:
+    def add(self, key: tp.Tuple | Coordinate, **kwargs) -> NSEFact:
         return super().add(key, NSEFact(**kwargs))
 
     def copy(self) -> NSECloud:
         return super().copy()
 
-    def detach(self) -> t.List[t.Tuple[Coordinate, NSEFact]]:
+    def detach(self) -> tp.List[tp.Tuple[Coordinate, NSEFact]]:
         return super().detach()
