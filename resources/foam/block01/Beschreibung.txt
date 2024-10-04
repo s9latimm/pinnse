@@ -1,0 +1,5 @@
+Inlet:	5
+nu:	0.001
+
+
+Ein Block in der Mitte, ansonsten üblich Abmessungen (2x10)
