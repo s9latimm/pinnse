@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from src.base.data import Coordinate
+from src.base.geometry import Coordinate
 from src.base.model import SequentialModel
 from src.nse.experiments import NSEExperiment
 
@@ -19,8 +19,8 @@ class NSEModel(SequentialModel):
 
         self.__experiment = experiment
 
-        rim = self.__experiment.rim_facts.detach()
-        pde = self.__experiment.pde_facts.detach()
+        rim = self.__experiment.knowledge.detach()
+        pde = self.__experiment.learning.detach()
 
         self.__null = torch.zeros(len(pde), 1, dtype=torch.float64, device=self.device)
         self.__u = torch.tensor([[i.u] for _, i in rim], dtype=torch.float64, device=self.device)
@@ -69,13 +69,13 @@ class NSEModel(SequentialModel):
         self._model.train()
         self.__optimizer.step(closure)
 
-    def __loss_pde(self) -> tp.Tuple[torch.Tensor, torch.Tensor]:
+    def __loss_pde(self) -> tuple[torch.Tensor, torch.Tensor]:
         *_, f, g = self.predict(self.__pde, True)
         f_loss = self._mse(f, self.__null)
         g_loss = self._mse(g, self.__null)
         return f_loss, g_loss
 
-    def __loss_rim(self) -> tp.Tuple[torch.Tensor, torch.Tensor]:
+    def __loss_rim(self) -> tuple[torch.Tensor, torch.Tensor]:
         u, v, *_ = self.predict(self.__rim)
         u_loss = self._mse(u, self.__u)
         v_loss = self._mse(v, self.__v)
@@ -116,8 +116,8 @@ class NSEModel(SequentialModel):
         self,
         sample: tp.List[Coordinate],
         nse=False
-    ) -> tp.Tuple[torch.Tensor, torch.Tensor, torch.Tensor] | tp.Tuple[torch.Tensor, torch.Tensor, torch.Tensor,
-                                                                       torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
+                                                                 torch.Tensor]:
         x = torch.tensor([[i.x] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
         y = torch.tensor([[i.y] for i in sample], dtype=torch.float64, requires_grad=True, device=self.device)
 

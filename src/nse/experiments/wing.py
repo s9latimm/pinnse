@@ -1,4 +1,5 @@
-from src.base.data import arrange, Rectangle, Airfoil
+from src.base.geometry import arrange, Mesh
+from src.base.shapes import Airfoil
 from src.nse.experiments.experiment import Axis, NSEExperiment
 
 
@@ -15,12 +16,7 @@ class Wing(NSEExperiment):
         self.__nu = nu
         self.__rho = rho
 
-        airfoil = Airfoil((1, 1.5), (5, 5))
-
-        geometry = [
-            Rectangle((0, 0), (10, 2)),
-            airfoil,
-        ]
+        airfoil = Airfoil((1, 1), (5, 5), -10)
 
         super().__init__(
             'Step',
@@ -32,28 +28,33 @@ class Wing(NSEExperiment):
             flow,
             foam,
             supervised,
-            geometry,
+            [airfoil],
         )
 
         # intake
-        for i in arrange(.05, 1.95, .05):
-            self._rim_facts.add((0, i), u=flow, v=0)
+        for y in arrange(.05, 1.95, .05):
+            self._knowledge.add((0, y), u=flow, v=0)
 
         # border
-        for i in arrange(.05, 9.95, .05):
-            self._rim_facts.add((i, 0), u=0, v=0)
-            self._rim_facts.add((i, 2), u=0, v=0)
+        for x in arrange(.05, 9.95, .05):
+            self._knowledge.add((x, 0), u=0, v=0)
+            self._knowledge.add((x, 2), u=0, v=0)
 
-        for i, x in enumerate(airfoil.x[:-1]):
-            self._rim_facts.add((x, airfoil.y[i]), u=0, v=0)
+        for c in airfoil[.05]:
+            self._knowledge.add(c, u=0, v=0)
 
-        for c in self._finite_elements_mesh:
-            if c in airfoil:
-                self._rim_facts.add(c, u=0, v=0)
+        # for e in arrange(0, .3, .05):
+        #     for c in airfoil - e:
+        #         if c not in self._knowledge:
+        #             self._knowledge.add(c, u=0, v=0)
 
-        for c in self._finite_elements_mesh:
-            if c not in self._rim_facts:
-                self._pde_facts.add(c)
+        for c in (airfoil + 1)[.05]:
+            self._learning.add(c)
+
+        mesh = Mesh(self.x.arrange(.1, True), self.y.arrange(.1, True))
+        for c in mesh:
+            if c not in self._knowledge and c not in airfoil:
+                self._learning.add(c)
 
     @property
     def nu(self):

@@ -4,7 +4,7 @@ import typing as tp
 
 import numpy as np
 
-from src.base.data import Coordinate, Cloud
+from src.base.geometry import Coordinate, Cloud
 
 
 class NSEFact:
@@ -64,14 +64,14 @@ class NSEFact:
 
 class NSECloud(Cloud):
 
-    def __getitem__(self, key: tp.Tuple | Coordinate) -> NSEFact:
+    def __getitem__(self, key: tuple | Coordinate) -> NSEFact:
         return super().__getitem__(key)
 
-    def add(self, key: tp.Tuple | Coordinate, **kwargs) -> NSEFact:
+    def add(self, key: tuple | Coordinate, **kwargs) -> NSEFact:
         return super().add(key, NSEFact(**kwargs))
 
     def copy(self) -> NSECloud:
         return super().copy()
 
-    def detach(self) -> tp.List[tp.Tuple[Coordinate, NSEFact]]:
+    def detach(self) -> tp.List[tuple[Coordinate, NSEFact]]:
         return super().detach()
