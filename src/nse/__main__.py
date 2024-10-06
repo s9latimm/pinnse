@@ -12,7 +12,7 @@ from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.model import NSEModel
-from src.nse.plot import plot_foam, plot_prediction, plot_hires, plot_history, plot_geometry
+from src.nse.plot import plot_foam, plot_prediction, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
 
@@ -29,7 +29,7 @@ def main(
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
     logging.info(f'INTAKE:     {experiment.flow:.3E}')
-    logging.info(f'GRID:       {experiment.training_mesh.shape}')
+    logging.info(f'GRID:       {experiment.knowledge.mesh().shape}')
     logging.info(f'DIMENSIONS: {experiment.dim}')
     logging.info(f'HIRES:      {HIRES}')
     logging.info(f'STEPS:      {args.train}')
@@ -70,7 +70,7 @@ def main(
                                 plot_history(pbar.n, experiment, model, identifier)
                             if hires and pbar.n % 1e4 == 0:
                                 logging.info('PLOT: HIRES PREDICTION')
-                                plot_hires(pbar.n, experiment, model, identifier)
+                                plot_prediction(pbar.n, experiment, model, identifier, hires=True)
                         pbar.update(1)
 
                 logging.info(f'TRAINING: START {n}')
@@ -90,7 +90,7 @@ def main(
 
     if hires:
         logging.info('PLOT: HIRES PREDICTION')
-        plot_hires(n, experiment, model, identifier)
+        plot_prediction(n, experiment, model, identifier, hires=True)
 
     if experiment.supervised:
         logging.info(f'NU: {model.nu:.16f}')

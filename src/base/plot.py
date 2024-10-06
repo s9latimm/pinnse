@@ -6,11 +6,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter
 
-from src.base.data import Coordinate, Shape, arrange
+from src.base.geometry import Coordinate, arrange, Cloud
+from src.base.shapes import Shape
 
 # plt.rcParams['text.usetex'] = True
 # pprint(sorted(matplotlib.font_manager.get_font_names()))
 plt.rcParams['font.family'] = 'DejaVu Sans'
+plt.rcParams['axes.linewidth'] = 1
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = .5
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['ytick.minor.width'] = .5
 # plt.switch_backend('Agg')
 
 COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
@@ -21,8 +27,9 @@ SCALE = 5
 
 def decorate(ax: plt.Axes, decorations: tp.Sequence[Shape]) -> None:
     for decoration in decorations:
-        ax.plot(decoration.x, decoration.y, color='k', linestyle='--', linewidth=.8, zorder=999)
-        ax.scatter(decoration.x, decoration.y, color='k', marker='x', zorder=999)
+        shape = decoration[.05]
+        ax.plot([i.x for i in shape], [i.y for i in shape], color='k', linestyle='--', linewidth=1, zorder=999)
+        # ax.scatter([i.x for i in shape], [i.y for i in shape], color='k', marker='x', zorder=998)
 
 
 def save_fig(fig, path: Path):
@@ -33,7 +40,7 @@ def save_fig(fig, path: Path):
 
 def plot_losses(
         title: str,
-        plots: tp.Sequence[tp.Tuple[str, tp.Sequence[tp.Tuple[str, np.ndarray]]]],
+        plots: tp.Sequence[tuple[str, tp.Sequence[tuple[str, np.ndarray]]]],
         path: Path = None,
         geometry=(),
 ):
@@ -65,8 +72,6 @@ def plot_losses(
 
         ax.legend(loc='upper right')
 
-        decorate(ax, geometry)
-
     fig.suptitle(title)
 
     fig.tight_layout()
@@ -86,10 +91,10 @@ def plot_heatmaps(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
-        plots: tp.Sequence[tp.Tuple[str, np.ndarray]],
-        overlay: np.ndarray = None,
+        plots: tp.Sequence[tuple[str, np.ndarray]],
         masks: tp.Sequence[np.ndarray] = None,
         path: Path = None,
+        marker: tp.Sequence[Coordinate] = (),
         geometry: tp.Sequence[Shape] = (),
 ):
     fig = plt.figure(figsize=(5 * SCALE, len(plots) * SCALE))
@@ -140,20 +145,21 @@ def plot_heatmaps(
                 vmax=1,
             )
 
-        if overlay is not None:
-            ax.scatter(
-                overlay[:, 0],
-                overlay[:, 1],
-                marker='.',
-                c=COLORS[0],
-                zorder=3,
-            )
+        ax.scatter(
+            [i.x for i in marker],
+            [i.y for i in marker],
+            marker='.',
+            c=COLORS[0],
+            zorder=3,
+        )
 
         ax.set_xlabel('x')
         ax.set_xticks([0, 1, int(np.round(x.max()))])
+        ax.set_xlim([0, int(np.round(x.max()))])
 
         ax.set_ylabel('y')
         ax.set_yticks([0, 1, int(np.round(y.max()))])
+        ax.set_ylim([0, int(np.round(y.max()))])
 
         ax.set_title(label)
 
@@ -189,10 +195,10 @@ def plot_clouds(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
-        cloud: tp.Dict[Coordinate, tp.Any],
+        cloud: Cloud,
         labels=(),
-        overlay: np.ndarray = None,
         path: Path = None,
+        marker: tp.Sequence[Coordinate] = (),
         geometry: tp.Sequence[Shape] = (),
 ):
     plots = []
@@ -211,7 +217,7 @@ def plot_clouds(
         plots.append((label, plot))
         masks.append(mask)
 
-    plot_heatmaps(title, x, y, plots, overlay=overlay, masks=masks, path=path, geometry=geometry)
+    plot_heatmaps(title, x, y, plots, marker=marker, masks=masks, path=path, geometry=geometry)
 
 
 def plot_streamlines(
@@ -257,6 +263,9 @@ def plot_streamlines(
         density=.5,
         linewidth=speed.transpose(),
     )
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     ax.set_title(title)
 
@@ -314,6 +323,9 @@ def plot_arrows(
                 length_includes_head=True,
                 color=COLORS[0],
             )
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     ax.set_title(title)
 
