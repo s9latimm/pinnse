@@ -24,9 +24,11 @@ def equal(a: float, b: float) -> bool:
     return clamp(a) == clamp(b)
 
 
-def arrange(start: float | int, stop: float | int, step: float | int) -> list[float]:
+def arrange(start: float, stop: float, step: float) -> list[float]:
     start, stop, step = clamp(start), clamp(stop), clamp(step)
     r = []
+    if step <= 0.:
+        return r
     if start < stop:
         while start <= stop:
             r.append(start * EPS)
@@ -131,7 +133,7 @@ class Axis:
 
 class Mesh:
 
-    def __init__(self, xs: tp.Sequence[int | float], ys: tp.Sequence[int | float]) -> None:
+    def __init__(self, xs: tp.Sequence[float], ys: tp.Sequence[float]) -> None:
         self.__width = len(xs)
         self.__height = len(ys)
 

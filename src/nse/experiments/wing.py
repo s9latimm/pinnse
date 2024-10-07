@@ -16,7 +16,7 @@ class Wing(NSEExperiment):
         self.__nu = nu
         self.__rho = rho
 
-        airfoil = Airfoil((1, 1), (5, 5), -10)
+        airfoil = Airfoil((1, 1.25), (5, 5), -10)
 
         super().__init__(
             'Step',
@@ -40,20 +40,29 @@ class Wing(NSEExperiment):
             self._knowledge.add((x, 0), u=0, v=0)
             self._knowledge.add((x, 2), u=0, v=0)
 
-        for c in airfoil[.05]:
+        for c in airfoil[::.05]:
             self._knowledge.add(c, u=0, v=0)
 
-        # for e in arrange(0, .3, .05):
-        #     for c in airfoil - e:
-        #         if c not in self._knowledge:
-        #             self._knowledge.add(c, u=0, v=0)
+        iline = airfoil[::.05].interpolate(-.05)
 
-        for c in (airfoil + 1)[.05]:
-            self._learning.add(c)
+        for c in iline:
+            self._knowledge.add(c, u=0, v=0)
 
         mesh = Mesh(self.x.arrange(.1, True), self.y.arrange(.1, True))
         for c in mesh:
-            if c not in self._knowledge and c not in airfoil:
+            if c not in self._knowledge and c in iline:
+                self._knowledge.add(c, u=0, v=0)
+
+        outline = airfoil[::.05].interpolate(.05)
+        bline = airfoil[::.05].interpolate(.1)
+
+        for c in outline:
+            if c not in self._learning:
+                self._learning.add(c)
+
+        mesh = Mesh(self.x.arrange(.1, True), self.y.arrange(.1, True))
+        for c in mesh:
+            if c not in self._knowledge and c not in self._learning and c not in bline:
                 self._learning.add(c)
 
     @property
