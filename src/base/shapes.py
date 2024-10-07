@@ -30,8 +30,13 @@ class Polygon(Shape):
     def __init__(self, *vertices: Coordinate):
         self.__vertices = vertices
 
-    def __getitem__(self, step: slice) -> Polygon:
-        return self.__vertices[step]
+    def __getitem__(self, s: slice) -> Polygon:
+        coordinates = self.__vertices
+        if s.start is not None:
+            coordinates = [i for i in coordinates if i.x >= s.start]
+        if s.stop is not None:
+            coordinates = [i for i in coordinates if i.x <= s.stop]
+        return Polygon(*coordinates)
 
     def __add__(self, summand: float) -> Shape:
         return Polygon(*[i + (summand, summand) for i in self.__vertices])
@@ -92,11 +97,16 @@ class Cylinder(Shape):
     def __add__(self, summand: float) -> Cylinder:
         return Cylinder(self.__center, self.__radius + summand)
 
-    def __getitem__(self, step: slice) -> Polygon:
-        return Polygon(*[
+    def __getitem__(self, s: slice) -> Polygon:
+        coordinates = [
             Coordinate(x, np.sin(np.arccos(x)))
-            for x in arrange(self.__center.x - self.__radius, self.__center.x + self.__radius, step.step)
-        ])
+            for x in arrange(self.__center.x - self.__radius, self.__center.x + self.__radius, s.step)
+        ]
+        if s.start is not None:
+            coordinates = [i for i in coordinates if i.x >= s.start]
+        if s.stop is not None:
+            coordinates = [i for i in coordinates if i.x <= s.stop]
+        return Polygon(*coordinates)
 
 
 class Line(Shape):
@@ -112,11 +122,16 @@ class Line(Shape):
     def __add__(self, summand: float) -> Line:
         return Line((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
-    def __getitem__(self, step: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> Polygon:
         if equal(self.__a.x, self.__b.x):
-            return Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, step.step)])
+            return Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, s.step)])
         m = (self.__b.y - self.__a.y) / (self.__b.x - self.__a.x)
-        return Polygon(*[Coordinate(x, self.__a.y + m * x) for x in arrange(self.__a.x, self.__b.x, step.step)])
+        coordinates = [Coordinate(x, self.__a.y + m * x) for x in arrange(self.__a.x, self.__b.x, s.step)]
+        if s.start is not None:
+            coordinates = [i for i in coordinates if i.x >= s.start]
+        if s.stop is not None:
+            coordinates = [i for i in coordinates if i.x <= s.stop]
+        return Polygon(*coordinates)
 
 
 class Rectangle(Shape):
@@ -136,12 +151,17 @@ class Rectangle(Shape):
     def __add__(self, summand: float) -> Rectangle:
         return Rectangle((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
-    def __getitem__(self, step: slice) -> Polygon:
-        left = [Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, step.step)]
-        top = [Coordinate(x, self.__b.y) for x in arrange(self.__a.x, self.__b.x, step.step)]
-        right = [Coordinate(self.__b.x, y) for y in arrange(self.__b.y, self.__a.y, step.step)]
-        bottom = [Coordinate(x, self.__a.y) for x in arrange(self.__b.x, self.__a.x, step.step)]
-        return Polygon(*merge(left, top, right, bottom))
+    def __getitem__(self, s: slice) -> Polygon:
+        left = [Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, s.step)]
+        top = [Coordinate(x, self.__b.y) for x in arrange(self.__a.x, self.__b.x, s.step)]
+        right = [Coordinate(self.__b.x, y) for y in arrange(self.__b.y, self.__a.y, s.step)]
+        bottom = [Coordinate(x, self.__a.y) for x in arrange(self.__b.x, self.__a.x, s.step)]
+        coordinates = merge(left, top, right, bottom)
+        if s.start is not None:
+            coordinates = [i for i in coordinates if i.x >= s.start]
+        if s.stop is not None:
+            coordinates = [i for i in coordinates if i.x <= s.stop]
+        return Polygon(*coordinates)
 
 
 class Airfoil(Shape):
@@ -186,11 +206,16 @@ class Airfoil(Shape):
             return lower.y <= c.y <= upper.y
         return False
 
-    def __getitem__(self, step: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> Polygon:
         top = []
         bottom = []
-        for x in arrange(0, 1, step.step / self.__size.x):
+        for x in arrange(0, 1, s.step / self.__size.x):
             upper, lower = self.__f(x)
             top.append(self.__a + upper * self.__size)
             bottom.append(self.__a + lower * self.__size)
-        return Polygon(*merge(bottom[::-1], top))
+        coordinates = merge(bottom[::-1], top)
+        if s.start is not None:
+            coordinates = [i for i in coordinates if i.x >= s.start]
+        if s.stop is not None:
+            coordinates = [i for i in coordinates if i.x <= s.stop]
+        return Polygon(*coordinates)
