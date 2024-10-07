@@ -11,7 +11,7 @@ from src.base.geometry import Coordinate, arrange, merge, equal
 class Shape:
 
     @abstractmethod
-    def __getitem__(self, step: float) -> Polygon:
+    def __getitem__(self, step: slice) -> Polygon:
         ...
 
     @abstractmethod
@@ -30,29 +30,49 @@ class Polygon(Shape):
     def __init__(self, *vertices: Coordinate):
         self.__vertices = vertices
 
-    def __getitem__(self, step: float) -> Polygon:
-        return Polygon(*self.__vertices)
+    def __getitem__(self, step: slice) -> Polygon:
+        return self.__vertices[step]
 
     def __add__(self, summand: float) -> Shape:
         return Polygon(*[i + (summand, summand) for i in self.__vertices])
 
-    def interpolate(self, coordinate: tuple[float, float] | Coordinate, extrude: float = 0) -> Coordinate | None:
-        if len(self.__vertices) < 2:
-            return None
-
-        c = Coordinate(*coordinate)
+    def interpolate(self, translation: float = 0.) -> Polygon:
+        vertices = []
         for i in range(1, len(self.__vertices)):
             left = self.__vertices[i - 1]
             right = self.__vertices[i]
-            if left.x <= c.x <= right.x and left.y >= c.y <= right.y:
-                m = (right.y - left.y) / (right.x - left.x)
-                y = m * (c.x - left.x) + left.y
-                return Coordinate(c.x, y)
+            x = right.x - left.x
+            y = right.y - left.y
+            a = translation / np.sqrt(x**2 + y**2)
+            c = left + Coordinate(x / 2 - y * a, y / 2 + x * a)
+            if translation < 0:
+                if c not in self:
+                    continue
+            vertices.append(c)
+        return Polygon(*vertices)
 
-        return None
+    def __contains__(self, coordinate: tuple | Coordinate) -> bool:
+        c = Coordinate(*coordinate)
+        upper, lower = False, False
+        for i in range(1, len(self.__vertices)):
+            left = self.__vertices[i - 1]
+            right = self.__vertices[i]
+            if left.x <= c.x <= right.x:
+                y = left.y + (right.y - left.y) / 2
+                if y >= c.y:
+                    upper = True
+                else:
+                    lower = True
+            if right.x <= c.x <= left.x:
+                y = right.y + (left.y - right.y) / 2
+                if y <= c.y:
+                    lower = True
+                else:
+                    upper = True
+        return upper and lower
 
-    def grow(self, extrude: float) -> Polygon:
-        return Polygon(*[self.interpolate(i, extrude) for i in self.__vertices])
+    def __iter__(self) -> tp.Iterator[Coordinate]:
+        return iter(self.__vertices)
 
     @property
     def x(self) -> list[float]:
@@ -72,10 +92,10 @@ class Cylinder(Shape):
     def __add__(self, summand: float) -> Cylinder:
         return Cylinder(self.__center, self.__radius + summand)
 
-    def __getitem__(self, step: float) -> Polygon:
+    def __getitem__(self, step: slice) -> Polygon:
         return Polygon(*[
             Coordinate(x, np.sin(np.arccos(x)))
-            for x in arrange(self.__center.x - self.__radius, self.__center.x + self.__radius, step)
+            for x in arrange(self.__center.x - self.__radius, self.__center.x + self.__radius, step.step)
         ])
 
 
@@ -92,11 +112,11 @@ class Line(Shape):
     def __add__(self, summand: float) -> Line:
         return Line((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
-    def __getitem__(self, step: float) -> Polygon:
+    def __getitem__(self, step: slice) -> Polygon:
         if equal(self.__a.x, self.__b.x):
-            return Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, step)])
+            return Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, step.step)])
         m = (self.__b.y - self.__a.y) / (self.__b.x - self.__a.x)
-        return Polygon(*[Coordinate(x, self.__a.y + m * x) for x in arrange(self.__a.x, self.__b.x, step)])
+        return Polygon(*[Coordinate(x, self.__a.y + m * x) for x in arrange(self.__a.x, self.__b.x, step.step)])
 
 
 class Rectangle(Shape):
@@ -116,11 +136,11 @@ class Rectangle(Shape):
     def __add__(self, summand: float) -> Rectangle:
         return Rectangle((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
-    def __getitem__(self, step: float) -> Polygon:
-        left = [Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, step)]
-        top = [Coordinate(x, self.__b.y) for x in arrange(self.__a.x, self.__b.x, step)]
-        right = [Coordinate(self.__b.x, y) for y in arrange(self.__b.y, self.__a.y, step)]
-        bottom = [Coordinate(x, self.__a.y) for x in arrange(self.__b.x, self.__a.x, step)]
+    def __getitem__(self, step: slice) -> Polygon:
+        left = [Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, step.step)]
+        top = [Coordinate(x, self.__b.y) for x in arrange(self.__a.x, self.__b.x, step.step)]
+        right = [Coordinate(self.__b.x, y) for y in arrange(self.__b.y, self.__a.y, step.step)]
+        bottom = [Coordinate(x, self.__a.y) for x in arrange(self.__b.x, self.__a.x, step.step)]
         return Polygon(*merge(left, top, right, bottom))
 
 
@@ -140,7 +160,7 @@ class Airfoil(Shape):
         """
         self.__a = Coordinate(*support)
         self.__size = Coordinate(*size)
-        self.__angle = 0
+        self.__angle = angle
 
     def __add__(self, summand: float) -> Airfoil:
         return Airfoil(self.__a - (summand / 2, 0), self.__size + (summand, summand / self.__t / 2), self.__angle)
@@ -154,22 +174,22 @@ class Airfoil(Shape):
             y_c = self.__m / (1 - self.__p)**2 * ((1 - 2 * self.__p) + 2 * self.__p * x - x**2)
             y_x = 2 * self.__m / (1 - self.__p)**2 * (self.__p - x)
 
-        upper = Coordinate(x - y_t * np.sin(y_x), y_c + y_t * np.cos(y_x))
-        lower = Coordinate(x + y_t * np.sin(y_x), y_c - y_t * np.cos(y_x))
+        upper = Coordinate(x - y_t * np.sin(y_x), y_c + y_t * np.cos(y_x)).rotate(self.__angle)
+        lower = Coordinate(x + y_t * np.sin(y_x), y_c - y_t * np.cos(y_x)).rotate(self.__angle)
 
         return upper, lower
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
-        c = ((Coordinate(*coordinate) - self.__a) / self.__size.x).rotate(-self.__angle)
+        c = ((Coordinate(*coordinate) - self.__a) / self.__size.x)
         if 0 <= c.x <= 1:
             upper, lower = self.__f(c.x)
             return lower.y <= c.y <= upper.y
         return False
 
-    def __getitem__(self, step: float) -> Polygon:
+    def __getitem__(self, step: slice) -> Polygon:
         top = []
         bottom = []
-        for x in arrange(0, 1, step / self.__size.x):
+        for x in arrange(0, 1, step.step / self.__size.x):
             upper, lower = self.__f(x)
             top.append(self.__a + upper * self.__size)
             bottom.append(self.__a + lower * self.__size)

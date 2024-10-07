@@ -1,6 +1,6 @@
 import numpy as np
 
-from src import OUTPUT_DIR, HIRES
+from src import OUTPUT_DIR
 from src.base.geometry import Mesh
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
 from src.nse.experiments import NSEExperiment
@@ -18,7 +18,7 @@ def predict(mesh: Mesh, model: NSEModel) -> tuple[np.ndarray, np.ndarray, np.nda
 
 
 def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
-    mesh = experiment.foam_facts.mesh()
+    mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
     x, y = mesh.x, mesh.y
     u, v, p = predict(mesh, model)
 
@@ -38,9 +38,9 @@ def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
 
 def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: str, hires=False):
     if hires:
-        mesh = experiment.learning.mesh(HIRES)
+        mesh = Mesh(experiment.x.arrange(.01, True), experiment.y.arrange(.01, True))
     else:
-        mesh = experiment.learning.mesh()
+        mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
     x, y = mesh.x, mesh.y
     u, v, p = predict(mesh, model)
 
@@ -149,7 +149,7 @@ def plot_history(n, experiment: NSEExperiment, model: NSEModel, identifier: str)
 
 
 def plot_foam(experiment: NSEExperiment, identifier: str):
-    mesh = experiment.foam_facts.mesh()
+    mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
     x, y = mesh.x, mesh.y
 
     data = mesh.transform(experiment.foam_facts)
