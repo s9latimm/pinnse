@@ -11,7 +11,7 @@ def clamp(f: float) -> int:
     return int(f / EPS)
 
 
-def merge(*lists: tp.Sequence[tp.Any]) -> tp.List[tp.Any]:
+def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
     merged = []
     for xs in lists:
         for x in xs:
@@ -24,7 +24,7 @@ def equal(a: float, b: float) -> bool:
     return clamp(a) == clamp(b)
 
 
-def arrange(start: float | int, stop: float | int, step: float | int) -> tp.List[float]:
+def arrange(start: float | int, stop: float | int, step: float | int) -> list[float]:
     start, stop, step = clamp(start), clamp(stop), clamp(step)
     r = []
     if start < stop:
@@ -123,7 +123,7 @@ class Axis:
     def label(self) -> str:
         return self.__label
 
-    def arrange(self, step: float, center=False) -> np.ndarray:
+    def arrange(self, step: float, center=False) -> list[float]:
         assert step > 0
         c = step / 2 if center else 0
         return arrange(self.__start + c, self.__stop - c, step)
@@ -167,7 +167,7 @@ class Mesh:
     def width(self) -> int:
         return self.__width
 
-    def flatten(self) -> tp.List[Coordinate]:
+    def flatten(self) -> list[Coordinate]:
         return list(self.__mesh.flatten())
 
     def transform(self, cloud: Cloud):
@@ -184,7 +184,7 @@ class Mesh:
 class Cloud:
 
     def __init__(self) -> None:
-        self.__cloud: tp.Dict[Coordinate, tp.Any] = dict()
+        self.__cloud: dict[Coordinate, tp.Any] = dict()
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         return Coordinate(*coordinate) in self.__cloud.keys()
@@ -206,7 +206,7 @@ class Cloud:
 
         return Mesh(xs, ys)
 
-    def keys(self) -> tp.List[Coordinate]:
+    def keys(self) -> list[Coordinate]:
         return list(self.__cloud.keys())
 
     def __iter__(self) -> tp.Iterator[tuple[Coordinate, tp.Any]]:
@@ -236,7 +236,7 @@ class Cloud:
         cloud.__cloud = self.__cloud.copy()
         return cloud
 
-    def detach(self) -> tp.List[tuple[Coordinate, tp.Any]]:
+    def detach(self) -> list[tuple[Coordinate, tp.Any]]:
         return list(self.__cloud.copy().items())
 
     def numpy(self) -> np.ndarray:

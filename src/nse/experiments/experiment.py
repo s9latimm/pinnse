@@ -21,7 +21,7 @@ class NSEExperiment:
             flow: float,
             foam: bool,
             supervised: bool,
-            geometry: tp.List[Shape] = (),
+            geometry: list[Shape] = (),
     ) -> None:
         self.__name = name
         self.__x = x
@@ -79,7 +79,7 @@ class NSEExperiment:
         return self._foam_facts
 
     @property
-    def geometry(self) -> tp.List[Shape]:
+    def geometry(self) -> list[Shape]:
         return self.__geometry
 
     @property

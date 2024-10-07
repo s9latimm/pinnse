@@ -73,5 +73,5 @@ class NSECloud(Cloud):
     def copy(self) -> NSECloud:
         return super().copy()
 
-    def detach(self) -> tp.List[tuple[Coordinate, NSEFact]]:
+    def detach(self) -> list[tuple[Coordinate, NSEFact]]:
         return super().detach()

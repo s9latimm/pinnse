@@ -28,7 +28,7 @@ SCALE = 5
 def decorate(ax: plt.Axes, decorations: tp.Sequence[Shape]) -> None:
     for decoration in decorations:
         shape = decoration[.05]
-        ax.plot([i.x for i in shape], [i.y for i in shape], color='k', linestyle='--', linewidth=1, zorder=999)
+        ax.plot(shape.x, shape.y, color='k', linestyle='--', linewidth=1, zorder=999)
         # ax.scatter([i.x for i in shape], [i.y for i in shape], color='k', marker='x', zorder=998)
 
 

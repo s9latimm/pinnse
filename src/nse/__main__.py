@@ -25,6 +25,7 @@ def main(
     foam: bool,
     hires: bool,
     save: bool,
+    layers: list[int],
 ) -> None:
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
@@ -48,7 +49,7 @@ def main(
         logging.info('PLOT: GEOMETRY')
         plot_geometry(experiment, identifier)
 
-    model = NSEModel(experiment, device, n)
+    model = NSEModel(experiment, device, n, layers)
 
     logging.info(model)
     logging.info(f'PARAMETERS: {len(model)}')
@@ -109,10 +110,9 @@ def parse_cmd() -> argparse.Namespace:
         '-e',
         '--experiment',
         type=str,
-        metavar='<experiment>',
         choices=EXPERIMENTS.keys(),
         required=True,
-        help='load experiment',
+        help='choose experiment',
     )
     initialization.add_argument(
         '-i',
@@ -153,13 +153,31 @@ def parse_cmd() -> argparse.Namespace:
         default=DEFAULT_STEPS,
         help='number of optimization steps',
     )
+
+    def layers_type(arg: str) -> list[int]:
+        try:
+            layers = [int(i.strip()) for i in arg.split(':') if len(i.strip()) > 0]
+            if len(layers) < 1 or min(layers) < 1:
+                parser.error(f"argument -l/--layers: invalid value: '{arg}'")
+            return layers
+        except (TypeError, ValueError):
+            parser.error(f"argument -l/--layers: invalid value: '{arg}'")
+
+    parser.add_argument(
+        '-l',
+        '--layers',
+        type=layers_type,
+        metavar='<layers>',
+        default='100:100:100',
+        help='size of layers seperated by colon (default: 100:100:100)',
+    )
     optimization.add_argument(
         '-d',
         '--device',
         type=str,
         choices=['cpu', 'cuda'],
         default='cpu',
-        help='device used for training',
+        help='device used for training (default: cpu)',
     )
     optimization.add_argument(
         '-f',
@@ -241,6 +259,7 @@ if __name__ == '__main__':
             args.foam,
             args.hires,
             args.save,
+            args.layers,
         )
         logging.info('EXIT: SUCCESS')
     except KeyboardInterrupt:

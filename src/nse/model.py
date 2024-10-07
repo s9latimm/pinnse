@@ -1,5 +1,3 @@
-import typing as tp
-
 import numpy as np
 import torch
 from torch import nn
@@ -11,11 +9,9 @@ from src.nse.experiments import NSEExperiment
 
 class NSEModel(SequentialModel):
 
-    def __init__(self, experiment: NSEExperiment, device: str, steps: int) -> None:
+    def __init__(self, experiment: NSEExperiment, device: str, steps: int, layers: list[int]) -> None:
 
-        layers = [2, 100, 100, 100, 2]
-
-        super().__init__(layers, device)
+        super().__init__([2] + layers + [2], device)
 
         self.__experiment = experiment
 
@@ -114,7 +110,7 @@ class NSEModel(SequentialModel):
 
     def predict(
         self,
-        sample: tp.List[Coordinate],
+        sample: list[Coordinate],
         nse=False
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
                                                                  torch.Tensor]:
