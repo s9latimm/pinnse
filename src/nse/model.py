@@ -41,7 +41,7 @@ class NSEModel(SequentialModel):
                                              max_eval=steps,
                                              history_size=50,
                                              tolerance_grad=1e-17,
-                                             tolerance_change=1e-17,
+                                             tolerance_change=5e-12,
                                              line_search_fn="strong_wolfe")
         self.__losses = np.asarray([np.zeros(5)])
 
