@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from src.base.geometry import Coordinate
+from src.base.mesh import Coordinate
 from src.base.model import SequentialModel
 from src.nse.experiments import NSEExperiment
 
@@ -120,22 +120,22 @@ class NSEModel(SequentialModel):
         res = self._model(torch.hstack([x, y]))
         psi, p = res[:, 0:1], res[:, 1:2]
 
-        u = self.gradient(psi, y)
-        v = -self.gradient(psi, x)
+        u = self.nabla(psi, y)
+        v = -self.nabla(psi, x)
 
         # u, v, p = res[:, 0:1], res[:, 1:2], res[:, 2:3]
 
         if not nse:
             return u, v, p
 
-        u_x, u_xx = self.derive(u, x)
-        u_y, u_yy = self.derive(u, y)
+        u_x, u_xx = self.laplace(u, x)
+        u_y, u_yy = self.laplace(u, y)
 
-        v_x, v_xx = self.derive(v, x)
-        v_y, v_yy = self.derive(v, y)
+        v_x, v_xx = self.laplace(v, x)
+        v_y, v_yy = self.laplace(v, y)
 
-        p_x = self.gradient(p, x)
-        p_y = self.gradient(p, y)
+        p_x = self.nabla(p, x)
+        p_y = self.nabla(p, y)
 
         f = self.__rho * (u * u_x + v * u_y - self.__nu * (u_xx + u_yy)) + p_x
         g = self.__rho * (u * v_x + v * v_y - self.__nu * (v_xx + v_yy)) + p_y

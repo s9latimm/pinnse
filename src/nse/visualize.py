@@ -1,7 +1,7 @@
 import numpy as np
 
 from src import OUTPUT_DIR, HIRES
-from src.base.geometry import Mesh
+from src.base.mesh import Mesh, Coordinate
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
 from src.nse.experiments import NSEExperiment
 from src.nse.model import NSEModel
@@ -32,7 +32,8 @@ def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
             ('p', np.abs(p - experiment.p)),
         ],
         path=OUTPUT_DIR / identifier / f'diff_uvp.pdf',
-        geometry=experiment.geometry,
+        boundary=experiment.boundary,
+        figure=experiment.obstruction,
     )
 
 
@@ -47,6 +48,14 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
     p = p - p.min()
 
     if hires:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                c = Coordinate(x[i, j], y[i, j])
+                if c in experiment.obstruction:
+                    u[i, j] = 0
+                    v[i, j] = 0
+                    p[i, j] = 0
+
         plot_heatmaps(
             f'Prediction HiRes [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
@@ -57,7 +66,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
                 ('p', p),
             ],
             path=OUTPUT_DIR / identifier / f'pred_uvp_hires.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
     else:
@@ -71,7 +81,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
                 ('p', p),
             ],
             path=OUTPUT_DIR / identifier / 'pred_uvp.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
         plot_streamlines(
@@ -81,7 +92,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             u,
             v,
             path=OUTPUT_DIR / identifier / 'pred_str.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
         plot_arrows(
@@ -91,7 +103,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             u,
             v,
             path=OUTPUT_DIR / identifier / 'pred_arr.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
         plot_heatmaps(
@@ -104,7 +117,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
                 ('p', p),
             ],
             path=OUTPUT_DIR / identifier / 'steps' / f'pred_uvp_{n}.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
         plot_streamlines(
@@ -114,7 +128,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             u,
             v,
             path=OUTPUT_DIR / identifier / 'steps' / f'pred_str_{n}.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
         plot_arrows(
@@ -124,7 +139,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             u,
             v,
             path=OUTPUT_DIR / identifier / 'steps' / f'pred_arr_{n}.pdf',
-            geometry=experiment.geometry,
+            boundary=experiment.boundary,
+            figure=experiment.obstruction,
         )
 
 
@@ -165,7 +181,8 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
             ('p', p - p.min()),
         ],
         path=OUTPUT_DIR / identifier / 'foam' / 'foam_uvp.pdf',
-        geometry=experiment.geometry,
+        boundary=experiment.boundary,
+        figure=experiment.obstruction,
     )
 
     plot_streamlines(
@@ -175,7 +192,8 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
         u,
         v,
         path=OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
-        geometry=experiment.geometry,
+        boundary=experiment.boundary,
+        figure=experiment.obstruction,
     )
 
     plot_arrows(
@@ -185,7 +203,8 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
         u,
         v,
         path=OUTPUT_DIR / identifier / 'foam' / f'foam_arr.pdf',
-        geometry=experiment.geometry,
+        boundary=experiment.boundary,
+        figure=experiment.obstruction,
     )
 
 
@@ -201,5 +220,6 @@ def plot_geometry(experiment: NSEExperiment, identifier: str):
         ['u', 'v', 'p'],
         marker=experiment.learning.keys() + experiment.knowledge.keys(),
         path=OUTPUT_DIR / identifier / 'model' / 'experiment.pdf',
-        geometry=experiment.geometry,
+        boundary=experiment.boundary,
+        figure=experiment.obstruction,
     )

@@ -1,5 +1,5 @@
-from src.base.geometry import arrange, Mesh
-from src.base.shapes import Airfoil
+from src.base.mesh import arrange, Mesh
+from src.base.shape import Airfoil, Rectangle, Figure
 from src.nse.experiments.experiment import Axis, NSEExperiment
 
 
@@ -24,7 +24,8 @@ class Wing(NSEExperiment):
             inlet,
             foam,
             supervised,
-            [airfoil],
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(airfoil),
         )
 
         # intake
