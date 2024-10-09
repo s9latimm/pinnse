@@ -3,7 +3,7 @@ import numpy as np
 from src import OUTPUT_DIR, HIRES
 from src.base.mesh import Mesh
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
-from src.nse.experiments import NSEExperiment
+from src.nse.experiments.experiment import NSEExperiment
 from src.nse.model import NSEModel
 
 
@@ -171,10 +171,10 @@ def plot_history(n, experiment: NSEExperiment, model: NSEModel, identifier: str)
 
 
 def plot_foam(experiment: NSEExperiment, identifier: str):
-    mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
+    mesh = experiment.foam.mesh
     x, y = mesh.x, mesh.y
 
-    data = mesh.transform(experiment.foam_facts)
+    data = mesh.transform(experiment.foam.knowledge)
     u, v, p = data.u, data.v, data.p
 
     plot_heatmaps(
@@ -198,17 +198,6 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
         u,
         v,
         path=OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
-    )
-
-    plot_arrows(
-        'OpenFOAM Arrows',
-        x,
-        y,
-        u,
-        v,
-        path=OUTPUT_DIR / identifier / 'foam' / f'foam_arr.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
     )

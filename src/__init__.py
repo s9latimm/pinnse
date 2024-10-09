@@ -16,5 +16,7 @@ HIRES: float = 10.
 TIMESTAMP: str = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 ROOT_DIR: Path = Path(__file__).parents[1].absolute()
 OUTPUT_DIR: Path = ROOT_DIR / 'output'
+RESOURCES_DIR: Path = ROOT_DIR / 'resources'
+FOAM_DIR: Path = RESOURCES_DIR / 'foam'
 
 DEVELOP_MODE: bool = True

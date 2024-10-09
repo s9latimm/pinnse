@@ -4,7 +4,7 @@ from torch import nn
 
 from src.base.mesh import Coordinate
 from src.base.model import SequentialModel
-from src.nse.experiments import NSEExperiment
+from src.nse.experiments.experiment import NSEExperiment
 
 
 class NSEModel(SequentialModel):
