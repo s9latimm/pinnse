@@ -1,6 +1,6 @@
 import numpy as np
 
-from src import OUTPUT_DIR
+from src import OUTPUT_DIR, HIRES
 from src.base.geometry import Mesh
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
 from src.nse.experiments import NSEExperiment
@@ -38,9 +38,9 @@ def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
 
 def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: str, hires=False):
     if hires:
-        mesh = Mesh(experiment.x.arrange(.01, True), experiment.y.arrange(.01, True))
+        mesh = Mesh(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
     else:
-        mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
+        mesh = Mesh(experiment.x.arrange(.1, True, 1), experiment.y.arrange(.1, True, 1))
     x, y = mesh.x, mesh.y
     u, v, p = predict(mesh, model)
 
@@ -74,15 +74,15 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             geometry=experiment.geometry,
         )
 
-        # plot_streamlines(
-        #     f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
-        #     x,
-        #     y,
-        #     u,
-        #     v,
-        #     path=OUTPUT_DIR / identifier / 'pred_str.pdf',
-        #     geometry=experiment.geometry,
-        # )
+        plot_streamlines(
+            f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
+            x,
+            y,
+            u,
+            v,
+            path=OUTPUT_DIR / identifier / 'pred_str.pdf',
+            geometry=experiment.geometry,
+        )
 
         plot_arrows(
             f'Prediction Arrows [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
@@ -107,15 +107,15 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             geometry=experiment.geometry,
         )
 
-        # plot_streamlines(
-        #     f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
-        #     x,
-        #     y,
-        #     u,
-        #     v,
-        #     path=OUTPUT_DIR / identifier / 'steps' / f'pred_str_{n}.pdf',
-        #     geometry=experiment.geometry,
-        # )
+        plot_streamlines(
+            f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
+            x,
+            y,
+            u,
+            v,
+            path=OUTPUT_DIR / identifier / 'steps' / f'pred_str_{n}.pdf',
+            geometry=experiment.geometry,
+        )
 
         plot_arrows(
             f'Prediction Arrows [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',

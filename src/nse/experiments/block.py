@@ -9,13 +9,10 @@ class Block(NSEExperiment):
         self,
         nu: float,
         rho: float,
-        flow: float,
+        inlet: float,
         foam: bool,
         supervised: bool,
-    ):
-        self.__nu = nu
-        self.__rho = rho
-
+    ) -> None:
         geometry = [
             Rectangle((1, .5), (2, 1.5)),
         ]
@@ -24,10 +21,9 @@ class Block(NSEExperiment):
             'Step',
             Axis('x', 0, 10),
             Axis('y', 0, 2),
-            .1,
             nu,
             rho,
-            flow,
+            inlet,
             foam,
             supervised,
             geometry,
@@ -35,7 +31,7 @@ class Block(NSEExperiment):
 
         # intake
         for i in arrange(.05, 1.95, .05):
-            self._knowledge.add((0, i), u=flow, v=0)
+            self._knowledge.add((0, i), u=inlet, v=0)
 
         # border
         for i in arrange(.05, 9.95, .05):
@@ -62,11 +58,3 @@ class Block(NSEExperiment):
         for c in mesh:
             if c not in self._knowledge:
                 self._learning.add(c)
-
-    @property
-    def nu(self):
-        return self.__nu
-
-    @property
-    def rho(self):
-        return self.__rho

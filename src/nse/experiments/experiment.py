@@ -1,5 +1,3 @@
-import typing as tp
-
 import numpy as np
 
 from src.base.geometry import Axis, Mesh
@@ -15,10 +13,9 @@ class NSEExperiment:
             name: str,
             x: Axis,
             y: Axis,
-            mesh: float,
             nu: float,
             rho: float,
-            flow: float,
+            inlet: float,
             foam: bool,
             supervised: bool,
             geometry: list[Shape] = (),
@@ -28,7 +25,7 @@ class NSEExperiment:
         self.__y = y
         self.__nu = nu
         self.__rho = rho
-        self.__flow = flow
+        self.__inlet = inlet
         self.__supervised = supervised
         self.__geometry = geometry
 
@@ -67,8 +64,8 @@ class NSEExperiment:
         return self.__rho
 
     @property
-    def flow(self) -> float:
-        return self.__flow
+    def inlet(self) -> float:
+        return self.__inlet
 
     @property
     def supervised(self) -> bool:

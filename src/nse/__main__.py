@@ -29,7 +29,7 @@ def main(
 ) -> None:
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
-    logging.info(f'INTAKE:     {experiment.flow:.3E}')
+    logging.info(f'INTAKE:     {experiment.inlet:.3E}')
     logging.info(f'GRID:       {experiment.knowledge.mesh().shape}')
     logging.info(f'DIMENSIONS: {experiment.dim}')
     logging.info(f'HIRES:      {HIRES}')
