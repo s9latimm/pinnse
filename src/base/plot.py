@@ -67,7 +67,7 @@ def plot_losses(
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
-        ax.set_xscale('log')
+        # ax.set_xscale('log')
         ax.set_xlim([1, len(lines[0][1])])
         ax.set_xticks([1, 10**np.ceil(np.log10(len(lines[0][1])) - 1), 10**np.ceil(np.log10(len(lines[0][1])))])
         ax.set_yscale('log')
@@ -120,8 +120,8 @@ class Plot(plt.Figure):
         ax.set_yticks([0, 1, int(np.round(self.__y.max()))])
         ax.set_ylim([int(np.round(self.__y.min())), int(np.round(self.__y.max()))])
 
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+        # ax.spines['top'].set_visible(False)
+        # ax.spines['right'].set_visible(False)
 
         if boundary is not None:
             for shape in boundary:

@@ -1,7 +1,7 @@
 import numpy as np
 
 from src import OUTPUT_DIR, HIRES
-from src.base.mesh import Mesh, Coordinate
+from src.base.mesh import Mesh
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
 from src.nse.experiments import NSEExperiment
 from src.nse.model import NSEModel
@@ -41,21 +41,27 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
     if hires:
         mesh = Mesh(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
     else:
-        mesh = Mesh(experiment.x.arrange(.1, True, 1), experiment.y.arrange(.1, True, 1))
+        mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
     x, y = mesh.x, mesh.y
     u, v, p = predict(mesh, model)
 
-    p = p - p.min()
+    p_min = np.infty
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if (x[i, j], y[i, j]) not in experiment.obstruction:
+                p_min = min(p_min, float(p[i, j]))
+
+    p = p - p_min
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if (x[i, j], y[i, j]) in experiment.obstruction:
+                u[i, j] = 0
+                v[i, j] = 0
+                p[i, j] = 0
 
     if hires:
-        for i in range(x.shape[0]):
-            for j in range(x.shape[1]):
-                c = Coordinate(x[i, j], y[i, j])
-                if c in experiment.obstruction:
-                    u[i, j] = 0
-                    v[i, j] = 0
-                    p[i, j] = 0
-
         plot_heatmaps(
             f'Prediction HiRes [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
