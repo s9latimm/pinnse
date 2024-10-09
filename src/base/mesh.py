@@ -5,10 +5,15 @@ import typing as tp
 import numpy as np
 
 EPS: float = 1e-6
+DELTA: float = 1e-7
 
 
 def clamp(f: float) -> int:
-    return int(np.round(f / EPS))
+    return int((f + DELTA) / EPS)
+
+
+def eps(i: int) -> float:
+    return i * EPS
 
 
 def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
@@ -31,14 +36,14 @@ def arrange(start: float, stop: float, step: float) -> list[float]:
         return r
     if start < stop:
         while start <= stop:
-            r.append(start * EPS)
+            r.append(eps(start))
             start += step
     elif start > stop:
         while start >= stop:
-            r.append(start * EPS)
+            r.append(eps(start))
             start -= step
     else:
-        return [start * EPS]
+        return [eps(start)]
     return r
 
 

@@ -1,6 +1,11 @@
+import typing as tp
+
 from src.base.mesh import Axis
 from src.base.shape import Figure
 from src.nse.data import NSECloud
+
+Foam: tp.TypeAlias = 'Foam'
+# type Foam = 'Foam'
 
 
 class NSEExperiment:
@@ -15,7 +20,7 @@ class NSEExperiment:
         nu: float = 1,
         rho: float = 1,
         inlet: float = 1,
-        foam=None,
+        foam: Foam = None,
         supervised: bool = False,
     ) -> None:
         self.__name = name
@@ -76,7 +81,7 @@ class NSEExperiment:
         return self.__supervised
 
     @property
-    def foam(self):
+    def foam(self) -> Foam:
         return self.__foam
 
     @property

@@ -18,18 +18,20 @@ def predict(mesh: Mesh, model: NSEModel) -> tuple[np.ndarray, np.ndarray, np.nda
 
 
 def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
-    mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
+    mesh = experiment.foam.mesh
     x, y = mesh.x, mesh.y
     u, v, p = predict(mesh, model)
+
+    foam = mesh.transform(experiment.foam.knowledge)
 
     plot_heatmaps(
         f'OpenFOAM vs. Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         [
-            ('u', np.abs(u - experiment.u)),
-            ('v', np.abs(v - experiment.v)),
-            ('p', np.abs(p - experiment.p)),
+            ('u', np.abs(u - foam.u)),
+            ('v', np.abs(v - foam.v)),
+            ('p', np.abs(p - foam.p)),
         ],
         path=OUTPUT_DIR / identifier / f'diff_uvp.pdf',
         boundary=experiment.boundary,
@@ -163,7 +165,7 @@ def plot_history(n, experiment: NSEExperiment, model: NSEModel, identifier: str)
                 ('g', model.history[1:, 1]),
             ]),
             ('Sum', [
-                ('$\Sigma$', model.history[1:, 2]),
+                ('$\\Sigma$', model.history[1:, 2]),
             ]),
         ],
         path=OUTPUT_DIR / identifier / f'err.pdf',

@@ -10,7 +10,7 @@ class Wing(NSEExperiment):
         nu: float,
         rho: float,
         inlet: float,
-        supervised: bool,
+        _: bool,
     ):
         airfoil = Airfoil((1, 1.25), 5, -10)
 

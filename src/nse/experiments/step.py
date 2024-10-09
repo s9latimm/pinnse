@@ -63,8 +63,5 @@ class Step(NSEExperiment):
             if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
                 self._learning.add(c)
 
-        # if supervised:
-        #     self._knowledge.clear()
-        #     for k, _ in self._knowledge:
-        #         v = self._foam_facts[k]
-        #         self._knowledge.add(k, u=v.u, v=v.v)
+        if supervised:
+            self._knowledge = self.foam.knowledge
