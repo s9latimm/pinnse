@@ -12,7 +12,7 @@ class Block(NSEExperiment):
         nu: float,
         rho: float,
         inlet: float,
-        supervised: bool,
+        _: bool,
     ) -> None:
         mesh = Mesh(Axis('x', 0, 10).arrange(.01, True), Axis('y', 0, 2).arrange(.01, True))
         foam = Foam(
