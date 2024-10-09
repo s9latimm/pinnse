@@ -4,7 +4,7 @@ import typing as tp
 
 import numpy as np
 
-from src.base.geometry import Coordinate, Cloud
+from src.base.mesh import Coordinate, Cloud
 
 
 class NSEFact:

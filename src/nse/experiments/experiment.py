@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.base.geometry import Axis, Mesh
-from src.base.shapes import Shape
+from src.base.mesh import Axis, Mesh
+from src.base.shape import Figure
 from src.foam import get_foam
 from src.nse.data import NSECloud
 
@@ -9,16 +9,17 @@ from src.nse.data import NSECloud
 class NSEExperiment:
 
     def __init__(
-            self,
-            name: str,
-            x: Axis,
-            y: Axis,
-            nu: float,
-            rho: float,
-            inlet: float,
-            foam: bool,
-            supervised: bool,
-            geometry: list[Shape] = (),
+        self,
+        name: str,
+        x: Axis,
+        y: Axis,
+        nu: float,
+        rho: float,
+        inlet: float,
+        foam: bool,
+        supervised: bool,
+        boundary: Figure = None,
+        obstruction: Figure = None,
     ) -> None:
         self.__name = name
         self.__x = x
@@ -27,10 +28,12 @@ class NSEExperiment:
         self.__rho = rho
         self.__inlet = inlet
         self.__supervised = supervised
-        self.__geometry = geometry
+        self.__boundary = boundary
+        self.__obstruction = obstruction
 
         self._learning = NSECloud()
         self._knowledge = NSECloud()
+        self._evaluation = NSECloud()
 
         if foam or supervised:
             self._foam_facts = self.__foam()
@@ -42,6 +45,10 @@ class NSEExperiment:
     @property
     def knowledge(self) -> NSECloud:
         return self._knowledge
+
+    @property
+    def evaluation(self) -> NSECloud:
+        return self._evaluation
 
     @property
     def name(self) -> str:
@@ -76,8 +83,12 @@ class NSEExperiment:
         return self._foam_facts
 
     @property
-    def geometry(self) -> list[Shape]:
-        return self.__geometry
+    def boundary(self) -> Figure:
+        return self.__boundary
+
+    @property
+    def obstruction(self) -> Figure:
+        return self.__obstruction
 
     @property
     def dim(self) -> tuple[tuple[float, float], tuple[float, float]]:

@@ -1,5 +1,5 @@
-from src.base.geometry import arrange, Mesh
-from src.base.shapes import Rectangle
+from src.base.mesh import arrange, Mesh
+from src.base.shape import Rectangle, Figure
 from src.nse.experiments.experiment import Axis, NSEExperiment
 
 
@@ -13,8 +13,6 @@ class Step(NSEExperiment):
         foam: bool,
         supervised: bool,
     ) -> None:
-        step = Rectangle((0, 0), (1, 1))
-
         super().__init__(
             'Step',
             Axis('x', 0, 10),
@@ -24,7 +22,8 @@ class Step(NSEExperiment):
             inlet,
             foam,
             supervised,
-            [step, Rectangle((0, 0), (10, 2))],
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Rectangle((0, 0), (1, 1))),
         )
 
         # inlet
@@ -38,10 +37,6 @@ class Step(NSEExperiment):
         for x in arrange(.05, 10, .05):
             self._knowledge.add((x, 2), u=0, v=0)
 
-        # obstruction
-        # for x in arrange(.05, .95, .1):
-        #     for y in arrange(.05, .95, .1):
-        #         self._knowledge.add((x, y), u=0, v=0)
         for x in arrange(.05, 1, .05):
             self._knowledge.add((x, 1), u=0, v=0)
         for y in arrange(.05, .95, .05):
@@ -50,7 +45,7 @@ class Step(NSEExperiment):
         # training
         mesh = Mesh(self.x.arrange(.1, True), self.y.arrange(.1, True))
         for c in mesh:
-            if c not in self._knowledge and c not in step:
+            if c not in self._knowledge and c not in self.obstruction:
                 self._learning.add(c)
 
         # if supervised:

@@ -70,13 +70,12 @@ class Coordinate:
         c = Coordinate(*coordinate)
         return Coordinate(self.x + c.x, self.y + c.y)
 
-    def __mul__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
-        c = Coordinate(*coordinate)
-        return Coordinate(self.x * c.x, self.y * c.y)
-
     def __sub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
         c = Coordinate(*coordinate)
         return Coordinate(self.x - c.x, self.y - c.y)
+
+    def __mul__(self, factor: float) -> Coordinate:
+        return Coordinate(self.x * factor, self.y * factor)
 
     def __truediv__(self, factor: float) -> Coordinate:
         if equal(factor, 0):

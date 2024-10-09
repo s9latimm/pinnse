@@ -10,16 +10,21 @@ from torch import nn
 class SequentialModel:
 
     @staticmethod
-    def gradient(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    def nabla(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         return torch.autograd.grad(f, x, grad_outputs=torch.ones_like(f), create_graph=True)[0]
 
     @staticmethod
-    def derive(f: torch.Tensor, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        f_x = SequentialModel.gradient(f, x)
-        f_xx = SequentialModel.gradient(f_x, x)
+    def laplace(f: torch.Tensor, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        f_x = SequentialModel.nabla(f, x)
+        f_xx = SequentialModel.nabla(f_x, x)
         return f_x, f_xx
 
     def __init__(self, layers: tp.Sequence[int], device: str) -> None:
+        if device == 'cpu':
+            assert torch.cpu.is_available()
+        if device == 'cuda':
+            assert torch.cuda.is_available()
+
         self.device = torch.device(device)
 
         self._model = nn.Sequential()

@@ -4,6 +4,7 @@ import sys
 
 import cpuinfo
 import psutil
+import torch
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
@@ -12,7 +13,7 @@ from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.model import NSEModel
-from src.nse.plot import plot_foam, plot_prediction, plot_history, plot_geometry
+from src.nse.visualize import plot_foam, plot_prediction, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
 
@@ -37,9 +38,20 @@ def main(
     logging.info(f'TIMESTAMP:  {TIMESTAMP}')
     logging.info(f'OUTPUT:     {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
 
-    logging.info(f'CPU:        {cpuinfo.get_cpu_info()["brand_raw"]} ')
-    logging.info(f'LOGICAL:    {psutil.cpu_count(logical=True)}')
-    logging.info(f'MEMORY:     {psutil.virtual_memory().total / (1024 ** 3):.2f} GB')
+    if torch.cpu.is_available():
+        info = cpuinfo.get_cpu_info()
+        logging.info(f'CPU:        {info["brand_raw"]}')
+        logging.info(f'LOGICAL:    {info["count"]}')
+        l2 = -(info["l2_cache_line_size"] * 1000) // -1024
+        logging.info(f'L2:         {(-(info["l2_cache_size"]) // -1024) // l2} x {l2} KB')
+        logging.info(f'L3:         {-(info["l3_cache_size"] // -(1024 ** 2))} MB')
+        logging.info(f'RAM:        {-(psutil.virtual_memory().total // -(1024 ** 3))} GB')
+
+    if torch.cuda.is_available():
+        info = torch.cuda.get_device_properties(torch.cuda.device(0))
+        logging.info(f'GPU:        {info.name}')
+        logging.info(f'CUDA:       {info.multi_processor_count}')
+        logging.info(f'MEMORY:     {-(info.total_memory // -(1024 ** 3))} GB')
 
     if foam:
         logging.info('PLOT: OPENFOAM')

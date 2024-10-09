@@ -1,5 +1,5 @@
-from src.base.geometry import arrange, Mesh
-from src.base.shapes import Rectangle
+from src.base.mesh import arrange, Mesh
+from src.base.shape import Rectangle, Figure
 from src.nse.experiments.experiment import Axis, NSEExperiment
 
 
@@ -13,10 +13,6 @@ class Block(NSEExperiment):
         foam: bool,
         supervised: bool,
     ) -> None:
-        geometry = [
-            Rectangle((1, .5), (2, 1.5)),
-        ]
-
         super().__init__(
             'Step',
             Axis('x', 0, 10),
@@ -26,7 +22,8 @@ class Block(NSEExperiment):
             inlet,
             foam,
             supervised,
-            geometry,
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Rectangle((1, .5), (2, 1.5))),
         )
 
         # intake

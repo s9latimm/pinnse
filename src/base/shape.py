@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from src.base.geometry import Coordinate, arrange, merge, equal
+from src.base.mesh import Coordinate, arrange, merge, equal
 
 
 class Shape:
@@ -22,6 +22,22 @@ class Shape:
         return self + -summand
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
+        return False
+
+
+class Figure:
+
+    def __init__(self, *shapes: Shape):
+        self.__shapes = shapes
+
+    def __iter__(self) -> tp.Iterator[Shape]:
+        return iter(self.__shapes)
+
+    def __contains__(self, coordinate: tuple | Coordinate) -> bool:
+        c = Coordinate(*coordinate)
+        for s in self.__shapes:
+            if c in s:
+                return True
         return False
 
 
@@ -197,7 +213,7 @@ class Airfoil(Shape):
         return upper, lower
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
-        c = ((Coordinate(*coordinate) - self.__a) / self.__size.x)
+        c = ((Coordinate(*coordinate) - self.__a) / self.__length)
         if 0 <= c.x <= 1:
             upper, lower = self.__f(c.x)
             return lower.y <= c.y <= upper.y
@@ -208,8 +224,8 @@ class Airfoil(Shape):
         bottom = []
         for x in arrange(0, 1, s.step / self.__length):
             upper, lower = self.__f(x)
-            top.append(self.__a + upper * (self.__length, self.__length))
-            bottom.append(self.__a + lower * (self.__length, self.__length))
+            top.append(self.__a + upper * self.__length)
+            bottom.append(self.__a + lower * self.__length)
         coordinates = merge(bottom[::-1], top)
         if s.start is not None:
             coordinates = [i for i in coordinates if i.x >= s.start]
