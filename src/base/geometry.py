@@ -125,10 +125,10 @@ class Axis:
     def label(self) -> str:
         return self.__label
 
-    def arrange(self, step: float, center=False) -> list[float]:
+    def arrange(self, step: float, center=False, padding=0) -> list[float]:
         assert step > 0
         c = step / 2 if center else 0
-        return arrange(self.__start + c, self.__stop - c, step)
+        return arrange(self.__start + c - padding, self.__stop - c + padding, step)
 
 
 class Mesh:

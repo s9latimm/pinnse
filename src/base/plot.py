@@ -155,11 +155,11 @@ def plot_heatmaps(
 
         ax.set_xlabel('x')
         ax.set_xticks([0, 1, int(np.round(x.max()))])
-        ax.set_xlim([0, int(np.round(x.max()))])
+        ax.set_xlim([int(np.round(x.min())), int(np.round(x.max()))])
 
         ax.set_ylabel('y')
         ax.set_yticks([0, 1, int(np.round(y.max()))])
-        ax.set_ylim([0, int(np.round(y.max()))])
+        ax.set_ylim([int(np.round(y.min())), int(np.round(y.max()))])
 
         ax.set_title(label)
 

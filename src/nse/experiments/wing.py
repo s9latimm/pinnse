@@ -9,31 +9,28 @@ class Wing(NSEExperiment):
         self,
         nu: float,
         rho: float,
-        flow: float,
+        inlet: float,
         foam: bool,
         supervised: bool,
     ):
-        self.__nu = nu
-        self.__rho = rho
-
-        airfoil = Airfoil((1, 1.25), (5, 5), -10)
+        airfoil = Airfoil((1, 1.25), 5, -10)
 
         super().__init__(
             'Step',
             Axis('x', 0, 10),
             Axis('y', 0, 2),
-            .1,
             nu,
             rho,
-            flow,
+            inlet,
             foam,
             supervised,
             [airfoil],
         )
 
         # intake
-        for y in arrange(.05, 1.95, .05):
-            self._knowledge.add((0, y), u=flow, v=0)
+        for y in arrange(0, 2, .05):
+            u = inlet * (1. - (1. - y)**2)
+            self._knowledge.add((0, y), u=u, v=0)
 
         # border
         for x in arrange(.05, 9.95, .05):
@@ -48,15 +45,19 @@ class Wing(NSEExperiment):
         for c in iline:
             self._knowledge.add(c, u=0, v=0)
 
-        mesh = Mesh(self.x.arrange(.1, True), self.y.arrange(.1, True))
+        mesh = Mesh(self.x.arrange(.1), self.y.arrange(.1))
         for c in mesh:
             if c not in self._knowledge and c in iline:
                 self._knowledge.add(c, u=0, v=0)
 
         outline = airfoil[::.05].interpolate(.05)
-        bline = airfoil[::.05].interpolate(.1)
+        bline = outline.interpolate(.05)
 
         for c in outline:
+            if c not in self._learning:
+                self._learning.add(c)
+
+        for c in bline:
             if c not in self._learning:
                 self._learning.add(c)
 
@@ -64,11 +65,3 @@ class Wing(NSEExperiment):
         for c in mesh:
             if c not in self._knowledge and c not in self._learning and c not in bline:
                 self._learning.add(c)
-
-    @property
-    def nu(self):
-        return self.__nu
-
-    @property
-    def rho(self):
-        return self.__rho

@@ -172,18 +172,15 @@ class Airfoil(Shape):
     def __init__(
         self,
         support: tuple[float, float] | Coordinate,
-        size: tuple[float, float] | Coordinate,
+        length: float,
         angle: float = 0.,
     ) -> None:
-        """
-        :param size: size of shape
-        """
         self.__a = Coordinate(*support)
-        self.__size = Coordinate(*size)
+        self.__length = length
         self.__angle = angle
 
     def __add__(self, summand: float) -> Airfoil:
-        return Airfoil(self.__a - (summand / 2, 0), self.__size + (summand, summand / self.__t / 2), self.__angle)
+        return Airfoil(self.__a - (summand / 2, 0), self.__length + summand, self.__angle)
 
     def __f(self, x) -> tuple[Coordinate, Coordinate]:
         y_t = 5 * self.__t * (.2969 * np.sqrt(x) - .1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1015 * x**4)
@@ -209,10 +206,10 @@ class Airfoil(Shape):
     def __getitem__(self, s: slice) -> Polygon:
         top = []
         bottom = []
-        for x in arrange(0, 1, s.step / self.__size.x):
+        for x in arrange(0, 1, s.step / self.__length):
             upper, lower = self.__f(x)
-            top.append(self.__a + upper * self.__size)
-            bottom.append(self.__a + lower * self.__size)
+            top.append(self.__a + upper * (self.__length, self.__length))
+            bottom.append(self.__a + lower * (self.__length, self.__length))
         coordinates = merge(bottom[::-1], top)
         if s.start is not None:
             coordinates = [i for i in coordinates if i.x >= s.start]

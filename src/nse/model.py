@@ -92,7 +92,7 @@ class NSEModel(SequentialModel):
         f_loss, g_loss = self.__loss_pde()
         u_loss, v_loss = self.__loss_rim()
 
-        loss = f_loss + g_loss + .5 * u_loss + 1.5 * v_loss
+        loss = f_loss + g_loss + u_loss + v_loss
 
         self.__losses = np.vstack([
             self.__losses,
@@ -122,6 +122,8 @@ class NSEModel(SequentialModel):
 
         u = self.gradient(psi, y)
         v = -self.gradient(psi, x)
+
+        # u, v, p = res[:, 0:1], res[:, 1:2], res[:, 2:3]
 
         if not nse:
             return u, v, p

@@ -28,13 +28,13 @@ class SequentialModel:
             self._model.append(nn.Tanh())
             self._model.append(nn.Linear(layers[i], layers[i + 1], bias=True, dtype=torch.float64))
 
-        def init_weights(m):
-            if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-
-        self._model.apply(init_weights)
+        # def init_weights(m):
+        #     if isinstance(m, nn.Linear):
+        #         nn.init.xavier_uniform_(m.weight)
+        #         if m.bias is not None:
+        #             nn.init.constant_(m.bias, 0)
+        #
+        # self._model.apply(init_weights)
 
         self._model.to(device)
 
