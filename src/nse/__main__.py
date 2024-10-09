@@ -9,8 +9,7 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
-from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
-from src.nse.experiments import EXPERIMENTS
+from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE, EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.model import NSEModel
 from src.nse.visualize import plot_foam, plot_prediction, plot_history, plot_geometry
@@ -261,7 +260,6 @@ if __name__ == '__main__':
                 args.nu,
                 args.rho,
                 args.intake,
-                args.foam,
                 args.supervised,
             ),
             args.train,

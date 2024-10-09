@@ -243,22 +243,18 @@ def plot_clouds(
         figure: Figure = None,
 ) -> None:
     plots = []
-    masks = []
 
     for p, label, in enumerate(labels):
         plot = np.zeros(x.shape)
-        mask = np.full(x.shape, .5)
         for k, v in cloud:
             if not np.isnan(v[p]):
                 for i in range(x.shape[0]):
                     for j in range(x.shape[1]):
                         if Coordinate(x[i][j], y[i][j]) == k:
                             plot[i][j] += v[p]
-                            mask[i][j] = -1
         plots.append((label, plot))
-        masks.append(mask)
 
-    plot_heatmaps(title, x, y, plots, marker=marker, masks=masks, path=path, boundary=boundary, figure=figure)
+    plot_heatmaps(title, x, y, plots, marker=marker, path=path, boundary=boundary, figure=figure)
 
 
 def plot_streamlines(

@@ -8,7 +8,7 @@ EPS: float = 1e-6
 
 
 def clamp(f: float) -> int:
-    return int(f / EPS)
+    return int(np.round(f / EPS))
 
 
 def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:

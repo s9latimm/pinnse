@@ -1,6 +1,8 @@
-from src.base.mesh import arrange, Mesh
+from src import FOAM_DIR
+from src.base.mesh import arrange, Mesh, Axis
 from src.base.shape import Rectangle, Figure
-from src.nse.experiments.experiment import Axis, NSEExperiment
+from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.foam import Foam
 
 
 class Block(NSEExperiment):
@@ -10,20 +12,30 @@ class Block(NSEExperiment):
         nu: float,
         rho: float,
         inlet: float,
-        foam: bool,
         supervised: bool,
     ) -> None:
+        mesh = Mesh(Axis('x', 0, 10).arrange(.01, True), Axis('y', 0, 2).arrange(.01, True))
+        foam = Foam(
+            FOAM_DIR / 'block_01',
+            mesh,
+            [(0, 1.5, 1, 2), (0, 0.5, 1, 1.5), (0, 0, 1, 0.5), (1, 1.5, 2, 2), (1, 0, 2, 0.5), (2, 1.5, 10, 2),
+             (2, 0.5, 10, 1.5), (2, 0, 10, 0.5)],
+            100,
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Rectangle((0, 0), (1, 1))),
+            0.01,
+            1.,
+        )
         super().__init__(
             'Step',
             Axis('x', 0, 10),
             Axis('y', 0, 2),
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Rectangle((1, .5), (2, 1.5))),
             nu,
             rho,
             inlet,
             foam,
-            supervised,
-            Figure(Rectangle((0, 0), (10, 2))),
-            Figure(Rectangle((1, .5), (2, 1.5))),
         )
 
         # intake

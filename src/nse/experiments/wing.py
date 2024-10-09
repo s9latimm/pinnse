@@ -1,6 +1,6 @@
-from src.base.mesh import arrange, Mesh
+from src.base.mesh import arrange, Mesh, Axis
 from src.base.shape import Airfoil, Rectangle, Figure
-from src.nse.experiments.experiment import Axis, NSEExperiment
+from src.nse.experiments.experiment import NSEExperiment
 
 
 class Wing(NSEExperiment):
@@ -10,7 +10,6 @@ class Wing(NSEExperiment):
         nu: float,
         rho: float,
         inlet: float,
-        foam: bool,
         supervised: bool,
     ):
         airfoil = Airfoil((1, 1.25), 5, -10)
@@ -19,13 +18,11 @@ class Wing(NSEExperiment):
             'Step',
             Axis('x', 0, 10),
             Axis('y', 0, 2),
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(airfoil),
             nu,
             rho,
             inlet,
-            foam,
-            supervised,
-            Figure(Rectangle((0, 0), (10, 2))),
-            Figure(airfoil),
         )
 
         # intake

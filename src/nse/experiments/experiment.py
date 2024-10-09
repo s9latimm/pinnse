@@ -1,8 +1,5 @@
-import numpy as np
-
-from src.base.mesh import Axis, Mesh
+from src.base.mesh import Axis
 from src.base.shape import Figure
-from src.foam import get_foam
 from src.nse.data import NSECloud
 
 
@@ -13,30 +10,30 @@ class NSEExperiment:
         name: str,
         x: Axis,
         y: Axis,
-        nu: float,
-        rho: float,
-        inlet: float,
-        foam: bool,
-        supervised: bool,
         boundary: Figure = None,
         obstruction: Figure = None,
+        nu: float = 1,
+        rho: float = 1,
+        inlet: float = 1,
+        foam=None,
+        supervised: bool = False,
     ) -> None:
         self.__name = name
         self.__x = x
         self.__y = y
+        self.__boundary = boundary
+        self.__obstruction = obstruction
         self.__nu = nu
         self.__rho = rho
         self.__inlet = inlet
         self.__supervised = supervised
-        self.__boundary = boundary
-        self.__obstruction = obstruction
 
         self._learning = NSECloud()
         self._knowledge = NSECloud()
         self._evaluation = NSECloud()
 
         if foam or supervised:
-            self._foam_facts = self.__foam()
+            self.__foam = foam
 
     @property
     def learning(self) -> NSECloud:
@@ -79,8 +76,8 @@ class NSEExperiment:
         return self.__supervised
 
     @property
-    def foam_facts(self) -> NSECloud:
-        return self._foam_facts
+    def foam(self):
+        return self.__foam
 
     @property
     def boundary(self) -> Figure:
@@ -93,18 +90,3 @@ class NSEExperiment:
     @property
     def dim(self) -> tuple[tuple[float, float], tuple[float, float]]:
         return self.__x.dim, self.__y.dim
-
-    def __foam(self) -> NSECloud:
-        u, v, p = get_foam()
-        u = np.flip(u, 0).transpose().flatten()
-        v = np.flip(v, 0).transpose().flatten()
-        p = np.flip(p, 0).transpose().flatten()
-
-        foam_cloud = NSECloud()
-
-        mesh = Mesh(self.__x.arrange(.1, True), self.__y.arrange(.1, True))
-
-        for i, c in enumerate(mesh):
-            foam_cloud.add(c, u=u[i], v=v[i], p=p[i])
-
-        return foam_cloud
