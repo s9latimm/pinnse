@@ -215,7 +215,7 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
 
 
 def plot_geometry(experiment: NSEExperiment, identifier: str):
-    mesh = Mesh(experiment.x.arrange(.05), experiment.y.arrange(.05))
+    mesh = Mesh(experiment.x.arrange(1), experiment.y.arrange(1))
     x, y = mesh.x, mesh.y
 
     plot_clouds(
