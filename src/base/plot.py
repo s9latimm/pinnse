@@ -69,7 +69,7 @@ def plot_losses(
 
         # ax.set_xscale('log')
         ax.set_xlim([1, len(lines[0][1])])
-        ax.set_xticks([1, 10**np.ceil(np.log10(len(lines[0][1])) - 1), 10**np.ceil(np.log10(len(lines[0][1])))])
+        ax.set_xticks([1, 10**np.floor(np.log10(len(lines[0][1])))])
         ax.set_yscale('log')
         ax.set_yticks([10**np.floor(np.log10(n)), 10**np.floor(np.log10(m)), 10**np.ceil(np.log10(m))])
 
