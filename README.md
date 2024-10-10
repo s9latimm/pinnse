@@ -37,12 +37,16 @@ $ python -m pip install -r requirements.txt
 - [Incompressible Flow](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow)
 
 ```
-usage: nse [-h] [-i <intake>] [--nu <nu>] [--rho <rho>] [--id <id>] [-n <train>] [-d {cpu,cuda}] [-f] [--supervised] [-p] [-r] [--save]
+usage: nse [-h] -e {step,block,wing} [-i <intake>] [--nu <nu>] [--rho <rho>] [--id <id>] [-n <train>] [-l <layers>] [-d {cpu,cuda}] [-f] [--supervised] [-p] [-r] [--save]
 
 options:
   -h, --help            show this help message and exit
+  -l <layers>, --layers <layers>
+                        size of layers seperated by colon (default: 100:100:100)
 
 initialization:
+  -e {step,block,wing}, --experiment {step,block,wing}
+                        choose experiment
   -i <intake>, --intake <intake>
                         set intake [m/s]
   --nu <nu>             set viscosity [m^2/s]
@@ -53,7 +57,7 @@ optimization:
   -n <train>, --train <train>
                         number of optimization steps
   -d {cpu,cuda}, --device {cpu,cuda}
-                        device used for training
+                        device used for training (default: cpu)
   -f, --foam            load OpenFOAM
   --supervised          set training method to supervised approach (requires OpenFOAM)
 
@@ -66,13 +70,13 @@ output:
 ### Examples
 
 ```shell
-$ python -m src.nse --id eval -i 1.2 --nu 1 -pn 10000 -d cuda
+$ python -m src.nse --experiment step -intake 5 --nu .08 --train 100
 ```
 
 ```shell
-$ python -m src.nse -i 10 --nu .068 -prfn 5000 --supervised
+$ python -m src.nse -e wing --id wing -l 100:100:100:100 -i 1 --nu .01 -d cuda -rpfn 30000
 ```
 
 ```shell
-$ python -m src.nse --id test
+$ python -m src.nse -e block
 ```
