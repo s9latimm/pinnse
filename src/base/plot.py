@@ -154,6 +154,7 @@ def plot_heatmaps(
         marker: tp.Sequence[Coordinate] = (),
         boundary: Figure = None,
         figure: Figure = None,
+        points=None,
 ) -> None:
     with Plot(x, y, path, len(plots)) as fig:
         fig.suptitle(title)
@@ -213,6 +214,22 @@ def plot_heatmaps(
                 zorder=3,
             )
 
+            if points is not None:
+                ps = []
+                vs = []
+                for k, v in points:
+                    ps.append(k)
+                    vs.append(v[i])
+                ax.scatter(
+                    [j.x for j in ps],
+                    [j.y for j in ps],
+                    marker='o',
+                    c=vs,
+                    cmap=seismic_pos,
+                    norm=colors.Normalize(vmin=0, vmax=max(vs)),
+                    zorder=3,
+                )
+
             cbar = fig.colorbar(
                 img,
                 ax=ax,
@@ -243,18 +260,22 @@ def plot_clouds(
         figure: Figure = None,
 ) -> None:
     plots = []
+    masks = []
 
     for p, label, in enumerate(labels):
-        plot = np.zeros(x.shape)
-        for k, v in cloud:
-            if not np.isnan(v[p]):
-                for i in range(x.shape[0]):
-                    for j in range(x.shape[1]):
-                        if Coordinate(x[i][j], y[i][j]) == k:
-                            plot[i][j] += v[p]
-        plots.append((label, plot))
+        plots.append((label, np.full(x.shape, np.nan)))
+        masks.append(np.full(x.shape, .5))
 
-    plot_heatmaps(title, x, y, plots, marker=marker, path=path, boundary=boundary, figure=figure)
+    plot_heatmaps(title,
+                  x,
+                  y,
+                  plots,
+                  masks=masks,
+                  points=cloud,
+                  marker=marker,
+                  path=path,
+                  boundary=boundary,
+                  figure=figure)
 
 
 def plot_streamlines(

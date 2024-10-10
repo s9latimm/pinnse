@@ -8,6 +8,16 @@ Foam: tp.TypeAlias = 'Foam'
 # type Foam = 'Foam'
 
 
+def inlet(start: float, end: float, scale: float = 1.) -> tp.Callable[[float], float]:
+    width = end - start
+    mid = end - width / 2.
+
+    b = 2. / width
+    a = mid * b
+
+    return lambda x: scale * (1. - (a - b * x)**2)
+
+
 class NSEExperiment:
 
     def __init__(
@@ -19,7 +29,7 @@ class NSEExperiment:
         obstruction: Figure = None,
         nu: float = 1,
         rho: float = 1,
-        inlet: float = 1,
+        flow: float = 1,
         foam: Foam = None,
         supervised: bool = False,
     ) -> None:
@@ -30,7 +40,7 @@ class NSEExperiment:
         self.__obstruction = obstruction
         self.__nu = nu
         self.__rho = rho
-        self.__inlet = inlet
+        self.__flow = flow
         self.__supervised = supervised
 
         self._learning = NSECloud()
@@ -73,8 +83,8 @@ class NSEExperiment:
         return self.__rho
 
     @property
-    def inlet(self) -> float:
-        return self.__inlet
+    def flow(self) -> float:
+        return self.__flow
 
     @property
     def supervised(self) -> bool:

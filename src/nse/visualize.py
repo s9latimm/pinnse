@@ -204,16 +204,16 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
         figure=experiment.obstruction,
     )
 
-    plot_arrows(
-        'OpenFOAM Arrows',
-        x,
-        y,
-        u,
-        v,
-        path=OUTPUT_DIR / identifier / 'steps' / 'foam_arw.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
-    )
+    # plot_arrows(
+    #     'OpenFOAM Arrows',
+    #     x,
+    #     y,
+    #     u,
+    #     v,
+    #     path=OUTPUT_DIR / identifier / 'steps' / 'foam_arw.pdf',
+    #     boundary=experiment.boundary,
+    #     figure=experiment.obstruction,
+    # )
 
 
 def plot_geometry(experiment: NSEExperiment, identifier: str):
@@ -226,7 +226,7 @@ def plot_geometry(experiment: NSEExperiment, identifier: str):
         y,
         experiment.knowledge,
         ['u', 'v', 'p'],
-        marker=experiment.learning.keys() + experiment.knowledge.keys(),
+        marker=experiment.learning.keys(),
         path=OUTPUT_DIR / identifier / 'model' / 'experiment.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
