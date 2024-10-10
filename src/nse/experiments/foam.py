@@ -154,13 +154,13 @@ class Foam(NSEExperiment):
         return values
 
     @staticmethod
-    def __dir(path: Path) -> Path | None:
+    def __dir(path: Path) -> int | None:
         indices = []
         for item in path.iterdir():
             if item.is_dir() and item.name.isdigit():
                 indices.append(int(item.name))
         if len(indices) > 0:
-            return path / str(max(indices))
+            return max(indices)
         return None
 
     @staticmethod

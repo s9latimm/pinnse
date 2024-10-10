@@ -1,7 +1,7 @@
 from src import FOAM_DIR
 from src.base.mesh import arrange, Mesh, Axis
 from src.base.shape import Rectangle, Figure
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import NSEExperiment, inlet
 from src.nse.experiments.foam import Foam
 
 
@@ -11,7 +11,7 @@ class Step(NSEExperiment):
         self,
         nu: float,
         rho: float,
-        inlet: float,
+        flow: float,
         supervised: bool,
     ) -> None:
         mesh = Mesh(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
@@ -33,7 +33,7 @@ class Step(NSEExperiment):
             Figure(Rectangle((0, 0), (1, 1))),
             nu,
             rho,
-            inlet,
+            flow,
             foam,
             supervised,
         )
@@ -43,7 +43,7 @@ class Step(NSEExperiment):
 
         # inlet
         for y in arrange(1, 2, s):
-            u = inlet * (1. - (3. - 2. * y)**2)
+            u = inlet(1, 2, flow)(y)
             self._knowledge.add((0, y), u=u, v=0)
 
         # border

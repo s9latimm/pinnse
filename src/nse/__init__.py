@@ -9,7 +9,7 @@ EXPERIMENTS: dict[str, type[Step | Block | Wing]] = {
     'wing': Wing,
 }
 
-DEFAULT_NU: float = 0.08
+DEFAULT_NU: float = .01
 DEFAULT_RHO: float = 1.
-DEFAULT_INTAKE: float = 5.
+DEFAULT_INTAKE: float = 1.
 DEFAULT_STEPS: int = 1
