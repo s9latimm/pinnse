@@ -2,30 +2,31 @@ import typing as tp
 from abc import abstractmethod
 from pathlib import Path
 
-import numpy as np
 import torch
 from torch import nn
 
 
+def nabla(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    return torch.autograd.grad(f, x, grad_outputs=torch.ones_like(f), create_graph=True, retain_graph=True)[0]
+
+
+def laplace(f: torch.Tensor, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    f_x = nabla(f, x)
+    f_xx = nabla(f_x, x)
+    return f_x, f_xx
+
+
 class SequentialModel:
 
-    @staticmethod
-    def nabla(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-        return torch.autograd.grad(f, x, grad_outputs=torch.ones_like(f), create_graph=True)[0]
-
-    @staticmethod
-    def laplace(f: torch.Tensor, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        f_x = SequentialModel.nabla(f, x)
-        f_xx = SequentialModel.nabla(f_x, x)
-        return f_x, f_xx
-
     def __init__(self, layers: tp.Sequence[int], device: str) -> None:
+        super().__init__()
+
         if device == 'cpu':
             assert torch.cpu.is_available()
         if device == 'cuda':
             assert torch.cuda.is_available()
 
-        self.device = torch.device(device)
+        self._device = torch.device(device)
 
         self._model = nn.Sequential()
         self._model.append(nn.Linear(layers[0], layers[1], bias=True, dtype=torch.float64))
@@ -45,20 +46,21 @@ class SequentialModel:
 
         self._mse = nn.MSELoss()
 
+        self._losses = []
+
     def __str__(self) -> str:
         return str(self._model)
 
     @property
+    def history(self) -> list[tuple[...]]:
+        return self._losses
+
     @abstractmethod
-    def history(self) -> np.ndarray:
+    def train(self, callback: ...) -> None:
         ...
 
     @abstractmethod
-    def train(self, callback) -> None:
-        ...
-
-    @abstractmethod
-    def predict(self, sample) -> tuple:
+    def predict(self, sample: ...) -> tuple[...]:
         ...
 
     def eval(self) -> None:
