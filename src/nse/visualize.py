@@ -4,10 +4,10 @@ from src import OUTPUT_DIR, HIRES
 from src.base.mesh import Mesh
 from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
 from src.nse.experiments.experiment import NSEExperiment
-from src.nse.model import NSEModel
+from src.nse.simulation import Simulation
 
 
-def predict(mesh: Mesh, model: NSEModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def predict(mesh: Mesh, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     u, v, p, *_ = model.predict(mesh.flatten())
 
     u = u.detach().cpu().numpy().reshape(mesh.x.shape)
@@ -17,7 +17,7 @@ def predict(mesh: Mesh, model: NSEModel) -> tuple[np.ndarray, np.ndarray, np.nda
     return u, v, p
 
 
-def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
+def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
     mesh = experiment.foam.mesh
     x, y = mesh.x, mesh.y
     u, v, p = predict(mesh, model)
@@ -39,7 +39,7 @@ def plot_diff(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
     )
 
 
-def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: str, hires=False):
+def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier: str, hires=False):
     if hires:
         mesh = Mesh(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
     else:
@@ -110,7 +110,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             y,
             u,
             v,
-            path=OUTPUT_DIR / identifier / 'pred_arr.pdf',
+            path=OUTPUT_DIR / identifier / 'pred_arw.pdf',
             boundary=experiment.boundary,
             figure=experiment.obstruction,
         )
@@ -146,26 +146,26 @@ def plot_prediction(n, experiment: NSEExperiment, model: NSEModel, identifier: s
             y,
             u,
             v,
-            path=OUTPUT_DIR / identifier / 'steps' / f'pred_arr_{n}.pdf',
+            path=OUTPUT_DIR / identifier / 'steps' / f'pred_arw_{n}.pdf',
             boundary=experiment.boundary,
             figure=experiment.obstruction,
         )
 
 
-def plot_history(n, experiment: NSEExperiment, model: NSEModel, identifier: str):
+def plot_history(n, experiment: NSEExperiment, model: Simulation, identifier: str):
     plot_losses(
         f'Loss [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         [
             ('Border', [
-                ('u', model.history[1:, 3]),
-                ('v', model.history[1:, 4]),
+                ('u', [i[3] for i in model.history[1:]]),
+                ('v', [i[4] for i in model.history[1:]]),
             ]),
             ('PDE', [
-                ('f', model.history[1:, 0]),
-                ('g', model.history[1:, 1]),
+                ('f', [i[0] for i in model.history[1:]]),
+                ('g', [i[1] for i in model.history[1:]]),
             ]),
             ('Sum', [
-                ('$\\Sigma$', model.history[1:, 2]),
+                ('$\\Sigma$', [i[2] for i in model.history[1:]]),
             ]),
         ],
         path=OUTPUT_DIR / identifier / f'err.pdf',
@@ -200,6 +200,17 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
         u,
         v,
         path=OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
+        boundary=experiment.boundary,
+        figure=experiment.obstruction,
+    )
+
+    plot_arrows(
+        'OpenFOAM Arrows',
+        x,
+        y,
+        u,
+        v,
+        path=OUTPUT_DIR / identifier / 'steps' / 'foam_arw.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
     )

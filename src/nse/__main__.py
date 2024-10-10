@@ -3,6 +3,7 @@ import logging
 import sys
 
 import cpuinfo
+import numpy as np
 import psutil
 import torch
 from tqdm import tqdm
@@ -11,7 +12,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
 from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE, EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
-from src.nse.model import NSEModel
+from src.nse.simulation import Simulation
 from src.nse.visualize import plot_foam, plot_prediction, plot_history, plot_geometry
 from src.utils.timer import Stopwatch
 
@@ -60,7 +61,7 @@ def main(
         logging.info('PLOT: GEOMETRY')
         plot_geometry(experiment, identifier)
 
-    model = NSEModel(experiment, device, n, layers)
+    model = Simulation(experiment, device, n, layers)
 
     logging.info(model)
     logging.info(f'PARAMETERS: {len(model)}')
@@ -73,8 +74,8 @@ def main(
                     if pbar.n < n:
                         if pbar.n > 0:
                             if pbar.n % 1e2 == 0:
-                                change = history[-1].mean() - history[-2].mean()
-                                logging.info(f'  {pbar.n:{len(str(n))}d}: {history[-1].mean():18.16f} {change:+.3E}')
+                                change = np.mean(history[-1]) - np.mean(history[-2])
+                                logging.info(f'  {pbar.n:{len(str(n))}d}: {np.mean(history[-1]):18.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, experiment, model, identifier)

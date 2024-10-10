@@ -40,7 +40,7 @@ def save_fig(fig: plt.Figure, path: Path) -> None:
 
 def plot_losses(
     title: str,
-    plots: tp.Sequence[tuple[str, tp.Sequence[tuple[str, np.ndarray]]]],
+    plots: tp.Sequence[tuple[str, tp.Sequence[tuple[str, tp.Sequence[float]]]]],
     path: Path = None,
 ) -> None:
     fig = plt.figure(figsize=(5 * SCALE, SCALE * len(plots)))
@@ -57,8 +57,8 @@ def plot_losses(
 
             ax.plot(np.arange(1, len(y) + 1, 1), y, label=l, color=COLORS[j])
             ax.axhline(y=float(y[-1]), color=COLORS[j], linestyle='--')
-            m = min(m, y.min())
-            n = max(n, y.max())
+            m = min(m, min(y))
+            n = max(n, max(y))
 
         ax.set_xlabel('iter')
         ax.set_ylabel('err')
