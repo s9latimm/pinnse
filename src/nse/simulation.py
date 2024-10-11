@@ -16,15 +16,26 @@ class Simulation(SequentialModel):
 
         knowledge = self.__experiment.knowledge.detach()
         learning = self.__experiment.learning.detach()
+        outlet = self.__experiment.outlet.detach()
 
         self.__u = torch.tensor([[i.u] for _, i in knowledge], dtype=torch.float64, device=self._device)
         self.__v = torch.tensor([[i.v] for _, i in knowledge], dtype=torch.float64, device=self._device)
 
         self.__null = torch.zeros(len(learning), 1, dtype=torch.float64, device=self._device)
 
+        self.__outlet = len(outlet)
+
+        self.__clamp = torch.zeros(len(outlet), 1, dtype=torch.float64, device=self._device)
+
         self.__knowledge = (
-            torch.tensor([[k.x] for k, _ in knowledge], dtype=torch.float64, requires_grad=True, device=self._device),
-            torch.tensor([[k.y] for k, _ in knowledge], dtype=torch.float64, requires_grad=True, device=self._device),
+            torch.tensor([[k.x] for k, _ in outlet + knowledge],
+                         dtype=torch.float64,
+                         requires_grad=True,
+                         device=self._device),
+            torch.tensor([[k.y] for k, _ in outlet + knowledge],
+                         dtype=torch.float64,
+                         requires_grad=True,
+                         device=self._device),
         )
         self.__learning = (
             torch.tensor([[k.x] for k, _ in learning], dtype=torch.float64, requires_grad=True, device=self._device),
@@ -76,8 +87,10 @@ class Simulation(SequentialModel):
         self.__optimizer.zero_grad()
 
         u, v, _ = self.__forward(self.__knowledge)
-        u_loss = self._mse(u, self.__u)
-        v_loss = self._mse(v, self.__v)
+
+        # prohibits the model from hallucinating an incoming flow from right
+        u_loss = self._mse(u[self.__outlet:], self.__u) + self._mse(torch.clamp(u[:self.__outlet], max=0), self.__clamp)
+        v_loss = self._mse(v[self.__outlet:], self.__v)
 
         *_, f, g = self.__forward(self.__learning, True)
         f_loss = self._mse(f, self.__null)

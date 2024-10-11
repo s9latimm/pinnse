@@ -31,23 +31,24 @@ class Block(NSEExperiment):
             Axis('x', 0, 10),
             Axis('y', 0, 2),
             Figure(Rectangle((0, 0), (10, 2))),
-            Figure(Rectangle((1, .5), (2, 1.5))),
+            Figure(Rectangle((2, .5), (3, 1.5))),
             nu,
             rho,
             flow,
             foam,
         )
 
-        s = 1. / 20
-        t = 1. / 10
+        t = .1
+        s = t / 2
 
         # inlet
         for y in arrange(0, 2, s):
             u = inlet(0, 2, flow)(y)
             self._knowledge.add((0, y), u=u, v=0)
+            self._outlet.add((10, y))
 
         # border
-        for x in arrange(s, 10, s):
+        for x in arrange(s, 10 - s, s):
             self._knowledge.add((x, 0), u=0, v=0)
             self._knowledge.add((x, 2), u=0, v=0)
 

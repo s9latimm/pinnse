@@ -10,3 +10,4 @@ steps/
 __pycache_/
 
 *.pdf
+*.png

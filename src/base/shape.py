@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from src.base.mesh import Coordinate, arrange, merge, equal
+from src.base.mesh import Coordinate, arrange, merge, equal, leq
 
 
 class Shape:
@@ -162,7 +162,7 @@ class Rectangle(Shape):
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate)
-        return self.__a.x <= c.x <= self.__b.x and self.__a.y <= c.y <= self.__b.y
+        return leq(self.__a.x, c.x) and leq(c.x, self.__b.x) and leq(self.__a.y, c.y) and leq(c.y, self.__b.y)
 
     def __add__(self, summand: float) -> Rectangle:
         return Rectangle((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
