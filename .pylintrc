@@ -4,6 +4,7 @@ disable=
     attribute-defined-outside-init,
     cell-var-from-loop,
     duplicate-code,
+    import-error,
     logging-fstring-interpolation,
     missing-class-docstring,
     missing-function-docstring,
