@@ -33,7 +33,7 @@ def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
             ('v', np.abs(v - foam.v)),
             ('p', np.abs(p - foam.p)),
         ],
-        path=OUTPUT_DIR / identifier / f'diff_uvp.pdf',
+        path=OUTPUT_DIR / identifier / 'diff_uvp.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
     )
@@ -73,7 +73,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
                 ('v', v),
                 ('p', p),
             ],
-            path=OUTPUT_DIR / identifier / f'pred_uvp_hires.pdf',
+            path=OUTPUT_DIR / identifier / 'pred_uvp_hires.pdf',
             boundary=experiment.boundary,
             figure=experiment.obstruction,
         )
@@ -152,7 +152,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
         )
 
 
-def plot_history(n, experiment: NSEExperiment, model: Simulation, identifier: str):
+def plot_history(n, model: Simulation, identifier: str):
     plot_losses(
         f'Loss [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         [
@@ -168,7 +168,7 @@ def plot_history(n, experiment: NSEExperiment, model: Simulation, identifier: st
                 ('$\\Sigma$', [i[2] for i in model.history[1:]]),
             ]),
         ],
-        path=OUTPUT_DIR / identifier / f'err.pdf',
+        path=OUTPUT_DIR / identifier / 'err.pdf',
     )
 
 
@@ -199,7 +199,7 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
         y,
         u,
         v,
-        path=OUTPUT_DIR / identifier / 'foam' / f'foam_str.pdf',
+        path=OUTPUT_DIR / identifier / 'foam' / 'foam_str.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
     )

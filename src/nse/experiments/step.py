@@ -44,25 +44,25 @@ class Step(NSEExperiment):
         # inlet
         for y in arrange(1, 2, s):
             u = inlet(1, 2, flow)(y)
-            self._knowledge.add((0, y), u=u, v=0)
-            self._outlet.add((10, y))
+            self._knowledge.emplace((0, y), u=u, v=0)
+            self._outlet.emplace((10, y))
 
         # border
         for x in arrange(1, 10, s):
-            self._knowledge.add((x, 0), u=0, v=0)
+            self._knowledge.emplace((x, 0), u=0, v=0)
         for x in arrange(s, 10, s):
-            self._knowledge.add((x, 2), u=0, v=0)
+            self._knowledge.emplace((x, 2), u=0, v=0)
 
         for x in arrange(s, 1, s):
-            self._knowledge.add((x, 1), u=0, v=0)
+            self._knowledge.emplace((x, 1), u=0, v=0)
         for y in arrange(s, 1 - s, s):
-            self._knowledge.add((1, y), u=0, v=0)
+            self._knowledge.emplace((1, y), u=0, v=0)
 
         # training
         mesh = Mesh(self.x.arrange(t), self.y.arrange(t))
         for c in mesh:
             if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
-                self._learning.add(c)
+                self._learning.emplace(c)
 
         if supervised:
             self._knowledge = self.foam.knowledge

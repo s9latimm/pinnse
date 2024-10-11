@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as tp
+from abc import abstractmethod
 
 import numpy as np
 
@@ -151,6 +152,7 @@ class Mesh:
                 self.__mesh[i][j] = Coordinate(x, y)
 
     def __getattr__(self, item) -> np.ndarray:
+        # pylint: disable=protected-access
         return self.map(lambda i: i.__getattribute__(item)).__mesh
 
     def __iter__(self) -> tp.Iterator:
@@ -184,6 +186,7 @@ class Mesh:
         return self.map(lambda i: cloud[i])
 
     def map(self, f) -> Mesh:
+        # pylint: disable=protected-access
         copy = Mesh([], [])
         copy.__mesh = np.array(list(map(lambda i: np.array(list(map(f, i))), self.__mesh.copy())))
         copy.__width = self.__width
@@ -194,7 +197,7 @@ class Mesh:
 class Cloud:
 
     def __init__(self) -> None:
-        self.__cloud: dict[Coordinate, tp.Any] = dict()
+        self.__cloud: dict[Coordinate, ...] = {}
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         return Coordinate(*coordinate) in self.__cloud.keys()
@@ -205,21 +208,13 @@ class Cloud:
             raise KeyError(c)
         return self.__cloud[c]
 
-    def mesh(self, refine=0) -> Mesh:
-        xs = sorted({i.x for i in self.__cloud.keys()})
-        ys = sorted({i.y for i in self.__cloud.keys()})
-
-        # if refine > 0:
-        #     xs = (xs[:, None] + np.linspace(0., 1., refine)).ravel()
-        #     print(xs)
-        #     ys = (ys[:, None] + np.linspace(0., 1., refine)).ravel()
-
-        return Mesh(xs, ys)
+    def mesh(self) -> Mesh:
+        return Mesh(sorted({i.x for i in self.__cloud.keys()}), sorted({i.y for i in self.__cloud.keys()}))
 
     def keys(self) -> list[Coordinate]:
         return list(self.__cloud.keys())
 
-    def __iter__(self) -> tp.Iterator[tuple[Coordinate, tp.Any]]:
+    def __iter__(self) -> tp.Iterator[tuple[Coordinate, ...]]:
         return iter(self.__cloud.items())
 
     def __len__(self) -> int:
@@ -231,22 +226,27 @@ class Cloud:
     def __str__(self) -> str:
         return self.__repr__()
 
-    def add(self, coordinate: tuple[float, float] | Coordinate, value: tp.Any) -> tp.Any:
+    def _insert(self, coordinate: tuple[float, float] | Coordinate, value: ...) -> tp.Any:
         c = Coordinate(*coordinate)
         if c in self.__cloud:
             raise KeyError(c)
         self.__cloud[c] = value
         return self.__cloud[c]
 
+    @abstractmethod
+    def emplace(self, key: tuple | Coordinate, **kwargs) -> tp.Any:
+        ...
+
     def clear(self) -> None:
         self.__cloud.clear()
 
     def copy(self) -> tp.Any:
+        # pylint: disable=protected-access
         cloud = Cloud()
         cloud.__cloud = self.__cloud.copy()
         return cloud
 
-    def detach(self) -> list[tuple[Coordinate, tp.Any]]:
+    def detach(self) -> list[tuple[Coordinate, ...]]:
         return list(self.__cloud.copy().items())
 
     def numpy(self) -> np.ndarray:

@@ -3,9 +3,9 @@ from __future__ import annotations
 import typing as tp
 from pathlib import Path
 
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import colors
 from matplotlib.ticker import FuncFormatter
 
 from src.base.mesh import Coordinate, Cloud
@@ -27,7 +27,7 @@ DPI: int = 1000
 SCALE: float = 5.
 
 
-def draw(ax: plt.Axes, shape: Shape) -> None:
+def draw_shape(ax: plt.Axes, shape: Shape) -> None:
     polygon = shape[::.01]
     ax.plot(polygon.x, polygon.y, color='k', linestyle='--', linewidth=1, zorder=999)
 
@@ -50,15 +50,14 @@ def plot_losses(
 
         ax = fig.add_subplot(len(plots), 1, i + 1)
 
-        m = np.infty
-        n = -np.infty
+        t_min, t_max = np.infty, -np.infty
         for j, line in enumerate(lines):
             l, y = line
 
             ax.plot(np.arange(1, len(y) + 1, 1), y, label=l, color=COLORS[j])
             ax.axhline(y=float(y[-1]), color=COLORS[j], linestyle='--')
-            m = min(m, min(y))
-            n = max(n, max(y))
+            y_min, y_max = min(y), max(y)
+            t_min, t_max = min(t_min, y_min), max(t_max, y_max)
 
         ax.set_xlabel('iter')
         ax.set_ylabel('err')
@@ -71,7 +70,7 @@ def plot_losses(
         ax.set_xlim([1, len(lines[0][1])])
         ax.set_xticks([1, 10**np.floor(np.log10(len(lines[0][1])))])
         ax.set_yscale('log')
-        ax.set_yticks([10**np.floor(np.log10(n)), 10**np.floor(np.log10(m)), 10**np.ceil(np.log10(m))])
+        ax.set_yticks([10**np.floor(np.log10(t_max)), 10**np.floor(np.log10(t_min)), 10**np.ceil(np.log10(t_min))])
 
         ax.legend(loc='upper right')
 
@@ -99,7 +98,7 @@ class Plot(plt.Figure):
         q = (int(np.round(x.max())) - int(np.round(x.min()))) / (int(np.round(y.max())) - int(np.round(y.min())))
         super().__init__(figsize=(q * SCALE, n * SCALE))
 
-    def layout(self, ax: plt.Axes, title: str, boundary: Figure = None, figure: Figure = None) -> None:
+    def setup(self, ax: plt.Axes, title: str, boundary: Figure = None, figure: Figure = None) -> None:
         ax.pcolormesh(
             self.__x,
             self.__y,
@@ -125,10 +124,10 @@ class Plot(plt.Figure):
 
         if boundary is not None:
             for shape in boundary:
-                draw(ax, shape)
+                draw_shape(ax, shape)
         if figure is not None:
             for shape in figure:
-                draw(ax, shape)
+                draw_shape(ax, shape)
 
         ax.set_title(title)
 
@@ -163,7 +162,7 @@ def plot_heatmaps(
             label, z = plot
 
             ax = fig.add_subplot(len(plots), 1, i + 1)
-            fig.layout(ax, label, boundary, figure)
+            fig.setup(ax, label, boundary, figure)
 
             if z.min() < 0 < z.max():
                 slope = colors.TwoSlopeNorm(vmin=z.min(), vcenter=0, vmax=z.max())
@@ -239,7 +238,7 @@ def plot_heatmaps(
                 format=FuncFormatter(lambda j, pos: f'{j:.1f}'),
             )
 
-            ticks = list()
+            ticks = []
             if z.min() < 0:
                 ticks.append(z.min())
             ticks.append(0)
@@ -262,7 +261,7 @@ def plot_clouds(
     plots = []
     masks = []
 
-    for p, label, in enumerate(labels):
+    for label, in labels:
         plots.append((label, np.full(x.shape, np.nan)))
         masks.append(np.full(x.shape, .5))
 
@@ -290,7 +289,7 @@ def plot_streamlines(
 ) -> None:
     with Plot(x, y, path) as fig:
         ax = fig.add_subplot()
-        fig.layout(ax, title, boundary, figure)
+        fig.setup(ax, title, boundary, figure)
 
         speed = np.sqrt(np.square(u) + np.square(v))
         speed = 1 + 4 * speed / speed.max()
@@ -320,7 +319,7 @@ def plot_arrows(
 ) -> None:
     with Plot(x, y, path) as fig:
         ax = fig.add_subplot()
-        fig.layout(ax, title, boundary, figure)
+        fig.setup(ax, title, boundary, figure)
 
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):

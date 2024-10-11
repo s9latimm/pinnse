@@ -13,15 +13,11 @@
 
 ![UML](images/classes.svg)
 
-## References
-
-- [Raissi, M. et al.: Physics Informed Deep Learning (Part II)](https://arxiv.org/pdf/1711.10566)
-
-## Requirements
+## Setup
 
 ### Virtual Environment
 
-#### Windows
+#### Windows (Powershell)
 
 ```shell
 $ python -m venv .venv
@@ -36,7 +32,7 @@ $ python -m venv .venv
 $ source ./venv/bin/activate
 ```
 
-### Packages
+### Dependencies
 
 ```shell
 $ python -m pip install --upgrade pip
@@ -47,9 +43,9 @@ $ python -m pip install -r requirements.txt
 
 ## Tools
 
-### Navier Stokes Equation
+### Navier-Stokes Equation
 
-- [Incompressible Flow](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow)
+- [Wikipedia](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow)
 
 ```
 usage: nse [-h] -e {step,block,wing} [-i <intake>] [--nu <nu>] [--rho <rho>] [--id <id>] [-n <train>] [-l <layers>] [-d {cpu,cuda}] [-f] [--supervised] [-p] [-r] [--save]
@@ -95,3 +91,13 @@ $ python -m src.nse -e wing --id wing -l 100:100:100:100 -i 1 --nu .01 -d cuda -
 ```shell
 $ python -m src.nse -e block
 ```
+
+### Burgers' Equation
+
+- [Wikipedia](https://en.wikipedia.org/wiki/Burgers%27_equation)
+
+TODO
+
+## References
+
+- [Raissi, M. et al.: Physics Informed Deep Learning (Part II)](https://arxiv.org/pdf/1711.10566)
