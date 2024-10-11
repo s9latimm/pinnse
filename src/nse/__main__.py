@@ -35,7 +35,7 @@ def main(
     logging.info(f'GRID:       {experiment.knowledge.mesh().shape}')
     logging.info(f'DIMENSIONS: {experiment.dim}')
     logging.info(f'HIRES:      {HIRES}')
-    logging.info(f'STEPS:      {args.train}')
+    logging.info(f'STEPS:      {n}')
     logging.info(f'TIMESTAMP:  {TIMESTAMP}')
     logging.info(f'OUTPUT:     {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
 
@@ -81,7 +81,7 @@ def main(
                                 logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, experiment, model, identifier)
                                 logging.info('PLOT: LOSS')
-                                plot_history(pbar.n, experiment, model, identifier)
+                                plot_history(pbar.n, model, identifier)
                             if hires and pbar.n % 1e4 == 0:
                                 logging.info('PLOT: HIRES PREDICTION')
                                 plot_prediction(pbar.n, experiment, model, identifier, hires=True)
@@ -100,7 +100,7 @@ def main(
         logging.info('PLOT: PREDICTION')
         plot_prediction(n, experiment, model, identifier)
         logging.info('PLOT: LOSS')
-        plot_history(pbar.n, experiment, model, identifier)
+        plot_history(pbar.n, model, identifier)
 
     if hires:
         logging.info('PLOT: HIRES PREDICTION')
@@ -175,6 +175,7 @@ def parse_cmd() -> argparse.Namespace:
             return layers
         except (TypeError, ValueError):
             parser.error(f"argument -l/--layers: invalid value: '{arg}'")
+        return []
 
     parser.add_argument(
         '-l',
@@ -240,12 +241,12 @@ def parse_cmd() -> argparse.Namespace:
 
 
 if __name__ == '__main__':
-    args = parse_cmd()
-    if args.plot:
-        (OUTPUT_DIR / args.id).mkdir(parents=True, exist_ok=args.id != TIMESTAMP)
+    cmd = parse_cmd()
+    if cmd.plot:
+        (OUTPUT_DIR / cmd.id).mkdir(parents=True, exist_ok=cmd.id != TIMESTAMP)
         logging.basicConfig(format='%(message)s',
                             handlers=[
-                                logging.FileHandler(OUTPUT_DIR / args.id / 'log.txt', mode='w'),
+                                logging.FileHandler(OUTPUT_DIR / cmd.id / 'log.txt', mode='w'),
                                 logging.StreamHandler(sys.stdout)
                             ],
                             encoding='utf-8',
@@ -258,20 +259,20 @@ if __name__ == '__main__':
 
     try:
         main(
-            EXPERIMENTS[args.experiment](
-                args.nu,
-                args.rho,
-                args.intake,
-                args.supervised,
+            EXPERIMENTS[cmd.experiment](
+                cmd.nu,
+                cmd.rho,
+                cmd.intake,
+                cmd.supervised,
             ),
-            args.train,
-            args.plot,
-            args.id,
-            args.device,
-            args.foam,
-            args.hires,
-            args.save,
-            args.layers,
+            cmd.train,
+            cmd.plot,
+            cmd.id,
+            cmd.device,
+            cmd.foam,
+            cmd.hires,
+            cmd.save,
+            cmd.layers,
         )
         logging.info('EXIT: SUCCESS')
     except KeyboardInterrupt:

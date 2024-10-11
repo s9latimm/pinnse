@@ -213,7 +213,7 @@ class Airfoil(Shape):
         return upper, lower
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
-        c = ((Coordinate(*coordinate) - self.__a) / self.__length)
+        c = (Coordinate(*coordinate) - self.__a) / self.__length
         if 0 <= c.x <= 1:
             upper, lower = self.__f(c.x)
             return lower.y <= c.y <= upper.y

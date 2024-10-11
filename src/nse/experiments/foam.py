@@ -50,7 +50,7 @@ class Foam(NSEExperiment):
         p = np.flip(p, 0).transpose().flatten()
 
         for i, c in enumerate(self.__mesh):
-            self._knowledge.add(c, u=u[i], v=v[i], p=p[i])
+            self._knowledge.emplace(c, u=u[i], v=v[i], p=p[i])
 
     @property
     def mesh(self) -> Mesh:
@@ -60,7 +60,7 @@ class Foam(NSEExperiment):
     def __parse_velocity(path: Path) -> tuple[list[float], list[float]]:
         u, v = [], []
 
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
 
         # Flag to start collecting data
@@ -94,7 +94,7 @@ class Foam(NSEExperiment):
     def __parse_pressure(path: Path) -> list[float]:
         p = []
 
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
 
         # Flag to start collecting data
@@ -109,13 +109,11 @@ class Foam(NSEExperiment):
                 continue
 
             if munch:
-                '''
-                match = []
-                match = re.findall(r'-?\d+\.\d+', line)
-                # Extract tuples using regular expression
-                if match != []:
-                    data.append(float(match[0]))
-                '''
+                # match = []
+                # match = re.findall(r'-?\d+\.\d+', line)
+                # # Extract tuples using regular expression
+                # if match != []:
+                #     data.append(float(match[0]))
                 p.append(float(line))
 
             # Start of data section
@@ -138,16 +136,16 @@ class Foam(NSEExperiment):
         values = np.zeros((size_y, size_x))
 
         head = 0
-        for i in range(len(model)):
-            px = model[i][2] - model[i][0]
-            py = model[i][3] - model[i][1]
+        for mode in model:
+            px = mode[2] - mode[0]
+            py = mode[3] - mode[1]
 
             tail = head + px * py
-            part = (data[head:tail])
+            part = data[head:tail]
 
             for y in range(py):
                 for x in range(px):
-                    values[model[i][1] + y - min_y][model[i][0] + x - min_x] = part[(py - 1 - y) * px + x]
+                    values[mode[1] + y - min_y][mode[0] + x - min_x] = part[(py - 1 - y) * px + x]
 
             head = tail
 
