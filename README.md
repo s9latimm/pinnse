@@ -9,6 +9,8 @@
 /_/                                  
 ```
 
+![UML](images/classes.png)
+
 ## References
 
 - [Raissi, M. et al.: Physics Informed Deep Learning (Part II)](https://arxiv.org/pdf/1711.10566)
@@ -41,7 +43,9 @@ $ python -m pip install torch --index-url https://download.pytorch.org/whl/cu124
 $ python -m pip install -r requirements.txt
 ```
 
-## Navier-Stokes
+## Tools
+
+### Navier Stokes Equation
 
 - [Incompressible Flow](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow)
 
@@ -76,7 +80,7 @@ output:
   --save                store model parameters in output directory
 ```
 
-### Examples
+#### Examples
 
 ```shell
 $ python -m src.nse --experiment step -intake 5 --nu .08 --train 100

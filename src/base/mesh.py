@@ -29,6 +29,10 @@ def equal(a: float, b: float) -> bool:
     return clamp(a) == clamp(b)
 
 
+def leq(a: float, b: float) -> bool:
+    return clamp(a) <= clamp(b)
+
+
 def arrange(start: float, stop: float, step: float) -> list[float]:
     start, stop, step = clamp(start), clamp(stop), clamp(step)
     r = []

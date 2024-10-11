@@ -15,7 +15,7 @@ def inlet(start: float, end: float, scale: float = 1.) -> tp.Callable[[float], f
     b = 2. / width
     a = mid * b
 
-    return lambda x: scale * (1. - (a - b * x)**2)
+    return lambda x: scale * width * (1. - (a - b * x)**2)
 
 
 class NSEExperiment:
@@ -46,6 +46,7 @@ class NSEExperiment:
         self._learning = NSECloud()
         self._knowledge = NSECloud()
         self._evaluation = NSECloud()
+        self._outlet = NSECloud()
 
         if foam or supervised:
             self.__foam = foam
@@ -61,6 +62,10 @@ class NSEExperiment:
     @property
     def evaluation(self) -> NSECloud:
         return self._evaluation
+
+    @property
+    def outlet(self) -> NSECloud:
+        return self._outlet
 
     @property
     def name(self) -> str:
