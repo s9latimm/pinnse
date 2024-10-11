@@ -9,7 +9,7 @@ on:
 
 jobs:
   release:
-    name: Release
+    name: Lint
     runs-on: ubuntu-latest
 
     continue-on-error: false
