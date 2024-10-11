@@ -9,7 +9,7 @@
 /_/                                  
 ```
 
-![UML](images/classes.png)
+![UML](images/classes.svg)
 
 ## References
 
