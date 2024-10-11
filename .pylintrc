@@ -1,0 +1,26 @@
+[MASTER]
+jobs=0
+disable=
+    attribute-defined-outside-init,
+    cell-var-from-loop,
+    duplicate-code,
+    logging-fstring-interpolation,
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-locals,
+    too-many-positional-arguments,
+    too-many-statements,
+    trailing-comma-tuple,
+    unused-private-member,
+
+[FORMAT]
+max-line-length=120
+
+[REPORTS]
+output-format=text
+reports=yes
+score=no
