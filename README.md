@@ -1,7 +1,7 @@
 # pinNSE
 
-[![Build)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/master.yml/badge.svg?branch=master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/master.yml)
-[![Build)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/develop.yml/badge.svg?branch=develop)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/develop.yml)
+[![Build (master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/master.yml/badge.svg?branch=master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/master.yml)
+[![Build (develop)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/delevop.yml/badge.svg?branch=develop)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/delevop.yml)
 
 ```text
                    _   _______ ______
