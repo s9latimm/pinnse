@@ -28,18 +28,33 @@ jobs:
       - name: Install Python Dependencies
         shell: bash
         run: |
-          python -m pip install wheel
-          python -m pip install pylint yapf
+          pip3 install wheel
+          pip3 install pylint yapf
 
       - name: Run YAPF
         shell: bash
         run: |
-          python -m yapf --verbose --diff --recursive src
+          yapf --verbose --diff --recursive src
 
       - name: Run Pylint
         shell: bash
         run: |
-          python -m pylint src
+          pylint src
+
+      - name: Run Pyreverse
+        shell: bash
+        run: |
+          pyreverse -o pdf --verbose --colorize src 
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          retention-days: 1
+          if-no-files-found: error
+          overwrite: true
+          path: |
+            classes.pdf
 
   release:
     name: Release
@@ -53,6 +68,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: .
 
       - name: Detect Version
         id: version
@@ -68,3 +89,5 @@ jobs:
             v${{ steps.version.outputs.version }}
           automatic_release_tag: v${{ steps.version.outputs.version }}
           prerelease: false
+          files: |
+            classes.pdf
