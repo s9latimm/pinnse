@@ -1,6 +1,6 @@
 # pinNSE
 
-[![Build](https://github.com/s9latimm/inf-mp-aos/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/build.yml)
+[![Build)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/build.yml)
 
 ```text
                    _   _______ ______
