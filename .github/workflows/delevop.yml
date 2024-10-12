@@ -28,15 +28,15 @@ jobs:
       - name: Install Python Dependencies
         shell: bash
         run: |
-          python -m pip install wheel
-          python -m pip install pylint yapf
+          pip3 install wheel
+          pip3 install pylint yapf
 
       - name: Run YAPF
         shell: bash
         run: |
-          python -m yapf --verbose --diff --recursive src
+          yapf --verbose --diff --recursive src
 
       - name: Run Pylint
         shell: bash
         run: |
-          python -m pylint src
+          pylint src
