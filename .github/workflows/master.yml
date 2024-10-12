@@ -81,7 +81,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          echo "version=$(cat VERSION)" >> GITHUB_OUTPUT
+          echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Release
         uses: marvinpinto/action-automatic-releases@latest
