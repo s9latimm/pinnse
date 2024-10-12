@@ -1,6 +1,7 @@
 # pinNSE
 
-[![Build](https://github.com/s9latimm/inf-mp-aos/actions/workflows/build.yml/badge.svg)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/build.yml)
+[![Build (master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/master.yml/badge.svg?branch=master)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/master.yml)
+[![Build (develop)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/delevop.yml/badge.svg?branch=develop)](https://github.com/s9latimm/inf-mp-aos/actions/workflows/delevop.yml)
 
 ```text
                    _   _______ ______
@@ -11,7 +12,7 @@
 /_/                                  
 ```
 
-![UML](images/classes.svg)
+[![UML](images/classes.svg)](https://github.com/s9latimm/inf-mp-aos/releases/latest/download/classes.pdf)
 
 ## Setup
 
