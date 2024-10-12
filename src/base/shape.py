@@ -104,24 +104,25 @@ class Polygon(Shape):
         return [i.y for i in self.__vertices]
 
 
-class Cylinder(Shape):
+class Circle(Shape):
 
     def __init__(self, center: tuple[float, float] | Coordinate, radius: float) -> None:
-        self.__center = center
+        self.__center = Coordinate(*center)
         self.__radius = radius
 
-    def __add__(self, summand: float) -> Cylinder:
-        return Cylinder(self.__center, self.__radius + summand)
+    def __add__(self, summand: float) -> Circle:
+        return Circle(self.__center, self.__radius + summand)
+
+    def __contains__(self, coordinate: tuple | Coordinate) -> bool:
+        c = Coordinate(*coordinate) - self.__center
+        return leq(np.sqrt(c.x**2 + c.y**2), self.__radius)
 
     def __getitem__(self, s: slice) -> Polygon:
+        n = -((2 * np.pi * self.__radius) // -s.step)
         coordinates = [
-            Coordinate(x, np.sin(np.arccos(x)))
-            for x in arrange(self.__center.x - self.__radius, self.__center.x + self.__radius, s.step)
+            self.__center + Coordinate(self.__radius * np.cos(i), self.__radius * np.sin(i))
+            for i in arrange(0, 2 * np.pi, 2 * np.pi / n)
         ]
-        if s.start is not None:
-            coordinates = [i for i in coordinates if i.x >= s.start]
-        if s.stop is not None:
-            coordinates = [i for i in coordinates if i.x <= s.stop]
         return Polygon(*coordinates)
 
 

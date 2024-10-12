@@ -28,8 +28,10 @@ SCALE: float = 5.
 
 
 def draw_shape(ax: plt.Axes, shape: Shape) -> None:
-    polygon = shape[::.01]
-    ax.plot(polygon.x, polygon.y, color='k', linestyle='--', linewidth=1, zorder=999)
+    polygon = shape[::.05]
+    x = polygon.x
+    y = polygon.y
+    ax.plot(x[-1:] + x, y[-1:] + y, color='k', linestyle='--', linewidth=1, zorder=999)
 
 
 def save_fig(fig: plt.Figure, path: Path) -> None:

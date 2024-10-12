@@ -5,9 +5,7 @@ __pycache__/
 
 images/
 output/
-steps/
-
-__pycache_/
 
 *.pdf
 *.png
+*.html
