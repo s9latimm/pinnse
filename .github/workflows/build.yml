@@ -1,4 +1,4 @@
-name: Build
+name: Build (${{ github.ref }})
 
 on:
   push:
@@ -9,13 +9,13 @@ on:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint (${{ github.ref }})
     runs-on: ubuntu-latest
 
     continue-on-error: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
