@@ -23,8 +23,8 @@ class Simulation(SequentialModel):
 
         self.__null = torch.zeros(len(learning), 1, dtype=torch.float64, device=self._device)
 
-        self.__outlet = len(outlet)
-        self.__clamp = torch.zeros(len(outlet), 1, dtype=torch.float64, device=self._device)
+        self.__out = len(outlet)
+        self.__u_out = torch.zeros(len(outlet), 1, dtype=torch.float64, device=self._device)
 
         self.__knowledge = (
             torch.tensor([[k.x] for k, _ in outlet + knowledge],
@@ -87,10 +87,12 @@ class Simulation(SequentialModel):
 
         u, v, _ = self.__forward(self.__knowledge)
 
-        u_loss = self._mse(u[self.__outlet:], self.__u)
+        u_loss = self._mse(u[self.__out:], self.__u)
+        v_loss = self._mse(v[self.__out:], self.__v)
+
         # prohibits the model from hallucinating an incoming flow from right
-        u_loss += self._mse(torch.clamp(u[:self.__outlet], max=0), self.__clamp)
-        v_loss = self._mse(v[self.__outlet:], self.__v)
+        if self.__out > 0:
+            u_loss += self._mse(torch.clamp(u[:self.__out], max=0), self.__u_out)
 
         *_, f, g = self.__forward(self.__learning, True)
         f_loss = self._mse(f, self.__null)
