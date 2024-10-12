@@ -46,6 +46,7 @@ class NSEExperiment:
         self._learning = NSECloud()
         self._knowledge = NSECloud()
         self._evaluation = NSECloud()
+        self._inlet = NSECloud()
         self._outlet = NSECloud()
 
         if foam or supervised:
@@ -62,6 +63,10 @@ class NSEExperiment:
     @property
     def evaluation(self) -> NSECloud:
         return self._evaluation
+
+    @property
+    def inlet(self) -> NSECloud:
+        return self._inlet
 
     @property
     def outlet(self) -> NSECloud:
