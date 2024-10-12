@@ -215,9 +215,9 @@ class Airfoil(Shape):
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         c = (Coordinate(*coordinate) - self.__a) / self.__length
-        if 0 <= c.x <= 1:
+        if leq(0, c.x) and leq(c.x, 1):
             upper, lower = self.__f(c.x)
-            return lower.y <= c.y <= upper.y
+            return leq(lower.y, c.y + 5e-3) and leq(c.y - 5e-3, upper.y)
         return False
 
     def __getitem__(self, s: slice) -> Polygon:
