@@ -1,15 +1,15 @@
-name: Build ({{ $GITHUB_REF }})
+name: Build (develop)
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ develop ]
   pull_request:
-    branches: [ master, develop ]
+    branches: [ develop ]
 
 
 jobs:
   lint:
-    name: Lint ({{ $GITHUB_REF }})
+    name: Lint
     runs-on: ubuntu-latest
 
     continue-on-error: false
