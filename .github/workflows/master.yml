@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           pip3 install wheel
-          pip3 install pylint yapf
+          pip3 install pylint yapf gitinspector
 
       - name: Run YAPF
         shell: bash
@@ -44,8 +44,13 @@ jobs:
       - name: Run Pyreverse
         shell: bash
         run: |
-          pyreverse -o pdf --verbose --colorize src
-          pyreverse -o svg --verbose --colorize src 
+          pyreverse --output pdf --verbose --colorize src
+          pyreverse --output svg --verbose --colorize src 
+
+      - name: Run Gitinspector
+        shell: bash
+        run: |
+          gitinspector --file-types py --format html --grading -lHmrTw > gitinspector.html
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -57,6 +62,7 @@ jobs:
           path: |
             classes.pdf
             classes.svg
+            gitinspector.html
 
   release:
     name: Release
@@ -94,3 +100,4 @@ jobs:
           files: |
             classes.pdf
             classes.svg
+            gitinspector.html
