@@ -12,7 +12,7 @@
 /_/                                  
 ```
 
-![UML](images/classes.svg)
+[![UML](https://github.com/s9latimm/inf-mp-aos/releases/latest/download/classes.svg)](https://github.com/s9latimm/inf-mp-aos/releases/latest/download/classes.pdf)
 
 ## Setup
 
