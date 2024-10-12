@@ -1,4 +1,4 @@
-name: Build ("$GITHUB_REF")
+name: Build ({{ $GITHUB_REF }})
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   lint:
-    name: Lint ("$GITHUB_REF")
+    name: Lint ({{ $GITHUB_REF }})
     runs-on: ubuntu-latest
 
     continue-on-error: false
