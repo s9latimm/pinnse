@@ -18,7 +18,7 @@ class Wing(NSEExperiment):
             Axis('x', 0, 10),
             Axis('y', 0, 2),
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Airfoil((2.05, 1), 5)),
+            Figure(Airfoil((3.05, 1), 3, -10)),
             nu,
             rho,
             Parabola(0, 2, flow),

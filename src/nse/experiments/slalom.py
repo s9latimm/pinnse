@@ -6,7 +6,7 @@ from src.nse.experiments.experiment import NSEExperiment
 from src.nse.experiments.foam import Foam
 
 
-class Step(NSEExperiment):
+class Slalom(NSEExperiment):
 
     def __init__(
         self,
@@ -27,11 +27,11 @@ class Step(NSEExperiment):
             1.,
         )
         super().__init__(
-            Step.__name__,
+            Slalom.__name__,
             Axis('x', 0, 10),
             Axis('y', 0, 2),
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
+            Figure(Rectangle((0, 0), (1, 1)), Rectangle((4.5, 1), (5.5, 2)), Rectangle((9, 0), (10, 1))),
             nu,
             rho,
             Parabola(1, 2, flow),
@@ -45,19 +45,30 @@ class Step(NSEExperiment):
         # inlet
         for y in arrange(1, 2, s):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
-        for y in arrange(0, 2, s):
             self._outlet.emplace((10, y))
 
         # border
-        for x in arrange(1, 10, s):
+        for x in arrange(1, 9, s):
             self._knowledge.emplace((x, 0), u=0, v=0)
-        for x in arrange(s, 10, s):
+        for x in arrange(s, 4.5, s):
+            self._knowledge.emplace((x, 2), u=0, v=0)
+        for x in arrange(5.5, 10, s):
             self._knowledge.emplace((x, 2), u=0, v=0)
 
         for x in arrange(s, 1, s):
             self._knowledge.emplace((x, 1), u=0, v=0)
         for y in arrange(s, 1 - s, s):
             self._knowledge.emplace((1, y), u=0, v=0)
+            self._knowledge.emplace((9, y), u=0, v=0)
+
+        for x in arrange(4.5, 5.5, s):
+            self._knowledge.emplace((x, 1), u=0, v=0)
+        for y in arrange(1 + s, 2 - s, s):
+            self._knowledge.emplace((4.5, y), u=0, v=0)
+            self._knowledge.emplace((5.5, y), u=0, v=0)
+
+        for x in arrange(9, 10, s):
+            self._knowledge.emplace((x, 1), u=0, v=0)
 
         # training
         mesh = Mesh(self.x.arrange(t), self.y.arrange(t))
