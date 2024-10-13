@@ -1,5 +1,6 @@
 import typing as tp
 
+from src.base.function import Function, Null
 from src.base.mesh import Axis
 from src.base.shape import Figure
 from src.nse.data import NSECloud
@@ -8,30 +9,20 @@ Foam: tp.TypeAlias = 'Foam'
 # type Foam = 'Foam'
 
 
-def inlet(start: float, end: float, scale: float = 1.) -> tp.Callable[[float], float]:
-    width = end - start
-    mid = end - width / 2.
-
-    b = 2. / width
-    a = mid * b
-
-    return lambda x: scale * width * (1. - (a - b * x)**2)
-
-
 class NSEExperiment:
 
     def __init__(
-        self,
-        name: str,
-        x: Axis,
-        y: Axis,
-        boundary: Figure = None,
-        obstruction: Figure = None,
-        nu: float = 1,
-        rho: float = 1,
-        flow: float = 1,
-        foam: Foam = None,
-        supervised: bool = False,
+            self,
+            name: str,
+            x: Axis,
+            y: Axis,
+            boundary: Figure = None,
+            obstruction: Figure = None,
+            nu: float = 1,
+            rho: float = 1,
+            inlet: Function = Null(),
+            foam: Foam = None,
+            supervised: bool = False,
     ) -> None:
         self.__name = name
         self.__x = x
@@ -40,8 +31,9 @@ class NSEExperiment:
         self.__obstruction = obstruction
         self.__nu = nu
         self.__rho = rho
-        self.__flow = flow
         self.__supervised = supervised
+
+        self._in = inlet
 
         self._learning = NSECloud()
         self._knowledge = NSECloud()
@@ -63,6 +55,10 @@ class NSEExperiment:
     @property
     def evaluation(self) -> NSECloud:
         return self._evaluation
+
+    @property
+    def inlet_f(self) -> Function:
+        return self._in
 
     @property
     def inlet(self) -> NSECloud:
@@ -91,10 +87,6 @@ class NSEExperiment:
     @property
     def rho(self) -> float:
         return self.__rho
-
-    @property
-    def flow(self) -> float:
-        return self.__flow
 
     @property
     def supervised(self) -> bool:

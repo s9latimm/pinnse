@@ -1,7 +1,8 @@
 from src import FOAM_DIR
+from src.base.function import Parabola
 from src.base.mesh import arrange, Mesh, Axis
-from src.base.shape import Rectangle, Figure
-from src.nse.experiments.experiment import NSEExperiment, inlet
+from src.base.shape import Rectangle, Figure, Line
+from src.nse.experiments.experiment import NSEExperiment
 from src.nse.experiments.foam import Foam
 
 
@@ -9,10 +10,10 @@ class Block(NSEExperiment):
 
     def __init__(
         self,
-        nu: float,
-        rho: float,
-        flow: float,
-        _: bool,
+        nu: float = 1,
+        rho: float = 1,
+        flow: float = 1,
+        _: bool = False,
     ) -> None:
         mesh = Mesh(Axis('x', 0, 10).arrange(.01, True), Axis('y', 0, 2).arrange(.01, True))
         foam = Foam(
@@ -21,20 +22,20 @@ class Block(NSEExperiment):
             [(0, 1.5, 1, 2), (0, 0.5, 1, 1.5), (0, 0, 1, 0.5), (1, 1.5, 2, 2), (1, 0, 2, 0.5), (2, 1.5, 10, 2),
              (2, 0.5, 10, 1.5), (2, 0, 10, 0.5)],
             100,
-            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
             0.01,
             1.,
         )
         super().__init__(
-            'Step',
+            Block.__name__,
             Axis('x', 0, 10),
             Axis('y', 0, 2),
-            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((2, .5), (3, 1.5))),
             nu,
             rho,
-            flow,
+            Parabola(0, 2, flow),
             foam,
         )
 
@@ -43,8 +44,7 @@ class Block(NSEExperiment):
 
         # inlet
         for y in arrange(0, 2, s):
-            u = inlet(0, 2, flow)(y)
-            self._knowledge.emplace((0, y), u=u, v=0)
+            self._inlet.emplace((0, y), u=self._in(y), v=0)
             self._outlet.emplace((10, y))
 
         # border

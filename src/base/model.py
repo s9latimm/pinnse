@@ -52,15 +52,15 @@ class SequentialModel:
         return str(self._model)
 
     @property
-    def history(self) -> list[tuple[...]]:
+    def history(self) -> list[tuple[tp.Any]]:
         return self._losses
 
     @abstractmethod
-    def train(self, callback: ...) -> None:
+    def train(self, callback: tp.Any) -> None:
         ...
 
     @abstractmethod
-    def predict(self, sample: ...) -> tuple[...]:
+    def predict(self, sample: tp.Any) -> tuple[tp.Any]:
         ...
 
     def eval(self) -> None:

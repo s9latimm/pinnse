@@ -1,7 +1,8 @@
 from src import FOAM_DIR
+from src.base.function import Parabola
 from src.base.mesh import arrange, Mesh, Axis
-from src.base.shape import Rectangle, Figure
-from src.nse.experiments.experiment import NSEExperiment, inlet
+from src.base.shape import Rectangle, Figure, Line
+from src.nse.experiments.experiment import NSEExperiment
 from src.nse.experiments.foam import Foam
 
 
@@ -9,10 +10,10 @@ class Step(NSEExperiment):
 
     def __init__(
         self,
-        nu: float,
-        rho: float,
-        flow: float,
-        supervised: bool,
+        nu: float = 1,
+        rho: float = 1,
+        flow: float = 1,
+        supervised: bool = False,
     ) -> None:
         mesh = Mesh(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
         foam = Foam(
@@ -20,20 +21,20 @@ class Step(NSEExperiment):
             mesh,
             [(0, 0, 1, 1), (1, 1, 10, 2), (1, 0, 10, 1)],
             10,
-            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
             0.08,
             1.,
         )
         super().__init__(
-            'Step',
+            Step.__name__,
             Axis('x', 0, 10),
             Axis('y', 0, 2),
-            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
             nu,
             rho,
-            flow,
+            Parabola(1, 2, flow),
             foam,
             supervised,
         )
@@ -43,8 +44,7 @@ class Step(NSEExperiment):
 
         # inlet
         for y in arrange(1, 2, s):
-            u = inlet(1, 2, flow)(y)
-            self._knowledge.emplace((0, y), u=u, v=0)
+            self._inlet.emplace((0, y), u=self._in(y), v=0)
             self._outlet.emplace((10, y))
 
         # border

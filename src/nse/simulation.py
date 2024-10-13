@@ -1,3 +1,5 @@
+import typing as tp
+
 import torch
 from torch import nn
 
@@ -16,10 +18,11 @@ class Simulation(SequentialModel):
 
         knowledge = self.__experiment.knowledge.detach()
         learning = self.__experiment.learning.detach()
+        inlet = self.__experiment.inlet.detach()
         outlet = self.__experiment.outlet.detach()
 
-        self.__u = torch.tensor([[i.u] for _, i in knowledge], dtype=torch.float64, device=self._device)
-        self.__v = torch.tensor([[i.v] for _, i in knowledge], dtype=torch.float64, device=self._device)
+        self.__u = torch.tensor([[i.u] for _, i in inlet + knowledge], dtype=torch.float64, device=self._device)
+        self.__v = torch.tensor([[i.v] for _, i in inlet + knowledge], dtype=torch.float64, device=self._device)
 
         self.__null = torch.zeros(len(learning), 1, dtype=torch.float64, device=self._device)
 
@@ -27,11 +30,11 @@ class Simulation(SequentialModel):
         self.__u_out = torch.zeros(len(outlet), 1, dtype=torch.float64, device=self._device)
 
         self.__knowledge = (
-            torch.tensor([[k.x] for k, _ in outlet + knowledge],
+            torch.tensor([[k.x] for k, _ in outlet + inlet + knowledge],
                          dtype=torch.float64,
                          requires_grad=True,
                          device=self._device),
-            torch.tensor([[k.y] for k, _ in outlet + knowledge],
+            torch.tensor([[k.y] for k, _ in outlet + inlet + knowledge],
                          dtype=torch.float64,
                          requires_grad=True,
                          device=self._device),
@@ -73,7 +76,7 @@ class Simulation(SequentialModel):
     def rho(self) -> float:
         return self.__rho.detach().cpu()
 
-    def train(self, callback: ...) -> None:
+    def train(self, callback: tp.Any) -> None:
 
         def closure():
             callback(self.history)
@@ -85,7 +88,7 @@ class Simulation(SequentialModel):
     def __loss(self):
         self.__optimizer.zero_grad()
 
-        u, v, _ = self.__forward(self.__knowledge)
+        u, v, *_ = self.__forward(self.__knowledge)
 
         u_loss = self._mse(u[self.__out:], self.__u)
         v_loss = self._mse(v[self.__out:], self.__v)
@@ -95,6 +98,7 @@ class Simulation(SequentialModel):
             u_loss += self._mse(torch.clamp(u[:self.__out], max=0), self.__u_out)
 
         *_, f, g = self.__forward(self.__learning, True)
+
         f_loss = self._mse(f, self.__null)
         g_loss = self._mse(g, self.__null)
 
@@ -115,8 +119,7 @@ class Simulation(SequentialModel):
         self,
         t: tuple[torch.Tensor, torch.Tensor],
         nse: bool = False
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
-                                                                 torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor]:
         x, y = t
 
         res = self._model.forward(torch.hstack([x, y]))
@@ -127,7 +130,7 @@ class Simulation(SequentialModel):
         v = -nabla(psi, x)
 
         if not nse:
-            return u, v, p
+            return u, v, p, psi
 
         u_x, u_xx = laplace(u, x)
         u_y, u_yy = laplace(u, y)
@@ -141,9 +144,9 @@ class Simulation(SequentialModel):
         f = self.__rho * (u * u_x + v * u_y - self.__nu * (u_xx + u_yy)) + p_x
         g = self.__rho * (u * v_x + v * v_y - self.__nu * (v_xx + v_yy)) + p_y
 
-        return u, v, p, f, g
+        return f, g
 
-    def predict(self, sample: list[Coordinate]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def predict(self, sample: list[Coordinate]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         t = (
             torch.tensor([[i.x] for i in sample], dtype=torch.float64, requires_grad=True, device=self._device),
             torch.tensor([[i.y] for i in sample], dtype=torch.float64, requires_grad=True, device=self._device),
