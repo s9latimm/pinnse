@@ -157,6 +157,10 @@ class Line(Shape):
             coordinates = [i for i in coordinates if i.x <= s.stop]
         return _Polygon(*coordinates, cyclic=False)
 
+    def __contains__(self, coordinate: tuple | Coordinate) -> bool:
+        c = Coordinate(*coordinate)
+        return equal(self.__a.distance(c) + self.__b.distance(c), self.__a.distance(self.__b))
+
 
 class Rectangle(Shape):
 

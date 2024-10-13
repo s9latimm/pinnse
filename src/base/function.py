@@ -24,7 +24,7 @@ class Constant(Function):
         return self.__constant
 
     def __str__(self) -> str:
-        return f'{self.__constant:.1f}'
+        return f'{self.__constant:.0f}'
 
 
 class Null(Constant):
@@ -47,4 +47,4 @@ class Parabola(Function):
         return self.__scale * self.__width * (1. - (self.__a - self.__b * x)**2)
 
     def __str__(self) -> str:
-        return f'{self.__scale:.1f} * {self.__width:.1f} * (1.0 - ({self.__a:.1f} - {self.__b:.1f} * x)**2)'
+        return f'{self.__scale:.0f}*{self.__width:.0f}*(1-({self.__a:.0f}-{self.__b:.0f}x)^2)'

@@ -48,8 +48,8 @@ $ python -m pip install -r requirements.txt
 
 - [Wikipedia](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow)
 
-```
-usage: nse [-h] -e {step,block,wing} [-i <intake>] [--nu <nu>] [--rho <rho>] [--id <id>] [-n <train>] [-l <layers>] [-d {cpu,cuda}] [-f] [--supervised] [-p] [-r] [--save]
+```text
+usage: nse [-h] -e {empty,step,curve,expand,slalom,block,cylinder,wing,slit} [-i <intake>] [--nu <nu>] [--rho <rho>] [--id <id>] [-n <train>] [-l <layers>] [-d {cpu,cuda}] [-f] [--supervised] [-p] [-r] [--save]
 
 options:
   -h, --help            show this help message and exit
@@ -57,25 +57,25 @@ options:
                         size of layers seperated by colon (default: 100:100:100)
 
 initialization:
-  -e {step,block,wing}, --experiment {step,block,wing}
+  -e {empty,step,curve,expand,slalom,block,cylinder,wing,slit}, --experiment {empty,step,curve,expand,slalom,block,cylinder,wing,slit}
                         choose experiment
   -i <intake>, --intake <intake>
-                        set intake [m/s]
-  --nu <nu>             set viscosity [m^2/s]
-  --rho <rho>           set density [kg/m^2]
+                        set intake [m/s] (default: 1.0)
+  --nu <nu>             set viscosity [m^2/s] (default: 0.01)
+  --rho <rho>           set density [kg/m^2] (default: 1.0)
 
 optimization:
-  --id <id>             identifier / prefix for output directory
+  --id <id>             identifier / prefix for output directory (default: timestamp, example: 2024-10-13_15-31-32)
   -n <train>, --train <train>
-                        number of optimization steps
+                        number of optimization steps (default: 1)
   -d {cpu,cuda}, --device {cpu,cuda}
                         device used for training (default: cpu)
   -f, --foam            load OpenFOAM
-  --supervised          set training method to supervised approach (requires OpenFOAM)
+  --supervised          set training method to supervised approach (requires --foam)
 
 output:
   -p, --plot            plot NSE in output directory
-  -r, --hires           plot NSE with high resolution grid in output directory
+  -r, --hires           plot NSE with high resolution grid in output directory (requires --plot)
   --save                store model parameters in output directory
 ```
 

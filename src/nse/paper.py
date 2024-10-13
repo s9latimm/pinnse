@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
-from src.base.mesh import arrange
-from src.base.plot import save_fig, draw_shape
+from src.base.plot import save_fig, draw_shape, COLORS
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
 
@@ -21,15 +20,17 @@ def plot_inlets(experiments: list[NSEExperiment]):
             x.append(k.y)
             y.append(v.u)
 
-        ax.plot(x, y, color='k')
-
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+        ax.plot(x, y, color=COLORS[1], label=experiment.inlet_f)
 
         ax.plot(1, 0, ">k", transform=ax.get_yaxis_transform(), clip_on=False)
         ax.plot(0, 1, "^k", transform=ax.get_xaxis_transform(), clip_on=False)
 
-        ax.set_xlabel('y')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        ax.axes.set_aspect('equal')
+
+        ax.set_xlabel('x')
         ax.set_xticks([0, 1, 2])
         ax.set_xlim([0, 2.2])
 
@@ -37,7 +38,7 @@ def plot_inlets(experiments: list[NSEExperiment]):
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([0, 2.2])
 
-        ax.set_title(experiment.name)
+        ax.set_title(str(experiment.inlet_f))
 
     fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'inlets.pdf')
@@ -47,7 +48,7 @@ def plot_inlets(experiments: list[NSEExperiment]):
 
 
 def plot_experiments(experiments: list[NSEExperiment]):
-    fig = plt.Figure(figsize=(10 / 2.2 * SCALE, len(experiments) * SCALE))
+    fig = plt.Figure(figsize=(10 / 2 * SCALE, len(experiments) * SCALE))
     for i, experiment in enumerate(experiments):
 
         ax = fig.add_subplot(len(experiments), 1, i + 1)
@@ -59,10 +60,12 @@ def plot_experiments(experiments: list[NSEExperiment]):
             draw_shape(ax, figure, style='-', width=3)
 
         s = 0
+        n = 0
         for k, v in experiment.inlet:
-            if 2 > k.y > 0 == k.y % .25:
+            if k.y % .25 == 0 and k not in experiment.obstruction and k not in experiment.boundary:
                 u = v.u
                 s += u
+                n += 1
                 ax.arrow(
                     k.x,
                     k.y,
@@ -72,34 +75,38 @@ def plot_experiments(experiments: list[NSEExperiment]):
                     head_width=.13,
                     head_length=.1,
                     length_includes_head=True,
-                    color='k',
+                    color=COLORS[1],
                 )
 
-        u = s / 7
-        for y in arrange(0.25, 1.75, .25):
-            ax.arrow(
-                10 - u,
-                y,
-                u,
-                0,
-                width=.05,
-                head_width=.13,
-                head_length=.1,
-                length_includes_head=True,
-                color='k',
-            )
+        u = s / n * len(experiment.inlet) / len(experiment.outlet)
+        for k, v in experiment.outlet:
+            if k.y % .25 == 0 and k not in experiment.obstruction and k not in experiment.boundary:
+                ax.arrow(
+                    10 - u,
+                    k.y,
+                    u,
+                    0,
+                    width=.05,
+                    head_width=.13,
+                    head_length=.1,
+                    length_includes_head=True,
+                    color=COLORS[1],
+                )
 
-        ax.set_axis_off()
+        ax.spines['top'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['right'].set_visible(False)
 
-        ax.set_xlabel('')
-        ax.set_xticks([])
-        ax.set_xlim([0, 10])
+        ax.axes.set_aspect('equal')
 
-        ax.set_ylabel('')
-        ax.set_yticks([])
-        ax.set_ylim([-.1, 2.1])
+        ax.set_xticks([0, 1, 10])
+        ax.set_xlim([-.05, 10.05])
 
-        ax.set_title(str(experiment.inlet_f))
+        ax.set_yticks([0, 1, 2])
+        ax.set_ylim([-.05, 2.05])
+
+        ax.set_title(experiment.name)
 
     fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'experiments.pdf')
