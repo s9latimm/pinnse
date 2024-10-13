@@ -68,7 +68,7 @@ class NSECloud(Cloud):
         return super().__getitem__(key)
 
     def emplace(self, key: tuple | Coordinate, **kwargs) -> NSEFact:
-        return super()._insert(key, NSEFact(**kwargs))
+        return super().insert(key, NSEFact(**kwargs))
 
     def copy(self) -> NSECloud:
         return super().copy()

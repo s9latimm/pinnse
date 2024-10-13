@@ -27,11 +27,11 @@ DPI: int = 1000
 SCALE: float = 5.
 
 
-def draw_shape(ax: plt.Axes, shape: Shape) -> None:
+def draw_shape(ax: plt.Axes, shape: Shape, style: str = '--', width: float = 1) -> None:
     polygon = shape[::.05]
     x = polygon.x
     y = polygon.y
-    ax.plot(x[-1:] + x, y[-1:] + y, color='k', linestyle='--', linewidth=1, zorder=999)
+    ax.plot(x, y, color='k', linestyle=style, linewidth=width, zorder=999)
 
 
 def save_fig(fig: plt.Figure, path: Path) -> None:
@@ -155,7 +155,7 @@ def plot_heatmaps(
         marker: tp.Sequence[Coordinate] = (),
         boundary: Figure = None,
         figure: Figure = None,
-        points=None,
+        cloud=None,
 ) -> None:
     with Plot(x, y, path, len(plots)) as fig:
         fig.suptitle(title)
@@ -215,10 +215,10 @@ def plot_heatmaps(
                 zorder=3,
             )
 
-            if points is not None:
+            if cloud is not None:
                 ps = []
                 vs = []
-                for k, v in points:
+                for k, v in cloud:
                     ps.append(k)
                     vs.append(v[i])
                 ax.scatter(
@@ -249,7 +249,7 @@ def plot_heatmaps(
             cbar.set_ticks(ticks)
 
 
-def plot_clouds(
+def plot_cloud(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
@@ -272,7 +272,7 @@ def plot_clouds(
                   y,
                   plots,
                   masks=masks,
-                  points=cloud,
+                  cloud=cloud,
                   marker=marker,
                   path=path,
                   boundary=boundary,
