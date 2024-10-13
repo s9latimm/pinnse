@@ -11,7 +11,7 @@ from src.base.mesh import Coordinate, arrange, merge, equal, leq
 class Shape:
 
     @abstractmethod
-    def __getitem__(self, step: slice) -> Polygon:
+    def __getitem__(self, step: slice) -> _Polygon:
         ...
 
     @abstractmethod
@@ -41,23 +41,24 @@ class Figure:
         return False
 
 
-class Polygon(Shape):
+class _Polygon(Shape):
 
-    def __init__(self, *vertices: Coordinate):
+    def __init__(self, *vertices: Coordinate, cyclic: bool):
+        self.__cyclic = cyclic
         self.__vertices = vertices
 
-    def __getitem__(self, s: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> _Polygon:
         coordinates = self.__vertices
         if s.start is not None:
             coordinates = [i for i in coordinates if i.x >= s.start]
         if s.stop is not None:
             coordinates = [i for i in coordinates if i.x <= s.stop]
-        return Polygon(*coordinates)
+        return _Polygon(*coordinates, cyclic=self.__cyclic)
 
     def __add__(self, summand: float) -> Shape:
-        return Polygon(*[i + (summand, summand) for i in self.__vertices])
+        return _Polygon(*[i + (summand, summand) for i in self.__vertices], cyclic=self.__cyclic)
 
-    def interpolate(self, translation: float = 0.) -> Polygon:
+    def interpolate(self, translation: float = 0.) -> _Polygon:
         vertices = []
         for i in range(1, len(self.__vertices)):
             left = self.__vertices[i - 1]
@@ -70,7 +71,7 @@ class Polygon(Shape):
                 if c not in self:
                     continue
             vertices.append(c)
-        return Polygon(*vertices)
+        return _Polygon(*vertices, cyclic=self.__cyclic)
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate)
@@ -97,11 +98,17 @@ class Polygon(Shape):
 
     @property
     def x(self) -> list[float]:
-        return [i.x for i in self.__vertices]
+        x = [i.x for i in self.__vertices]
+        if self.__cyclic:
+            return x[-1:] + x
+        return x
 
     @property
     def y(self) -> list[float]:
-        return [i.y for i in self.__vertices]
+        y = [i.y for i in self.__vertices]
+        if self.__cyclic:
+            return y[-1:] + y
+        return y
 
 
 class Circle(Shape):
@@ -117,13 +124,13 @@ class Circle(Shape):
         c = Coordinate(*coordinate) - self.__center
         return leq(np.sqrt(c.x**2 + c.y**2), self.__radius)
 
-    def __getitem__(self, s: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> _Polygon:
         n = -((2 * np.pi * self.__radius) // -s.step)
         coordinates = [
             self.__center + Coordinate(self.__radius * np.cos(i), self.__radius * np.sin(i))
             for i in arrange(0, 2 * np.pi, 2 * np.pi / n)
         ]
-        return Polygon(*coordinates)
+        return _Polygon(*coordinates, cyclic=True)
 
 
 class Line(Shape):
@@ -139,16 +146,16 @@ class Line(Shape):
     def __add__(self, summand: float) -> Line:
         return Line((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
-    def __getitem__(self, s: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> _Polygon:
         if equal(self.__a.x, self.__b.x):
-            return Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, s.step)])
+            return _Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, s.step)])
         m = (self.__b.y - self.__a.y) / (self.__b.x - self.__a.x)
         coordinates = [Coordinate(x, self.__a.y + m * x) for x in arrange(self.__a.x, self.__b.x, s.step)]
         if s.start is not None:
             coordinates = [i for i in coordinates if i.x >= s.start]
         if s.stop is not None:
             coordinates = [i for i in coordinates if i.x <= s.stop]
-        return Polygon(*coordinates)
+        return _Polygon(*coordinates, cyclic=False)
 
 
 class Rectangle(Shape):
@@ -168,7 +175,7 @@ class Rectangle(Shape):
     def __add__(self, summand: float) -> Rectangle:
         return Rectangle((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
-    def __getitem__(self, s: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> _Polygon:
         left = [Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, s.step)]
         top = [Coordinate(x, self.__b.y) for x in arrange(self.__a.x, self.__b.x, s.step)]
         right = [Coordinate(self.__b.x, y) for y in arrange(self.__b.y, self.__a.y, s.step)]
@@ -178,7 +185,7 @@ class Rectangle(Shape):
             coordinates = [i for i in coordinates if i.x >= s.start]
         if s.stop is not None:
             coordinates = [i for i in coordinates if i.x <= s.stop]
-        return Polygon(*coordinates)
+        return _Polygon(*coordinates, cyclic=True)
 
 
 class Airfoil(Shape):
@@ -220,7 +227,7 @@ class Airfoil(Shape):
             return leq(lower.y, c.y + 5e-3) and leq(c.y - 5e-3, upper.y)
         return False
 
-    def __getitem__(self, s: slice) -> Polygon:
+    def __getitem__(self, s: slice) -> _Polygon:
         top = []
         bottom = []
         for x in arrange(0, 1, s.step / self.__length):
@@ -232,4 +239,4 @@ class Airfoil(Shape):
             coordinates = [i for i in coordinates if i.x >= s.start]
         if s.stop is not None:
             coordinates = [i for i in coordinates if i.x <= s.stop]
-        return Polygon(*coordinates)
+        return _Polygon(*coordinates, cyclic=True)

@@ -14,7 +14,7 @@ from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.simulation import Simulation
-from src.nse.visualize import plot_foam, plot_prediction, plot_history, plot_geometry
+from src.nse.visualize import plot_foam, plot_prediction, plot_history, plot_experiment
 from src.utils.timer import Stopwatch
 
 
@@ -31,7 +31,7 @@ def main(
 ) -> None:
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
-    logging.info(f'Flow:       {experiment.flow:.3E}')
+    logging.info(f'INLET:      {experiment.inlet_f}')
     logging.info(f'GRID:       {experiment.knowledge.mesh().shape}')
     logging.info(f'DIMENSIONS: {experiment.dim}')
     logging.info(f'HIRES:      {HIRES}')
@@ -60,7 +60,7 @@ def main(
 
     if plot:
         logging.info('PLOT: GEOMETRY')
-        plot_geometry(experiment, identifier)
+        plot_experiment(experiment, identifier)
 
     model = Simulation(experiment, device, n, layers)
 

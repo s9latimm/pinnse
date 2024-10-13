@@ -1,26 +1,27 @@
+from src.base.function import Parabola
 from src.base.mesh import arrange, Mesh, Axis
-from src.base.shape import Rectangle, Figure
-from src.nse.experiments.experiment import NSEExperiment, inlet
+from src.base.shape import Rectangle, Figure, Line
+from src.nse.experiments.experiment import NSEExperiment
 
 
 class Slit(NSEExperiment):
 
     def __init__(
         self,
-        nu: float,
-        rho: float,
-        flow: float,
-        _: bool,
+        nu: float = 1,
+        rho: float = 1,
+        flow: float = 1,
+        _: bool = False,
     ) -> None:
         super().__init__(
-            'Step',
+            Slit.__name__,
             Axis('x', 0, 10),
             Axis('y', 0, 2),
-            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((3, 0), (3.1, .8)), Rectangle((3, 1.4), (3.1, 2))),
             nu,
             rho,
-            flow,
+            Parabola(0, 2, flow),
         )
 
         t = .1
@@ -28,9 +29,8 @@ class Slit(NSEExperiment):
 
         # inlet
         for y in arrange(0, 2, s):
-            u = inlet(0, 2, flow)(y)
-            self._knowledge.emplace((0, y), u=u, v=0)
-            # self._outlet.emplace((10, y))
+            self._inlet.emplace((0, y), u=self._in(y), v=0)
+            self._outlet.emplace((10, y))
 
         # border
         for x in arrange(s, 10, s):

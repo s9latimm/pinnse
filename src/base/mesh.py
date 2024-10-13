@@ -197,7 +197,7 @@ class Mesh:
 class Cloud:
 
     def __init__(self) -> None:
-        self.__cloud: dict[Coordinate, ...] = {}
+        self.__cloud: dict[Coordinate, tp.Any] = {}
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         return Coordinate(*coordinate) in self.__cloud.keys()
@@ -214,7 +214,7 @@ class Cloud:
     def keys(self) -> list[Coordinate]:
         return list(self.__cloud.keys())
 
-    def __iter__(self) -> tp.Iterator[tuple[Coordinate, ...]]:
+    def __iter__(self) -> tp.Iterator[tuple[Coordinate, tp.Any]]:
         return iter(self.__cloud.items())
 
     def __len__(self) -> int:
@@ -226,7 +226,7 @@ class Cloud:
     def __str__(self) -> str:
         return self.__repr__()
 
-    def _insert(self, coordinate: tuple[float, float] | Coordinate, value: ...) -> tp.Any:
+    def insert(self, coordinate: tuple[float, float] | Coordinate, value: tp.Any) -> tp.Any:
         c = Coordinate(*coordinate)
         if c in self.__cloud:
             raise KeyError(c)
@@ -246,7 +246,7 @@ class Cloud:
         cloud.__cloud = self.__cloud.copy()
         return cloud
 
-    def detach(self) -> list[tuple[Coordinate, ...]]:
+    def detach(self) -> list[tuple[Coordinate, tp.Any]]:
         return list(self.__cloud.copy().items())
 
     def numpy(self) -> np.ndarray:

@@ -2,25 +2,27 @@ import numpy as np
 
 from src import OUTPUT_DIR, HIRES
 from src.base.mesh import Mesh
-from src.base.plot import plot_heatmaps, plot_clouds, plot_losses, plot_arrows, plot_streamlines
+from src.base.plot import plot_heatmaps, plot_cloud, plot_losses, plot_arrows, plot_streamlines
+from src.nse.data import NSECloud
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.simulation import Simulation
 
 
-def predict(mesh: Mesh, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    u, v, p, *_ = model.predict(mesh.flatten())
+def predict(mesh: Mesh, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    u, v, p, psi = model.predict(mesh.flatten())
 
     u = u.detach().cpu().numpy().reshape(mesh.x.shape)
     v = v.detach().cpu().numpy().reshape(mesh.x.shape)
     p = p.detach().cpu().numpy().reshape(mesh.x.shape)
+    psi = psi.detach().cpu().numpy().reshape(mesh.x.shape)
 
-    return u, v, p
+    return u, v, p, psi
 
 
 def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
     mesh = experiment.foam.mesh
     x, y = mesh.x, mesh.y
-    u, v, p = predict(mesh, model)
+    u, v, p, _ = predict(mesh, model)
 
     foam = mesh.transform(experiment.foam.knowledge)
 
@@ -45,7 +47,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
     else:
         mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
     x, y = mesh.x, mesh.y
-    u, v, p = predict(mesh, model)
+    u, v, p, _ = predict(mesh, model)
 
     p_min = np.infty
 
@@ -216,15 +218,23 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
     # )
 
 
-def plot_geometry(experiment: NSEExperiment, identifier: str):
+def plot_experiment(experiment: NSEExperiment, identifier: str):
     mesh = Mesh(experiment.x.arrange(1), experiment.y.arrange(1))
     x, y = mesh.x, mesh.y
 
-    plot_clouds(
-        "Geometry",
+    cloud = NSECloud()
+
+    for k, v in experiment.inlet:
+        cloud.insert(k, v)
+
+    for k, v in experiment.knowledge:
+        cloud.insert(k, v)
+
+    plot_cloud(
+        experiment.name,
         x,
         y,
-        experiment.knowledge,
+        cloud,
         ['u', 'v', 'p'],
         marker=experiment.learning.keys(),
         path=OUTPUT_DIR / identifier / 'model' / 'experiment.pdf',
