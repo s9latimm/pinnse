@@ -24,7 +24,7 @@ plt.rcParams['ytick.minor.width'] = .5
 COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
 
 DPI: int = 1000
-SCALE: float = 5.
+SCALE: float = 4.
 
 
 def draw_shape(ax: plt.Axes, shape: Shape, style: str = '--', width: float = 1) -> None:
@@ -37,7 +37,7 @@ def draw_shape(ax: plt.Axes, shape: Shape, style: str = '--', width: float = 1) 
 def save_fig(fig: plt.Figure, path: Path) -> None:
     if path is not None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(path, format=path.suffix[1:], transparent=False, dpi=DPI / SCALE)
+        fig.savefig(path, format=path.suffix[1:], bbox_inches='tight', transparent=True, dpi=DPI / SCALE)
 
 
 def plot_losses(
@@ -113,13 +113,20 @@ class Plot(plt.Figure):
             antialiased=True,
         )
 
+        ax.axes.set_aspect('equal')
+
+        ax.spines['top'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
         ax.set_xlabel('x')
         ax.set_xticks([0, 1, int(np.round(self.__x.max()))])
-        ax.set_xlim([int(np.round(self.__x.min())), int(np.round(self.__x.max()))])
+        ax.set_xlim([int(np.round(self.__x.min())) - .05, int(np.round(self.__x.max())) + .05])
 
         ax.set_ylabel('y')
         ax.set_yticks([0, 1, int(np.round(self.__y.max()))])
-        ax.set_ylim([int(np.round(self.__y.min())), int(np.round(self.__y.max()))])
+        ax.set_ylim([int(np.round(self.__y.min())) - .05, int(np.round(self.__y.max())) + .05])
 
         # ax.spines['top'].set_visible(False)
         # ax.spines['right'].set_visible(False)

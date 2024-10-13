@@ -92,6 +92,10 @@ class Coordinate:
             return Coordinate(np.infty, np.infty)
         return Coordinate(self.x / factor, self.y / factor)
 
+    def distance(self, coordinate: tuple[float, float] | Coordinate) -> float:
+        c = Coordinate(*coordinate)
+        return np.sqrt((self.__x - c.x)**2 + (self.__y - c.y)**2)
+
     def numpy(self) -> np.ndarray:
         return np.array([self.x, self.y])
 

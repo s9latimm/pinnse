@@ -6,58 +6,69 @@ from src.nse.experiments.experiment import NSEExperiment
 from src.nse.experiments.foam import Foam
 
 
-class Block(NSEExperiment):
+class Curve(NSEExperiment):
 
     def __init__(
         self,
         nu: float = 1,
         rho: float = 1,
         flow: float = 1,
-        _: bool = False,
+        supervised: bool = False,
     ) -> None:
-        mesh = Mesh(Axis('x', 0, 10).arrange(.01, True), Axis('y', 0, 2).arrange(.01, True))
+        mesh = Mesh(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
         foam = Foam(
-            FOAM_DIR / 'block_01',
+            FOAM_DIR / 'step_01',
             mesh,
-            [(0, 1.5, 1, 2), (0, 0.5, 1, 1.5), (0, 0, 1, 0.5), (1, 1.5, 2, 2), (1, 0, 2, 0.5), (2, 1.5, 10, 2),
-             (2, 0.5, 10, 1.5), (2, 0, 10, 0.5)],
-            100,
+            [(0, 0, 1, 1), (1, 1, 10, 2), (1, 0, 10, 1)],
+            10,
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
-            0.01,
+            0.08,
             1.,
         )
         super().__init__(
-            Block.__name__,
+            Curve.__name__,
             Axis('x', 0, 10),
             Axis('y', 0, 2),
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((4.7, .7), (5.3, 1.3))),
+            Figure(Rectangle((0, 0), (1, 1)), Rectangle((9, 1), (10, 2))),
             nu,
             rho,
-            Parabola(0, 2, flow),
+            Parabola(1, 2, flow),
             foam,
+            supervised,
         )
 
         t = .1
         s = t / 2
 
         # inlet
-        for y in arrange(0, 2, s):
+        for y in arrange(1, 2, s):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
+        for y in arrange(0, 1, s):
             self._outlet.emplace((10, y))
 
         # border
-        for x in arrange(s, 10 - s, s):
+        for x in arrange(1, 10, s):
             self._knowledge.emplace((x, 0), u=0, v=0)
+        for x in arrange(s, 9, s):
             self._knowledge.emplace((x, 2), u=0, v=0)
 
-        for figure in self.obstruction:
-            for c in figure[::s]:
-                self._knowledge.emplace(c, u=0, v=0)
+        for x in arrange(s, 1, s):
+            self._knowledge.emplace((x, 1), u=0, v=0)
+        for y in arrange(s, 1 - s, s):
+            self._knowledge.emplace((1, y), u=0, v=0)
+
+        for x in arrange(9, 10, s):
+            self._knowledge.emplace((x, 1), u=0, v=0)
+        for y in arrange(1 + s, 2 - s, s):
+            self._knowledge.emplace((9, y), u=0, v=0)
 
         # training
         mesh = Mesh(self.x.arrange(t), self.y.arrange(t))
         for c in mesh:
             if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
                 self._learning.emplace(c)
+
+        if supervised:
+            self._knowledge = self.foam.knowledge

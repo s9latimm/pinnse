@@ -133,21 +133,21 @@ def parse_cmd() -> argparse.Namespace:
         type=float,
         metavar='<intake>',
         default=DEFAULT_INTAKE,
-        help='set intake [m/s]',
+        help=f'set intake [m/s] (default: {DEFAULT_INTAKE})',
     )
     initialization.add_argument(
         '--nu',
         type=float,
         metavar='<nu>',
         default=DEFAULT_NU,
-        help='set viscosity [m^2/s]',
+        help=f'set viscosity [m^2/s] (default: {DEFAULT_NU})',
     )
     initialization.add_argument(
         '--rho',
         type=float,
         metavar='<rho>',
         default=DEFAULT_RHO,
-        help='set density [kg/m^2]',
+        help=f'set density [kg/m^2] (default: {DEFAULT_RHO})',
     )
 
     optimization = parser.add_argument_group('optimization')
@@ -156,7 +156,7 @@ def parse_cmd() -> argparse.Namespace:
         type=str,
         metavar='<id>',
         default=TIMESTAMP,
-        help='identifier / prefix for output directory',
+        help=f'identifier / prefix for output directory (default: timestamp, example: {TIMESTAMP})',
     )
     optimization.add_argument(
         '-n',
@@ -164,7 +164,7 @@ def parse_cmd() -> argparse.Namespace:
         type=int,
         metavar='<train>',
         default=DEFAULT_STEPS,
-        help='number of optimization steps',
+        help=f'number of optimization steps (default: {DEFAULT_STEPS})',
     )
 
     def layers_type(arg: str) -> list[int]:
@@ -204,7 +204,7 @@ def parse_cmd() -> argparse.Namespace:
         '--supervised',
         action='store_true',
         default=False,
-        help='set training method to supervised approach (requires OpenFOAM)',
+        help='set training method to supervised approach (requires --foam)',
     )
 
     output = parser.add_argument_group('output')
@@ -220,7 +220,7 @@ def parse_cmd() -> argparse.Namespace:
         '--hires',
         action='store_true',
         default=False,
-        help='plot NSE with high resolution grid in output directory',
+        help='plot NSE with high resolution grid in output directory (requires --plot)',
     )
     output.add_argument(
         '--save',
