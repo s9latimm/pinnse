@@ -29,12 +29,12 @@ jobs:
         shell: bash
         run: |
           pip3 install wheel
-          pip3 install pylint yapf
+          pip3 install pylint autopep8
 
-      - name: Run YAPF
+      - name: Check Style
         shell: bash
         run: |
-          yapf --verbose --diff --recursive src
+          autopep8 --diff src
 
       - name: Run Pylint
         shell: bash
