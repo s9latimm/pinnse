@@ -2,11 +2,11 @@ import numpy as np
 
 from src import OUTPUT_DIR
 from src.base.plot import plot_seismic, plot_stream, plot_arrows
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
 from src.nse.simulation import Simulation
 
 
-def plot_foam(experiment: NSEExperiment, identifier: str):
+def plot_foam(experiment: Experiment, identifier: str):
     grid = experiment.foam.knowledge.grid()
     x, y = grid.x, grid.y
 
@@ -50,13 +50,13 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
     )
 
 
-def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
+def plot_diff(n, experiment: Experiment, model: Simulation, identifier: str):
     grid = experiment.foam.knowledge.grid()
     x, y = grid.x, grid.y
 
     foam = grid.transform(experiment.foam.knowledge)
 
-    prediction = grid.transform(model.predict(grid.mesh().flatten()))
+    prediction = grid.transform(model.predict(grid.mesh()))
     u, v, p = prediction.u, prediction.v, prediction.p
 
     plot_seismic(

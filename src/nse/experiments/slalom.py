@@ -2,11 +2,11 @@ from src import FOAM_DIR
 from src.base.function import Parabola
 from src.base.mesh import arrange, Grid, Axis
 from src.base.shape import Rectangle, Figure, Line
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
 from src.nse.experiments.foam import Foam
 
 
-class Slalom(NSEExperiment):
+class Slalom(Experiment):
 
     def __init__(
         self,

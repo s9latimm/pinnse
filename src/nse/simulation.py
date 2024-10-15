@@ -3,14 +3,14 @@ import typing as tp
 import torch
 from torch import nn
 
-from src.base.mesh import Coordinate
+from src.base.mesh import Mesh
 from src.base.model import SequentialModel, laplace, nabla
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
 
 
 class Simulation(SequentialModel):
 
-    def __init__(self, experiment: NSEExperiment, device: str, steps: int, layers: list[int]) -> None:
+    def __init__(self, experiment: Experiment, device: str, steps: int, layers: list[int]) -> None:
 
         self.__experiment = experiment
 
@@ -146,9 +146,13 @@ class Simulation(SequentialModel):
 
         return f, g
 
-    def predict(self, sample: list[Coordinate]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def predict(self, mesh: Mesh) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+
+        coordinates = [k for k, _ in mesh.detach()]
+
         t = (
-            torch.tensor([[i.x] for i in sample], dtype=torch.float64, requires_grad=True, device=self._device),
-            torch.tensor([[i.y] for i in sample], dtype=torch.float64, requires_grad=True, device=self._device),
+            torch.tensor([[i.x] for i in coordinates], dtype=torch.float64, requires_grad=True, device=self._device),
+            torch.tensor([[i.y] for i in coordinates], dtype=torch.float64, requires_grad=True, device=self._device),
         )
+
         return self.__forward(t)
