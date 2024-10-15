@@ -13,31 +13,51 @@ class Real:
     def __init__(self, value: float) -> None:
         self.__value: int = int((value + self.DELTA) / self.EPS)
 
-    def __eq__(self, other: Real) -> bool:
-        return self.__value == other.__value
+    def __eq__(self, other: Real | float) -> bool:
+        # pylint: disable=protected-access
+        return self.__value == Real(float(other)).__value
 
-    def __gt__(self, other: Real) -> bool:
-        return self.__value > other.__value
+    def __gt__(self, other: Real | float) -> bool:
+        # pylint: disable=protected-access
+        return self.__value > Real(float(other)).__value
 
-    def __ge__(self, other: Real) -> bool:
-        return self.__value >= other.__value
+    def __ge__(self, other: Real | float) -> bool:
+        # pylint: disable=protected-access
+        return self.__value >= Real(float(other)).__value
 
-    def __lt__(self, other: Real) -> bool:
-        return self.__value <= other.__value
+    def __lt__(self, other: Real | float) -> bool:
+        # pylint: disable=protected-access
+        return self.__value <= Real(float(other)).__value
 
-    def __le__(self, other: Real) -> bool:
-        return self.__value <= other.__value
+    def __le__(self, other: Real | float) -> bool:
+        # pylint: disable=protected-access
+        return self.__value <= Real(float(other)).__value
 
-    def __add__(self, other: Real) -> Real:
+    def __add__(self, other: Real | float) -> Real:
         return Real(float(self) + float(other))
 
-    def __sub__(self, other: Real) -> Real:
+    def __radd__(self, other) -> Real:
+        return self.__add__(other)
+
+    def __sub__(self, other: Real | float) -> Real:
         return Real(float(self) - float(other))
 
-    def __mul__(self, other: Real) -> Real:
+    def __rsub__(self, other) -> Real:
+        return Real(float(other) - float(self))
+
+    def __mul__(self, other: Real | float) -> Real:
         return Real(float(self) * float(other))
 
-    def __float__(self):
+    def __rmul__(self, other: Real | float) -> Real:
+        return self.__mul__(other)
+
+    def __truediv__(self, other: Real | float) -> Real:
+        return Real(float(self) / float(other))
+
+    def __rtruediv__(self, other: Real | float) -> Real:
+        return Real(float(other) / float(self))
+
+    def __float__(self) -> float:
         return self.__value * self.EPS
 
     def __hash__(self) -> int:

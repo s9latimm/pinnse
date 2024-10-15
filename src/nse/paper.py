@@ -58,9 +58,6 @@ def plot_experiment(experiment: Experiment):
     for k, v in experiment.inlet:
         mesh.insert(k, v)
 
-    for k, v in experiment.outlet:
-        mesh.insert(k, v)
-
     for k, v in experiment.knowledge:
         mesh.insert(k, v)
 
@@ -71,7 +68,7 @@ def plot_experiment(experiment: Experiment):
         mesh,
         ['u', 'v', 'p'],
         marker=experiment.learning.keys(),
-        path=OUTPUT_DIR / 'paper' / 'training.pdf',
+        path=OUTPUT_DIR / 'paper' / f'{experiment.name.lower()}.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
     )
