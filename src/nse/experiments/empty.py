@@ -1,6 +1,6 @@
-from src.base.function import Parabola
-from src.base.mesh import arrange, Grid, Axis
-from src.base.shape import Figure, Line
+from src.base.model.function import Parabola
+from src.base.model.mesh import arrange, Grid, Axis
+from src.base.model.shape import Figure, Line
 from src.nse.experiments.experiment import Experiment
 
 

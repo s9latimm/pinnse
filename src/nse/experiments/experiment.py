@@ -1,9 +1,9 @@
 import typing as tp
 
-from src.base.function import Function, Null
-from src.base.mesh import Axis, Mesh
-from src.base.shape import Figure
-from src.nse.record import Record
+from src.base.model.function import Function, Null
+from src.base.model.mesh import Axis, Mesh
+from src.base.model.shape import Figure
+from src.nse.model.record import Record
 
 Foam: tp.TypeAlias = 'Foam'
 

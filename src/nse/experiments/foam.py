@@ -4,9 +4,9 @@ from pathlib import Path
 import numpy as np
 
 from src import OUTPUT_DIR, FOAM_DIR
-from src.base.mesh import Grid, Axis
-from src.base.plot import plot_seismic
-from src.base.shape import Figure, Rectangle
+from src.base.model.mesh import Grid, Axis
+from src.base.model.shape import Figure, Rectangle
+from src.base.view.plot import plot_seismic
 from src.nse.experiments.experiment import Experiment
 
 

@@ -1,10 +1,10 @@
 import numpy as np
 
 from src import OUTPUT_DIR, HIRES
-from src.base.mesh import Grid
-from src.base.plot import plot_seismic, plot_history, plot_arrows, plot_stream
+from src.base.model.mesh import Grid
+from src.base.view.plot import plot_seismic, plot_history, plot_arrows, plot_stream
+from src.nse.controller.simulation import Simulation
 from src.nse.experiments.experiment import Experiment
-from src.nse.simulation import Simulation
 
 
 def plot_prediction(n, experiment: Experiment, model: Simulation, identifier: str, hires=False):

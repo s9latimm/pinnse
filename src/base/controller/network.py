@@ -5,7 +5,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from src.base.mesh import Mesh
+from src.base.model.mesh import Mesh
 
 
 def nabla(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
@@ -60,11 +60,11 @@ class SequentialModel(tp.Generic[T]):
         return str(self._model)
 
     @property
-    def history(self) -> list[tuple[tp.Any, ...]]:
+    def history(self) -> list[list[tp.Any]]:
         return self._losses
 
     @abstractmethod
-    def train(self, callback: tp.Callable[[tp.Any], None]) -> None:
+    def train(self, callback: tp.Callable[[tp.Any], tp.Any]) -> None:
         ...
 
     @abstractmethod
