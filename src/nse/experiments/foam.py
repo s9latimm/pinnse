@@ -7,10 +7,10 @@ from src import OUTPUT_DIR, FOAM_DIR
 from src.base.mesh import Grid, Axis
 from src.base.plot import plot_seismic
 from src.base.shape import Figure, Rectangle
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
 
 
-class Foam(NSEExperiment):
+class Foam(Experiment):
 
     def __init__(
         self,

@@ -3,12 +3,12 @@ import numpy as np
 from src import OUTPUT_DIR, HIRES
 from src.base.mesh import Grid
 from src.base.plot import plot_seismic, plot_history, plot_arrows, plot_stream
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
 from src.nse.simulation import Simulation
 
 
 def predict(grid: Grid, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    u, v, p, psi = model.predict(grid.flatten())
+    u, v, p, psi = model.predict(grid.mesh())
 
     u = u.detach().cpu().numpy().reshape(grid.x.shape)
     v = v.detach().cpu().numpy().reshape(grid.x.shape)
@@ -18,7 +18,7 @@ def predict(grid: Grid, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.n
     return u, v, p, psi
 
 
-def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier: str, hires=False):
+def plot_prediction(n, experiment: Experiment, model: Simulation, identifier: str, hires=False):
     if hires:
         grid = Grid(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
     else:

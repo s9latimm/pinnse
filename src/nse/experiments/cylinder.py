@@ -1,10 +1,10 @@
 from src.base.function import Parabola
 from src.base.mesh import arrange, Grid, Axis
 from src.base.shape import Figure, Circle, Line
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
 
 
-class Cylinder(NSEExperiment):
+class Cylinder(Experiment):
 
     def __init__(
         self,

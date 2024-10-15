@@ -4,10 +4,8 @@ import typing as tp
 
 import numpy as np
 
-from src.base.mesh import Coordinate, Mesh
 
-
-class NSEFact:
+class Record:
 
     def __init__(self, u: float = np.nan, v: float = np.nan, p: float = np.nan) -> None:
         self.__u = u
@@ -37,21 +35,3 @@ class NSEFact:
     @property
     def v(self) -> float:
         return self.__v
-
-
-class NSEMesh(Mesh):
-
-    def __getitem__(self, key: tuple | Coordinate) -> NSEFact:
-        return super().__getitem__(key)
-
-    def emplace(self, key: tuple | Coordinate, **kwargs) -> NSEFact:
-        """
-        Create and insert a value by forwarding keyword arguments to constructor
-        """
-        return super().insert(key, NSEFact(**kwargs))
-
-    def copy(self) -> NSEMesh:
-        return super().copy()
-
-    def detach(self) -> list[tuple[Coordinate, NSEFact]]:
-        return super().detach()
