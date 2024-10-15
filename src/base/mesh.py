@@ -50,7 +50,7 @@ class Real:
         return self.__value > 0
 
 
-def merge[T](*lists: tp.Sequence[T]) -> list[T]:
+def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
     merged = []
     for xs in lists:
         for x in xs:
@@ -225,7 +225,10 @@ class Grid:
         return mesh
 
 
-class Mesh[T: tp.Hashable]:
+T = tp.TypeVar("T")
+
+
+class Mesh(tp.Generic[T]):
 
     def __init__(self, value: type[T] | None = None) -> None:
         self.__value = value

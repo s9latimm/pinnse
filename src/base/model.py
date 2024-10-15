@@ -2,7 +2,6 @@ import typing as tp
 from abc import abstractmethod
 from pathlib import Path
 
-import numpy as np
 import torch
 from torch import nn
 
@@ -50,8 +49,8 @@ class SequentialModel:
         self._losses = []
 
     @staticmethod
-    def _detach(*tensor: torch.Tensor) -> tuple[np.ndarray, ...]:
-        return tuple([i.detach().cpu().numpy() for i in tensor])
+    def _detach(*tensor: torch.Tensor) -> tuple[list[list[float]], ...]:
+        return tuple([i.detach().cpu().tolist() for i in tensor])
 
     def __str__(self) -> str:
         return str(self._model)
