@@ -122,7 +122,7 @@ class Circle(Shape):
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate) - self.__center
-        return Real(np.sqrt(c.x ** 2 + c.y ** 2)) <= Real(self.__radius)
+        return Real(np.sqrt(c.x**2 + c.y**2)) <= Real(self.__radius)
 
     def __getitem__(self, s: slice) -> _Polygon:
         n = -((2 * np.pi * self.__radius) // -s.step)
