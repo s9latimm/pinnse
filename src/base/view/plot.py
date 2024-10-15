@@ -8,8 +8,8 @@ import numpy as np
 from matplotlib import colors
 from matplotlib.ticker import FuncFormatter
 
-from src.base.mesh import Coordinate, Mesh
-from src.base.shape import Shape, Figure
+from src.base.model.mesh import Coordinate, Mesh
+from src.base.model.shape import Shape, Figure
 
 # plt.rcParams['text.usetex'] = True
 # pprint(sorted(matplotlib.font_manager.get_font_names()))
