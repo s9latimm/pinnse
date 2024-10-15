@@ -1,9 +1,11 @@
+import typing as tp
+
 from src.base.function import Function, Null
 from src.base.mesh import Axis, Mesh
 from src.base.shape import Figure
 from src.nse.record import Record
 
-type Foam = 'Foam'
+Foam: tp.TypeAlias = 'Foam'
 
 
 class Experiment:

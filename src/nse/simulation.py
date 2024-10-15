@@ -6,6 +6,7 @@ from torch import nn
 from src.base.mesh import Mesh
 from src.base.model import SequentialModel, laplace, nabla
 from src.nse.experiments.experiment import Experiment
+from src.nse.record import Record
 
 
 class Simulation(SequentialModel):
@@ -104,13 +105,7 @@ class Simulation(SequentialModel):
 
         loss = f_loss + g_loss + u_loss + v_loss
 
-        self._losses.append([
-            f_loss.detach().cpu().numpy(),
-            g_loss.detach().cpu().numpy(),
-            u_loss.detach().cpu().numpy(),
-            v_loss.detach().cpu().numpy(),
-            loss.detach().cpu().numpy(),
-        ])
+        self._losses.append(self._detach(f_loss, g_loss, u_loss, v_loss, loss))
 
         loss.backward()
         return loss
@@ -146,13 +141,16 @@ class Simulation(SequentialModel):
 
         return f, g
 
-    def predict(self, mesh: Mesh) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-
+    def predict(self, mesh: Mesh) -> Mesh[Record]:
         coordinates = [k for k, _ in mesh.detach()]
 
-        t = (
+        u, v, p, psi = self._detach(*self.__forward((
             torch.tensor([[i.x] for i in coordinates], dtype=torch.float64, requires_grad=True, device=self._device),
             torch.tensor([[i.y] for i in coordinates], dtype=torch.float64, requires_grad=True, device=self._device),
-        )
+        )))
 
-        return self.__forward(t)
+        prediction = Mesh(Record)
+        for i, c in enumerate(coordinates):
+            prediction.insert(c, Record(u[i][0], v[i][0], p[i][0]))
+
+        return prediction

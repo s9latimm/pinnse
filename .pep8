@@ -1,7 +1,0 @@
-[pycodestyle]
-max_line_length = 120
-recursive = true
-jobs = 0
-exit_code = true
-aggressive = 1
-verbose = 1

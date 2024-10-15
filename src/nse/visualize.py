@@ -7,24 +7,15 @@ from src.nse.experiments.experiment import Experiment
 from src.nse.simulation import Simulation
 
 
-def predict(grid: Grid, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    u, v, p, psi = model.predict(grid.mesh())
-
-    u = u.detach().cpu().numpy().reshape(grid.x.shape)
-    v = v.detach().cpu().numpy().reshape(grid.x.shape)
-    p = p.detach().cpu().numpy().reshape(grid.x.shape)
-    psi = psi.detach().cpu().numpy().reshape(grid.x.shape)
-
-    return u, v, p, psi
-
-
 def plot_prediction(n, experiment: Experiment, model: Simulation, identifier: str, hires=False):
     if hires:
         grid = Grid(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
     else:
         grid = Grid(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
     x, y = grid.x, grid.y
-    u, v, p, _ = predict(grid, model)
+
+    prediction = grid.transform(model.predict(grid.mesh()))
+    u, v, p = prediction.u, prediction.v, prediction.p
 
     p_min = np.infty
 
