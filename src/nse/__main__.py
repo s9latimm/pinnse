@@ -32,7 +32,7 @@ def main(
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
     logging.info(f'INLET:      {experiment.inlet_f}')
-    logging.info(f'GRID:       {experiment.knowledge.mesh().shape}')
+    logging.info(f'GRID:       {experiment.knowledge.grid().shape}')
     logging.info(f'DIMENSIONS: {experiment.dim}')
     logging.info(f'HIRES:      {HIRES}')
     logging.info(f'STEPS:      {n}')
