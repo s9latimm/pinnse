@@ -17,7 +17,7 @@ def eps(i: int) -> float:
     return i * EPS
 
 
-def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
+def merge[T](*lists: tp.Sequence[T]) -> list[T]:
     merged = []
     for xs in lists:
         for x in xs:
@@ -197,15 +197,16 @@ class Grid:
         return mesh
 
 
-class Mesh:
+class Mesh[T]:
 
-    def __init__(self) -> None:
-        self.__mesh: dict[Coordinate, tp.Any] = {}
+    def __init__(self, value: type[T] | None = None) -> None:
+        self.__value = value
+        self.__mesh: dict[Coordinate, T] = {}
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         return Coordinate(*coordinate) in self.__mesh.keys()
 
-    def __getitem__(self, coordinate: tuple[float, float] | Coordinate) -> tp.Any:
+    def __getitem__(self, coordinate: tuple[float, float] | Coordinate) -> T:
         c = Coordinate(*coordinate)
         if c not in self:
             raise KeyError(c)
@@ -217,7 +218,7 @@ class Mesh:
     def keys(self) -> list[Coordinate]:
         return list(self.__mesh.keys())
 
-    def __iter__(self) -> tp.Iterator[tuple[Coordinate, tp.Any]]:
+    def __iter__(self) -> tp.Iterator[tuple[Coordinate, T]]:
         return iter(self.__mesh.items())
 
     def __len__(self) -> int:
@@ -229,7 +230,7 @@ class Mesh:
     def __str__(self) -> str:
         return self.__repr__()
 
-    def insert(self, coordinate: tuple[float, float] | Coordinate, value: tp.Any | None) -> tp.Any:
+    def insert(self, coordinate: tuple[float, float] | Coordinate, value: T | None = None) -> T:
         c = Coordinate(*coordinate)
         if c in self.__mesh:
             raise KeyError(c)
@@ -237,20 +238,18 @@ class Mesh:
         return self.__mesh[c]
 
     @abstractmethod
-    def emplace(self, key: tuple | Coordinate, **kwargs) -> tp.Any:
-        ...
+    def emplace(self, key: tuple | Coordinate, **kwargs) -> T:
+        assert self.__value is not None
+        return self.insert(key, self.__value(**kwargs))
 
     def clear(self) -> None:
         self.__mesh.clear()
 
-    def copy(self) -> tp.Any:
+    def copy(self) -> Mesh[T]:
         # pylint: disable=protected-access
-        mesh = Mesh()
+        mesh = Mesh(self.__value)
         mesh.__mesh = self.__mesh.copy()
         return mesh
 
-    def detach(self) -> list[tuple[Coordinate, tp.Any]]:
+    def detach(self) -> list[tuple[Coordinate, T]]:
         return list(self.__mesh.copy().items())
-
-    def numpy(self) -> np.ndarray:
-        return np.array([np.concatenate([k.numpy(), v.numpy()]) for k, v in self.__mesh.items()])

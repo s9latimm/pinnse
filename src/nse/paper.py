@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 from src import OUTPUT_DIR
 from src.base.mesh import Grid
 from src.base.plot import save_fig, draw_shape, COLORS, plot_mesh
-from src.nse.data import NSEMesh
 from src.nse.experiments import EXPERIMENTS
-from src.nse.experiments.experiment import NSEExperiment
+from src.nse.experiments.experiment import Experiment
+from src.nse.record import NSEMesh
 
 SCALE: float = 2.5
 
 
-def plot_inlets(experiments: list[NSEExperiment]):
+def plot_inlets(experiments: list[Experiment]):
     fig = plt.Figure(figsize=(SCALE, len(experiments) * SCALE))
     for i, experiment in enumerate(experiments):
 
@@ -49,7 +49,7 @@ def plot_inlets(experiments: list[NSEExperiment]):
     plt.close()
 
 
-def plot_experiment(experiment: NSEExperiment):
+def plot_experiment(experiment: Experiment):
     grid = Grid(experiment.x.arrange(1), experiment.y.arrange(1))
     x, y = grid.x, grid.y
 
@@ -77,7 +77,7 @@ def plot_experiment(experiment: NSEExperiment):
     )
 
 
-def plot_experiments(experiments: list[NSEExperiment]):
+def plot_experiments(experiments: list[Experiment]):
     fig = plt.Figure(figsize=(10 / 2 * SCALE, len(experiments) * SCALE))
     for i, experiment in enumerate(experiments):
 

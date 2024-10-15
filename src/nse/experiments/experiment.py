@@ -1,15 +1,12 @@
-import typing as tp
-
 from src.base.function import Function, Null
-from src.base.mesh import Axis
+from src.base.mesh import Axis, Mesh
 from src.base.shape import Figure
-from src.nse.data import NSEMesh
+from src.nse.record import Record
 
-Foam: tp.TypeAlias = 'Foam'
-# type Foam = 'Foam'
+type Foam = 'Foam'
 
 
-class NSEExperiment:
+class Experiment:
 
     def __init__(
             self,
@@ -35,25 +32,25 @@ class NSEExperiment:
 
         self._in = inlet
 
-        self._learning = NSEMesh()
-        self._knowledge = NSEMesh()
-        self._evaluation = NSEMesh()
-        self._inlet = NSEMesh()
-        self._outlet = NSEMesh()
+        self._learning = Mesh(Record)
+        self._knowledge = Mesh(Record)
+        self._evaluation = Mesh(Record)
+        self._inlet = Mesh(Record)
+        self._outlet = Mesh(Record)
 
         if foam or supervised:
             self.__foam = foam
 
     @property
-    def learning(self) -> NSEMesh:
+    def learning(self) -> Mesh[Record]:
         return self._learning
 
     @property
-    def knowledge(self) -> NSEMesh:
+    def knowledge(self) -> Mesh[Record]:
         return self._knowledge
 
     @property
-    def evaluation(self) -> NSEMesh:
+    def evaluation(self) -> Mesh[Record]:
         return self._evaluation
 
     @property
@@ -61,11 +58,11 @@ class NSEExperiment:
         return self._in
 
     @property
-    def inlet(self) -> NSEMesh:
+    def inlet(self) -> Mesh[Record]:
         return self._inlet
 
     @property
-    def outlet(self) -> NSEMesh:
+    def outlet(self) -> Mesh[Record]:
         return self._outlet
 
     @property
