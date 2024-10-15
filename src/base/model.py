@@ -5,6 +5,8 @@ from pathlib import Path
 import torch
 from torch import nn
 
+from src.base.mesh import Mesh
+
 
 def nabla(f: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
     return torch.autograd.grad(f, x, grad_outputs=torch.ones_like(f), create_graph=True, retain_graph=True)[0]
@@ -16,13 +18,15 @@ def laplace(f: torch.Tensor, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tenso
     return f_x, f_xx
 
 
-class SequentialModel:
+T = tp.TypeVar('T')
+
+
+class SequentialModel(tp.Generic[T]):
 
     def __init__(self, layers: tp.Sequence[int], device: str) -> None:
         super().__init__()
 
-        if device == 'cpu':
-            assert torch.cpu.is_available()
+        assert torch.cpu.is_available()
         if device == 'cuda':
             assert torch.cuda.is_available()
 
@@ -50,7 +54,7 @@ class SequentialModel:
 
     @staticmethod
     def _detach(*tensor: torch.Tensor) -> tuple[list[list[float]], ...]:
-        return tuple([i.detach().cpu().tolist() for i in tensor])
+        return tuple(i.detach().cpu().tolist() for i in tensor)
 
     def __str__(self) -> str:
         return str(self._model)
@@ -60,11 +64,11 @@ class SequentialModel:
         return self._losses
 
     @abstractmethod
-    def train(self, callback: tp.Any) -> None:
+    def train(self, callback: tp.Callable[[tp.Any], None]) -> None:
         ...
 
     @abstractmethod
-    def predict(self, sample: tp.Any) -> tuple[tp.Any, ...]:
+    def predict(self, mesh: Mesh) -> Mesh[T]:
         ...
 
     def eval(self) -> None:

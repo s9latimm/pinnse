@@ -174,8 +174,7 @@ class Rectangle(Shape):
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate)
-        return Real(self.__a.x) <= Real(c.x) <= Real(self.__b.x) \
-            and Real(self.__a.y) <= Real(c.y) <= Real(self.__b.y)
+        return Real(self.__a.x) <= c.x <= Real(self.__b.x) and Real(self.__a.y) <= c.y <= Real(self.__b.y)
 
     def __add__(self, summand: float) -> Rectangle:
         return Rectangle((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
@@ -227,7 +226,7 @@ class Airfoil(Shape):
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         c = (Coordinate(*coordinate) - self.__a) / self.__length
-        if Real(0) <= Real(c.x) <= Real(1):
+        if 0 <= Real(c.x) <= 1:
             upper, lower = self.__f(c.x)
             return Real(lower.y) <= Real(c.y + 5e-3) and Real(c.y - 5e-3) <= Real(upper.y)
         return False
