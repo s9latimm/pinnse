@@ -1,30 +1,30 @@
 import numpy as np
 
 from src import OUTPUT_DIR, HIRES
-from src.base.mesh import Mesh
+from src.base.mesh import Grid
 from src.base.plot import plot_heatmaps, plot_cloud, plot_losses, plot_arrows, plot_streamlines
 from src.nse.data import NSECloud
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.simulation import Simulation
 
 
-def predict(mesh: Mesh, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    u, v, p, psi = model.predict(mesh.flatten())
+def predict(grid: Grid, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    u, v, p, psi = model.predict(grid.flatten())
 
-    u = u.detach().cpu().numpy().reshape(mesh.x.shape)
-    v = v.detach().cpu().numpy().reshape(mesh.x.shape)
-    p = p.detach().cpu().numpy().reshape(mesh.x.shape)
-    psi = psi.detach().cpu().numpy().reshape(mesh.x.shape)
+    u = u.detach().cpu().numpy().reshape(grid.x.shape)
+    v = v.detach().cpu().numpy().reshape(grid.x.shape)
+    p = p.detach().cpu().numpy().reshape(grid.x.shape)
+    psi = psi.detach().cpu().numpy().reshape(grid.x.shape)
 
     return u, v, p, psi
 
 
 def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
-    mesh = experiment.foam.mesh
-    x, y = mesh.x, mesh.y
-    u, v, p, _ = predict(mesh, model)
+    grid = experiment.foam.grid
+    x, y = grid.x, grid.y
+    u, v, p, _ = predict(grid, model)
 
-    foam = mesh.transform(experiment.foam.knowledge)
+    foam = grid.transform(experiment.foam.knowledge)
 
     plot_heatmaps(
         f'OpenFOAM vs. Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
@@ -43,11 +43,11 @@ def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
 
 def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier: str, hires=False):
     if hires:
-        mesh = Mesh(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
+        grid = Grid(experiment.x.arrange(.1 / HIRES, True), experiment.y.arrange(.1 / HIRES, True))
     else:
-        mesh = Mesh(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
-    x, y = mesh.x, mesh.y
-    u, v, p, _ = predict(mesh, model)
+        grid = Grid(experiment.x.arrange(.1, True), experiment.y.arrange(.1, True))
+    x, y = grid.x, grid.y
+    u, v, p, _ = predict(grid, model)
 
     p_min = np.infty
 
@@ -175,10 +175,10 @@ def plot_history(n, model: Simulation, identifier: str):
 
 
 def plot_foam(experiment: NSEExperiment, identifier: str):
-    mesh = experiment.foam.mesh
-    x, y = mesh.x, mesh.y
+    grid = experiment.foam.grid
+    x, y = grid.x, grid.y
 
-    data = mesh.transform(experiment.foam.knowledge)
+    data = grid.transform(experiment.foam.knowledge)
     u, v, p = data.u, data.v, data.p
 
     plot_heatmaps(
@@ -219,8 +219,8 @@ def plot_foam(experiment: NSEExperiment, identifier: str):
 
 
 def plot_experiment(experiment: NSEExperiment, identifier: str):
-    mesh = Mesh(experiment.x.arrange(1), experiment.y.arrange(1))
-    x, y = mesh.x, mesh.y
+    grid = Grid(experiment.x.arrange(1), experiment.y.arrange(1))
+    x, y = grid.x, grid.y
 
     cloud = NSECloud()
 
