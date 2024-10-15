@@ -5,16 +5,49 @@ from abc import abstractmethod
 
 import numpy as np
 
-EPS: float = 1e-6
-DELTA: float = 1e-7
 
+class Real:
+    EPS: float = 1e-6
+    DELTA: float = 1e-7
 
-def clamp(f: float) -> int:
-    return int((f + DELTA) / EPS)
+    def __init__(self, value: float) -> None:
+        self.__value: int = int((value + self.DELTA) / self.EPS)
 
+    def __eq__(self, other: Real) -> bool:
+        return self.__value == other.__value
 
-def eps(i: int) -> float:
-    return i * EPS
+    def __gt__(self, other: Real) -> bool:
+        return self.__value > other.__value
+
+    def __ge__(self, other: Real) -> bool:
+        return self.__value >= other.__value
+
+    def __lt__(self, other: Real) -> bool:
+        return self.__value <= other.__value
+
+    def __le__(self, other: Real) -> bool:
+        return self.__value <= other.__value
+
+    def __add__(self, other: Real) -> Real:
+        return Real(float(self) + float(other))
+
+    def __sub__(self, other: Real) -> Real:
+        return Real(float(self) - float(other))
+
+    def __mul__(self, other: Real) -> Real:
+        return Real(float(self) * float(other))
+
+    def __float__(self):
+        return self.__value * self.EPS
+
+    def __hash__(self) -> int:
+        return self.__value
+
+    def is_zero(self) -> bool:
+        return self.__value == 0
+
+    def is_positive(self) -> bool:
+        return self.__value > 0
 
 
 def merge[T](*lists: tp.Sequence[T]) -> list[T]:
@@ -26,29 +59,21 @@ def merge[T](*lists: tp.Sequence[T]) -> list[T]:
     return merged
 
 
-def equal(a: float, b: float) -> bool:
-    return clamp(a) == clamp(b)
-
-
-def leq(a: float, b: float) -> bool:
-    return clamp(a) <= clamp(b)
-
-
 def arrange(start: float, stop: float, step: float) -> list[float]:
-    start, stop, step = clamp(start), clamp(stop), clamp(step)
+    start, stop, step = Real(start), Real(stop), Real(step)
     r = []
-    if step <= 0.:
+    if not step.is_positive():
         return r
     if start < stop:
         while start <= stop:
-            r.append(eps(start))
+            r.append(float(start))
             start += step
     elif start > stop:
         while start >= stop:
-            r.append(eps(start))
+            r.append(float(start))
             start -= step
     else:
-        return [eps(start)]
+        return [float(start)]
     return r
 
 
@@ -59,13 +84,13 @@ class Coordinate:
         self.__y = y
 
     def __eq__(self, other) -> bool:
-        return clamp(self.x) == clamp(other.x) and clamp(self.y) == clamp(other.y)
+        return Real(self.x) == Real(other.x) and Real(self.y) == Real(other.y)
 
     def __getitem__(self, key) -> float:
         return [self.x, self.y][key]
 
     def __hash__(self) -> int:
-        return hash((clamp(self.x), clamp(self.y)))
+        return hash((hash(Real(self.x)), hash(Real(self.y))))
 
     def __iter__(self) -> tp.Iterator[float]:
         return iter((self.x, self.y))
@@ -87,8 +112,11 @@ class Coordinate:
     def __mul__(self, factor: float) -> Coordinate:
         return Coordinate(self.x * factor, self.y * factor)
 
+    def __rmul__(self, factor: float) -> Coordinate:
+        return self * factor
+
     def __truediv__(self, factor: float) -> Coordinate:
-        if equal(factor, 0):
+        if Real(factor).is_zero():
             return Coordinate(np.infty, np.infty)
         return Coordinate(self.x / factor, self.y / factor)
 
@@ -197,7 +225,7 @@ class Grid:
         return mesh
 
 
-class Mesh[T]:
+class Mesh[T: tp.Hashable]:
 
     def __init__(self, value: type[T] | None = None) -> None:
         self.__value = value
