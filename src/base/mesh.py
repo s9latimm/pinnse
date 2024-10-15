@@ -54,7 +54,7 @@ def arrange(start: float, stop: float, step: float) -> list[float]:
 
 class Coordinate:
 
-    def __init__(self, x: float | np.ndarray, y: float | np.ndarray) -> None:
+    def __init__(self, x: float, y: float) -> None:
         self.__x = x
         self.__y = y
 
@@ -96,9 +96,6 @@ class Coordinate:
         c = Coordinate(*coordinate)
         return np.sqrt((self.__x - c.x)**2 + (self.__y - c.y)**2)
 
-    def numpy(self) -> np.ndarray:
-        return np.array([self.x, self.y])
-
     @property
     def x(self) -> float:
         return self.__x
@@ -133,6 +130,10 @@ class Axis:
     @property
     def stop(self) -> float:
         return self.__stop
+
+    @property
+    def shape(self) -> tuple[float, float]:
+        return self.__start, self.__stop
 
     @property
     def label(self) -> str:
@@ -172,22 +173,14 @@ class Grid:
         return self.__repr__()
 
     @property
-    def height(self) -> int:
-        return self.__height
-
-    @property
     def shape(self) -> tuple[int, int]:
         return self.__width, self.__height
-
-    @property
-    def width(self) -> int:
-        return self.__width
 
     def flatten(self) -> list[Coordinate]:
         return list(self.__grid.flatten())
 
-    def transform(self, cloud: Cloud):
-        return self.map(lambda i: cloud[i])
+    def transform(self, mesh: Mesh):
+        return self.map(lambda i: mesh[i])
 
     def map(self, f) -> Grid:
         # pylint: disable=protected-access
@@ -197,61 +190,67 @@ class Grid:
         copy.__height = self.__height
         return copy
 
+    def mesh(self) -> Mesh:
+        mesh = Mesh()
+        for c in self:
+            mesh.insert(c)
+        return mesh
 
-class Cloud:
+
+class Mesh:
 
     def __init__(self) -> None:
-        self.__cloud: dict[Coordinate, tp.Any] = {}
+        self.__mesh: dict[Coordinate, tp.Any] = {}
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
-        return Coordinate(*coordinate) in self.__cloud.keys()
+        return Coordinate(*coordinate) in self.__mesh.keys()
 
     def __getitem__(self, coordinate: tuple[float, float] | Coordinate) -> tp.Any:
         c = Coordinate(*coordinate)
         if c not in self:
             raise KeyError(c)
-        return self.__cloud[c]
+        return self.__mesh[c]
 
     def grid(self) -> Grid:
-        return Grid(sorted({i.x for i in self.__cloud.keys()}), sorted({i.y for i in self.__cloud.keys()}))
+        return Grid(sorted({i.x for i in self.__mesh.keys()}), sorted({i.y for i in self.__mesh.keys()}))
 
     def keys(self) -> list[Coordinate]:
-        return list(self.__cloud.keys())
+        return list(self.__mesh.keys())
 
     def __iter__(self) -> tp.Iterator[tuple[Coordinate, tp.Any]]:
-        return iter(self.__cloud.items())
+        return iter(self.__mesh.items())
 
     def __len__(self) -> int:
-        return len(self.__cloud)
+        return len(self.__mesh)
 
     def __repr__(self) -> str:
-        return f'{self.__cloud}'
+        return f'{self.__mesh}'
 
     def __str__(self) -> str:
         return self.__repr__()
 
-    def insert(self, coordinate: tuple[float, float] | Coordinate, value: tp.Any) -> tp.Any:
+    def insert(self, coordinate: tuple[float, float] | Coordinate, value: tp.Any | None) -> tp.Any:
         c = Coordinate(*coordinate)
-        if c in self.__cloud:
+        if c in self.__mesh:
             raise KeyError(c)
-        self.__cloud[c] = value
-        return self.__cloud[c]
+        self.__mesh[c] = value
+        return self.__mesh[c]
 
     @abstractmethod
     def emplace(self, key: tuple | Coordinate, **kwargs) -> tp.Any:
         ...
 
     def clear(self) -> None:
-        self.__cloud.clear()
+        self.__mesh.clear()
 
     def copy(self) -> tp.Any:
         # pylint: disable=protected-access
-        cloud = Cloud()
-        cloud.__cloud = self.__cloud.copy()
-        return cloud
+        mesh = Mesh()
+        mesh.__mesh = self.__mesh.copy()
+        return mesh
 
     def detach(self) -> list[tuple[Coordinate, tp.Any]]:
-        return list(self.__cloud.copy().items())
+        return list(self.__mesh.copy().items())
 
     def numpy(self) -> np.ndarray:
-        return np.array([np.concatenate([k.numpy(), v.numpy()]) for k, v in self.__cloud.items()])
+        return np.array([np.concatenate([k.numpy(), v.numpy()]) for k, v in self.__mesh.items()])

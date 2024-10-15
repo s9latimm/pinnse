@@ -4,7 +4,7 @@ import typing as tp
 
 import numpy as np
 
-from src.base.mesh import Coordinate, Cloud
+from src.base.mesh import Coordinate, Mesh
 
 
 class NSEFact:
@@ -30,47 +30,27 @@ class NSEFact:
     def p(self) -> float:
         return self.__p
 
-    @p.setter
-    def p(self, value: float) -> None:
-        self.__p = value
-
     @property
     def u(self) -> float:
         return self.__u
-
-    @u.setter
-    def u(self, value: float) -> None:
-        self.__u = value
 
     @property
     def v(self) -> float:
         return self.__v
 
-    @v.setter
-    def v(self, value: float) -> None:
-        self.__v = value
 
-    def numpy(self) -> np.ndarray:
-        return np.array([self.__u, self.__v, self.p])
-
-    def update(self, u: float = None, v: float = None, p: float = None) -> None:
-        if u is not None:
-            self.__u = u
-        if v is not None:
-            self.__v = v
-        if p is not None:
-            self.__p = p
-
-
-class NSECloud(Cloud):
+class NSEMesh(Mesh):
 
     def __getitem__(self, key: tuple | Coordinate) -> NSEFact:
         return super().__getitem__(key)
 
     def emplace(self, key: tuple | Coordinate, **kwargs) -> NSEFact:
+        """
+        Create and insert a value by forwarding keyword arguments to constructor
+        """
         return super().insert(key, NSEFact(**kwargs))
 
-    def copy(self) -> NSECloud:
+    def copy(self) -> NSEMesh:
         return super().copy()
 
     def detach(self) -> list[tuple[Coordinate, NSEFact]]:

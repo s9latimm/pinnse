@@ -2,6 +2,7 @@ import typing as tp
 from abc import abstractmethod
 from pathlib import Path
 
+import numpy as np
 import torch
 from torch import nn
 
@@ -48,11 +49,15 @@ class SequentialModel:
 
         self._losses = []
 
+    @staticmethod
+    def _detach(*tensor: torch.Tensor) -> tuple[np.ndarray, ...]:
+        return tuple([i.detach().cpu().numpy() for i in tensor])
+
     def __str__(self) -> str:
         return str(self._model)
 
     @property
-    def history(self) -> list[tuple[tp.Any]]:
+    def history(self) -> list[tuple[tp.Any, ...]]:
         return self._losses
 
     @abstractmethod
@@ -60,7 +65,7 @@ class SequentialModel:
         ...
 
     @abstractmethod
-    def predict(self, sample: tp.Any) -> tuple[tp.Any]:
+    def predict(self, sample: tp.Any) -> tuple[tp.Any, ...]:
         ...
 
     def eval(self) -> None:

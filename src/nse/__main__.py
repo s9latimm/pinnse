@@ -14,7 +14,7 @@ from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.simulation import Simulation
-from src.nse.visualize import plot_foam, plot_prediction, plot_history, plot_experiment
+from src.nse.visualize import plot_prediction, plot_losses
 from src.utils.timer import Stopwatch
 
 
@@ -32,8 +32,8 @@ def main(
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
     logging.info(f'INLET:      {experiment.inlet_f}')
-    logging.info(f'GRID:       {experiment.knowledge.grid().shape}')
-    logging.info(f'DIMENSIONS: {experiment.dim}')
+    logging.info(f'DIMENSION:  {experiment.shape}')
+    logging.info(f'MESH:       {experiment.knowledge.grid().shape}')
     logging.info(f'HIRES:      {HIRES}')
     logging.info(f'STEPS:      {n}')
     logging.info(f'TIMESTAMP:  {TIMESTAMP}')
@@ -54,14 +54,6 @@ def main(
         logging.info(f'CUDA:       {info.multi_processor_count}')
         logging.info(f'MEMORY:     {-(info.total_memory // -(1024 ** 3))} GB')
 
-    if foam:
-        logging.info('PLOT: OPENFOAM')
-        plot_foam(experiment, identifier)
-
-    if plot:
-        logging.info('PLOT: GEOMETRY')
-        plot_experiment(experiment, identifier)
-
     model = Simulation(experiment, device, n, layers)
 
     logging.info(model)
@@ -81,7 +73,7 @@ def main(
                                 logging.info('PLOT: PREDICTION')
                                 plot_prediction(pbar.n, experiment, model, identifier)
                                 logging.info('PLOT: LOSS')
-                                plot_history(pbar.n, model, identifier)
+                                plot_losses(pbar.n, model, identifier)
                             if hires and pbar.n % 1e4 == 0:
                                 logging.info('PLOT: HIRES PREDICTION')
                                 plot_prediction(pbar.n, experiment, model, identifier, hires=True)
@@ -100,7 +92,7 @@ def main(
         logging.info('PLOT: PREDICTION')
         plot_prediction(n, experiment, model, identifier)
         logging.info('PLOT: LOSS')
-        plot_history(pbar.n, model, identifier)
+        plot_losses(pbar.n, model, identifier)
 
     if hires:
         logging.info('PLOT: HIRES PREDICTION')
@@ -109,6 +101,10 @@ def main(
     if experiment.supervised:
         logging.info(f'NU: {model.nu:.16f}')
         logging.info(f'RHO: {model.rho:.16f}')
+
+    # if foam:
+    #     logging.info('PLOT: OPENFOAM')
+    #     plot_foam(experiment, identifier)
 
     # if foam:
     #     logging.info('PLOT: DIFFERENCE')
