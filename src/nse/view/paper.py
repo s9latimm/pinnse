@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
-from src.base.mesh import Grid, Mesh
-from src.base.plot import save_fig, draw_shape, COLORS, plot_mesh
+from src.base.view.plot import save_fig, draw_shape, COLORS
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import Experiment
-from src.nse.record import Record
 
 SCALE: float = 2.5
 
@@ -47,31 +45,6 @@ def plot_inlets(experiments: list[Experiment]):
 
     plt.clf()
     plt.close()
-
-
-def plot_experiment(experiment: Experiment):
-    grid = Grid(experiment.x.arrange(1), experiment.y.arrange(1))
-    x, y = grid.x, grid.y
-
-    mesh = Mesh[Record]()
-
-    for k, v in experiment.inlet:
-        mesh.insert(k, v)
-
-    for k, v in experiment.knowledge:
-        mesh.insert(k, v)
-
-    plot_mesh(
-        experiment.name,
-        x,
-        y,
-        mesh,
-        ['u', 'v', 'p'],
-        marker=experiment.learning.keys(),
-        path=OUTPUT_DIR / 'paper' / f'{experiment.name.lower()}.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
-    )
 
 
 def plot_experiments(experiments: list[Experiment]):

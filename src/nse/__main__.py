@@ -11,11 +11,11 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
 from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
+from src.nse.controller.simulation import Simulation
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import Experiment
-from src.nse.paper import plot_experiment
-from src.nse.simulation import Simulation
-from src.nse.visualize import plot_prediction, plot_losses
+from src.nse.view.grading import plot_diff, plot_setup, plot_foam
+from src.nse.view.prediction import plot_prediction, plot_losses
 from src.utils.timer import Stopwatch
 
 
@@ -29,6 +29,7 @@ def main(
     hires: bool,
     save: bool,
     layers: list[int],
+    grading: bool,
 ) -> None:
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
@@ -60,11 +61,15 @@ def main(
     logging.info(model)
     logging.info(f'PARAMETERS: {len(model)}')
 
+    if grading:
+        logging.info('PLOT: SETUP')
+        plot_setup(experiment, identifier)
+
     if n > 0:
         with Stopwatch(lambda t: logging.info(f'TIME: {t}')):
             with tqdm(total=n, position=0, leave=True) as pbar, logging_redirect_tqdm():
 
-                def callback(history):
+                def callback(history: list[list[float]]) -> None:
                     if pbar.n < n:
                         if pbar.n > 0:
                             if pbar.n % 1e2 == 0:
@@ -105,11 +110,11 @@ def main(
 
     if foam:
         logging.info('PLOT: OPENFOAM')
-        plot_experiment(experiment)
+        plot_foam(experiment, identifier)
 
-    # if foam:
-    #     logging.info('PLOT: DIFFERENCE')
-    #     plot_diff(n, data, model, identifier)
+    if grading:
+        logging.info('PLOT: DIFFERENCE')
+        plot_diff(n, experiment, model, identifier)
 
 
 def parse_cmd() -> argparse.Namespace:
@@ -191,13 +196,6 @@ def parse_cmd() -> argparse.Namespace:
         help='device used for training (default: cpu)',
     )
     optimization.add_argument(
-        '-f',
-        '--foam',
-        action='store_true',
-        default=False,
-        help='load OpenFOAM',
-    )
-    optimization.add_argument(
         '--supervised',
         action='store_true',
         default=False,
@@ -211,6 +209,20 @@ def parse_cmd() -> argparse.Namespace:
         action='store_true',
         default=False,
         help='plot NSE in output directory',
+    )
+    output.add_argument(
+        '-f',
+        '--foam',
+        action='store_true',
+        default=False,
+        help='initialize OpenFOAM experiment',
+    )
+    output.add_argument(
+        '-g',
+        '--grading',
+        action='store_true',
+        default=False,
+        help='grade prediction (requires --foam and --plot)',
     )
     output.add_argument(
         '-r',
@@ -228,10 +240,10 @@ def parse_cmd() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    if args.hires and not args.plot:
+    if (args.hires or args.grading) and not args.plot:
         parser.error('the following arguments are required: --plot')
 
-    if args.supervised and not args.foam:
+    if (args.supervised or args.grading) and not args.foam:
         parser.error('the following arguments are required: --foam')
 
     return args
@@ -270,6 +282,7 @@ if __name__ == '__main__':
             cmd.hires,
             cmd.save,
             cmd.layers,
+            cmd.grading,
         )
         logging.info('EXIT: SUCCESS')
     except KeyboardInterrupt:

@@ -1,7 +1,7 @@
 from src import FOAM_DIR
-from src.base.function import Parabola
-from src.base.mesh import arrange, Grid, Axis
-from src.base.shape import Rectangle, Figure, Line
+from src.base.model.function import Parabola
+from src.base.model.mesh import arrange, Grid, Axis
+from src.base.model.shape import Rectangle, Figure, Line
 from src.nse.experiments.experiment import Experiment
 from src.nse.experiments.foam import Foam
 

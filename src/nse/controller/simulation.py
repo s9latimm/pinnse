@@ -3,10 +3,10 @@ import typing as tp
 import torch
 from torch import nn
 
-from src.base.mesh import Mesh
-from src.base.model import SequentialModel, laplace, nabla
+from src.base.controller.network import SequentialModel, laplace, nabla
+from src.base.model.mesh import Mesh
 from src.nse.experiments.experiment import Experiment
-from src.nse.record import Record
+from src.nse.model.record import Record
 
 
 class Simulation(SequentialModel[Record]):
@@ -77,7 +77,7 @@ class Simulation(SequentialModel[Record]):
     def rho(self) -> float:
         return self.__rho.detach().cpu()
 
-    def train(self, callback: tp.Callable[[tp.Any], None]) -> None:
+    def train(self, callback: tp.Callable[[list[list[float]]], None]) -> None:
 
         def closure():
             callback(self.history)
@@ -94,9 +94,9 @@ class Simulation(SequentialModel[Record]):
         u_loss = self._mse(u[self.__out:], self.__u)
         v_loss = self._mse(v[self.__out:], self.__v)
 
-        # prohibits the model from hallucinating an incoming flow from right
-        if self.__out > 0:
-            u_loss += self._mse(torch.clamp(u[:self.__out], max=0), self.__u_out)
+        # # prohibits the model from hallucinating an incoming flow from right
+        # if self.__out > 0:
+        #     u_loss += self._mse(torch.clamp(u[:self.__out], max=0), self.__u_out)
 
         *_, f, g = self.__forward(self.__learning, True)
 

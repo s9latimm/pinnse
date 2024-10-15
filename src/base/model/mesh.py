@@ -250,8 +250,8 @@ T = tp.TypeVar("T")
 
 class Mesh(tp.Generic[T]):
 
-    def __init__(self, value: type[T] | None = None) -> None:
-        self.__value = value
+    def __init__(self, value_type: type[T] | None = None) -> None:
+        self.__value_type = value_type
         self.__mesh: dict[Coordinate, T] = {}
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
@@ -290,15 +290,15 @@ class Mesh(tp.Generic[T]):
 
     @abstractmethod
     def emplace(self, key: tuple | Coordinate, **kwargs) -> T:
-        assert self.__value is not None
-        return self.insert(key, self.__value(**kwargs))
+        assert self.__value_type is not None
+        return self.insert(key, self.__value_type(**kwargs))
 
     def clear(self) -> None:
         self.__mesh.clear()
 
     def copy(self) -> Mesh[T]:
         # pylint: disable=protected-access
-        mesh = Mesh(self.__value)
+        mesh = Mesh(self.__value_type)
         mesh.__mesh = self.__mesh.copy()
         return mesh
 
