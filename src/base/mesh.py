@@ -144,29 +144,29 @@ class Axis:
         return arrange(self.__start + c - padding, self.__stop - c + padding, step)
 
 
-class Mesh:
+class Grid:
 
     def __init__(self, xs: tp.Sequence[float], ys: tp.Sequence[float]) -> None:
         self.__width = len(xs)
         self.__height = len(ys)
 
-        self.__mesh = np.zeros((self.__width, self.__height), dtype="object")
+        self.__grid = np.zeros((self.__width, self.__height), dtype="object")
         for i, x in enumerate(xs):
             for j, y in enumerate(ys):
-                self.__mesh[i][j] = Coordinate(x, y)
+                self.__grid[i][j] = Coordinate(x, y)
 
     def __getattr__(self, item) -> np.ndarray:
         # pylint: disable=protected-access
-        return self.map(lambda i: i.__getattribute__(item)).__mesh
+        return self.map(lambda i: i.__getattribute__(item)).__grid
 
     def __iter__(self) -> tp.Iterator:
-        return iter(self.__mesh.flatten())
+        return iter(self.__grid.flatten())
 
     def __len__(self) -> int:
-        return self.__mesh.size
+        return self.__grid.size
 
     def __repr__(self) -> str:
-        return f'{self.__mesh}'
+        return f'{self.__grid}'
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -184,15 +184,15 @@ class Mesh:
         return self.__width
 
     def flatten(self) -> list[Coordinate]:
-        return list(self.__mesh.flatten())
+        return list(self.__grid.flatten())
 
     def transform(self, cloud: Cloud):
         return self.map(lambda i: cloud[i])
 
-    def map(self, f) -> Mesh:
+    def map(self, f) -> Grid:
         # pylint: disable=protected-access
-        copy = Mesh([], [])
-        copy.__mesh = np.array(list(map(lambda i: np.array(list(map(f, i))), self.__mesh.copy())))
+        copy = Grid([], [])
+        copy.__grid = np.array(list(map(lambda i: np.array(list(map(f, i))), self.__grid.copy())))
         copy.__width = self.__width
         copy.__height = self.__height
         return copy
@@ -212,8 +212,8 @@ class Cloud:
             raise KeyError(c)
         return self.__cloud[c]
 
-    def mesh(self) -> Mesh:
-        return Mesh(sorted({i.x for i in self.__cloud.keys()}), sorted({i.y for i in self.__cloud.keys()}))
+    def grid(self) -> Grid:
+        return Grid(sorted({i.x for i in self.__cloud.keys()}), sorted({i.y for i in self.__cloud.keys()}))
 
     def keys(self) -> list[Coordinate]:
         return list(self.__cloud.keys())

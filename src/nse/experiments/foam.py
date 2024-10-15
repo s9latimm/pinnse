@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from src import OUTPUT_DIR, FOAM_DIR
-from src.base.mesh import Mesh, Axis
+from src.base.mesh import Grid, Axis
 from src.base.plot import plot_heatmaps
 from src.base.shape import Figure, Rectangle
 from src.nse.experiments.experiment import NSEExperiment
@@ -15,7 +15,7 @@ class Foam(NSEExperiment):
     def __init__(
         self,
         path: Path,
-        mesh: Mesh,
+        grid: Grid,
         model: list[tuple[float, float, float, float]],
         scale: float,
         boundary: Figure = None,
@@ -23,11 +23,11 @@ class Foam(NSEExperiment):
         nu: float = 1.,
         rho: float = 1.,
     ):
-        self.__mesh = mesh
+        self.__grid = grid
         super().__init__(
             'Foam',
-            self.__mesh.x,
-            self.__mesh.y,
+            self.__grid.x,
+            self.__grid.y,
             boundary,
             obstruction,
             nu,
@@ -49,12 +49,12 @@ class Foam(NSEExperiment):
         v = np.flip(v, 0).transpose().flatten()
         p = np.flip(p, 0).transpose().flatten()
 
-        for i, c in enumerate(self.__mesh):
+        for i, c in enumerate(self.__grid):
             self._knowledge.emplace(c, u=u[i], v=v[i], p=p[i])
 
     @property
-    def mesh(self) -> Mesh:
-        return self.__mesh
+    def grid(self) -> Grid:
+        return self.__grid
 
     @staticmethod
     def __parse_velocity(path: Path) -> tuple[list[float], list[float]]:
@@ -168,7 +168,7 @@ class Foam(NSEExperiment):
 
 
 if __name__ == '__main__':
-    m = Mesh(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
+    m = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
     f = Foam(
         FOAM_DIR / 'step_01',
         m,

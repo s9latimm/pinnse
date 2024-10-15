@@ -1,6 +1,6 @@
 from src import FOAM_DIR
 from src.base.function import Parabola
-from src.base.mesh import arrange, Mesh, Axis
+from src.base.mesh import arrange, Grid, Axis
 from src.base.shape import Rectangle, Figure, Line
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.experiments.foam import Foam
@@ -15,10 +15,10 @@ class Slalom(NSEExperiment):
         flow: float = 1,
         supervised: bool = False,
     ) -> None:
-        mesh = Mesh(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
+        grid = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
         foam = Foam(
             FOAM_DIR / 'step_01',
-            mesh,
+            grid,
             [(0, 0, 1, 1), (1, 1, 10, 2), (1, 0, 10, 1)],
             10,
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
@@ -71,8 +71,8 @@ class Slalom(NSEExperiment):
             self._knowledge.emplace((x, 1), u=0, v=0)
 
         # training
-        mesh = Mesh(self.x.arrange(t), self.y.arrange(t))
-        for c in mesh:
+        grid = Grid(self.x.arrange(t), self.y.arrange(t))
+        for c in grid:
             if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
                 self._learning.emplace(c)
 

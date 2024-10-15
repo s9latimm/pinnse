@@ -1,5 +1,5 @@
 from src.base.function import Parabola
-from src.base.mesh import arrange, Mesh, Axis
+from src.base.mesh import arrange, Grid, Axis
 from src.base.shape import Figure, Circle, Line
 from src.nse.experiments.experiment import NSEExperiment
 
@@ -43,7 +43,7 @@ class Cylinder(NSEExperiment):
                     self._knowledge.emplace(c, u=0, v=0)
 
         # training
-        mesh = Mesh(self.x.arrange(t), self.y.arrange(t))
-        for c in mesh:
+        grid = Grid(self.x.arrange(t), self.y.arrange(t))
+        for c in grid:
             if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
                 self._learning.emplace(c)
