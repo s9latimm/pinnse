@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import colors
 from matplotlib.ticker import FuncFormatter
 
-from src.base.mesh import Coordinate, Cloud
+from src.base.mesh import Coordinate, Mesh
 from src.base.shape import Shape, Figure
 
 # plt.rcParams['text.usetex'] = True
@@ -40,7 +40,7 @@ def save_fig(fig: plt.Figure, path: Path) -> None:
         fig.savefig(path, format=path.suffix[1:], bbox_inches='tight', transparent=True, dpi=DPI / SCALE)
 
 
-def plot_losses(
+def plot_history(
     title: str,
     plots: tp.Sequence[tuple[str, tp.Sequence[tuple[str, tp.Sequence[float]]]]],
     path: Path = None,
@@ -152,7 +152,7 @@ class Plot(plt.Figure):
         plt.close()
 
 
-def plot_heatmaps(
+def plot_seismic(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
@@ -162,8 +162,11 @@ def plot_heatmaps(
         marker: tp.Sequence[Coordinate] = (),
         boundary: Figure = None,
         figure: Figure = None,
-        cloud=None,
+        mesh=None,
 ) -> None:
+    if masks is not None:
+        assert len(plots) == len(masks)
+
     with Plot(x, y, path, len(plots)) as fig:
         fig.suptitle(title)
 
@@ -198,7 +201,7 @@ def plot_heatmaps(
                 antialiased=True,
             )
 
-            if masks:
+            if masks is not None:
                 cmap = plt.get_cmap('Grays')
                 cmap.set_under('k', alpha=0)
                 ax.pcolormesh(
@@ -222,10 +225,10 @@ def plot_heatmaps(
                 zorder=3,
             )
 
-            if cloud is not None:
+            if mesh is not None:
                 ps = []
                 vs = []
-                for k, v in cloud:
+                for k, v in mesh:
                     ps.append(k)
                     vs.append(v[i])
                 ax.scatter(
@@ -256,11 +259,11 @@ def plot_heatmaps(
             cbar.set_ticks(ticks)
 
 
-def plot_cloud(
+def plot_mesh(
         title: str,
         x: np.ndarray,
         y: np.ndarray,
-        cloud: Cloud,
+        mesh: Mesh,
         labels=(),
         path: Path = None,
         marker: tp.Sequence[Coordinate] = (),
@@ -274,19 +277,10 @@ def plot_cloud(
         plots.append((label, np.full(x.shape, np.nan)))
         masks.append(np.full(x.shape, .5))
 
-    plot_heatmaps(title,
-                  x,
-                  y,
-                  plots,
-                  masks=masks,
-                  cloud=cloud,
-                  marker=marker,
-                  path=path,
-                  boundary=boundary,
-                  figure=figure)
+    plot_seismic(title, x, y, plots, masks=masks, mesh=mesh, marker=marker, path=path, boundary=boundary, figure=figure)
 
 
-def plot_streamlines(
+def plot_stream(
     title: str,
     x: np.ndarray,
     y: np.ndarray,

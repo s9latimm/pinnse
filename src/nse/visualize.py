@@ -2,8 +2,7 @@ import numpy as np
 
 from src import OUTPUT_DIR, HIRES
 from src.base.mesh import Grid
-from src.base.plot import plot_heatmaps, plot_cloud, plot_losses, plot_arrows, plot_streamlines
-from src.nse.data import NSECloud
+from src.base.plot import plot_seismic, plot_history, plot_arrows, plot_stream
 from src.nse.experiments.experiment import NSEExperiment
 from src.nse.simulation import Simulation
 
@@ -17,28 +16,6 @@ def predict(grid: Grid, model: Simulation) -> tuple[np.ndarray, np.ndarray, np.n
     psi = psi.detach().cpu().numpy().reshape(grid.x.shape)
 
     return u, v, p, psi
-
-
-def plot_diff(n, experiment: NSEExperiment, model: Simulation, identifier: str):
-    grid = experiment.foam.grid
-    x, y = grid.x, grid.y
-    u, v, p, _ = predict(grid, model)
-
-    foam = grid.transform(experiment.foam.knowledge)
-
-    plot_heatmaps(
-        f'OpenFOAM vs. Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
-        x,
-        y,
-        [
-            ('u', np.abs(u - foam.u)),
-            ('v', np.abs(v - foam.v)),
-            ('p', np.abs(p - foam.p)),
-        ],
-        path=OUTPUT_DIR / identifier / 'diff_uvp.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
-    )
 
 
 def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier: str, hires=False):
@@ -66,7 +43,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
                 p[i, j] = 0
 
     if hires:
-        plot_heatmaps(
+        plot_seismic(
             f'Prediction HiRes [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
             y,
@@ -81,7 +58,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
         )
 
     else:
-        plot_heatmaps(
+        plot_seismic(
             f'Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
             y,
@@ -95,7 +72,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
             figure=experiment.obstruction,
         )
 
-        plot_streamlines(
+        plot_stream(
             f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
             y,
@@ -117,7 +94,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
             figure=experiment.obstruction,
         )
 
-        plot_heatmaps(
+        plot_seismic(
             f'Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
             y,
@@ -131,7 +108,7 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
             figure=experiment.obstruction,
         )
 
-        plot_streamlines(
+        plot_stream(
             f'Prediction Streamlines [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
             x,
             y,
@@ -154,8 +131,8 @@ def plot_prediction(n, experiment: NSEExperiment, model: Simulation, identifier:
         )
 
 
-def plot_history(n, model: Simulation, identifier: str):
-    plot_losses(
+def plot_losses(n, model: Simulation, identifier: str):
+    plot_history(
         f'Loss [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         [
             ('Border', [
@@ -171,73 +148,4 @@ def plot_history(n, model: Simulation, identifier: str):
             ]),
         ],
         path=OUTPUT_DIR / identifier / 'err.pdf',
-    )
-
-
-def plot_foam(experiment: NSEExperiment, identifier: str):
-    grid = experiment.foam.grid
-    x, y = grid.x, grid.y
-
-    data = grid.transform(experiment.foam.knowledge)
-    u, v, p = data.u, data.v, data.p
-
-    plot_heatmaps(
-        'OpenFOAM',
-        x,
-        y,
-        [
-            ('u', u),
-            ('v', v),
-            ('p', p - p.min()),
-        ],
-        path=OUTPUT_DIR / identifier / 'foam' / 'foam_uvp.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
-    )
-
-    plot_streamlines(
-        'OpenFOAM Streamlines',
-        x,
-        y,
-        u,
-        v,
-        path=OUTPUT_DIR / identifier / 'foam' / 'foam_str.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
-    )
-
-    # plot_arrows(
-    #     'OpenFOAM Arrows',
-    #     x,
-    #     y,
-    #     u,
-    #     v,
-    #     path=OUTPUT_DIR / identifier / 'steps' / 'foam_arw.pdf',
-    #     boundary=experiment.boundary,
-    #     figure=experiment.obstruction,
-    # )
-
-
-def plot_experiment(experiment: NSEExperiment, identifier: str):
-    grid = Grid(experiment.x.arrange(1), experiment.y.arrange(1))
-    x, y = grid.x, grid.y
-
-    cloud = NSECloud()
-
-    for k, v in experiment.inlet:
-        cloud.insert(k, v)
-
-    for k, v in experiment.knowledge:
-        cloud.insert(k, v)
-
-    plot_cloud(
-        experiment.name,
-        x,
-        y,
-        cloud,
-        ['u', 'v', 'p'],
-        marker=experiment.learning.keys(),
-        path=OUTPUT_DIR / identifier / 'model' / 'experiment.pdf',
-        boundary=experiment.boundary,
-        figure=experiment.obstruction,
     )

@@ -3,7 +3,7 @@ import typing as tp
 from src.base.function import Function, Null
 from src.base.mesh import Axis
 from src.base.shape import Figure
-from src.nse.data import NSECloud
+from src.nse.data import NSEMesh
 
 Foam: tp.TypeAlias = 'Foam'
 # type Foam = 'Foam'
@@ -35,25 +35,25 @@ class NSEExperiment:
 
         self._in = inlet
 
-        self._learning = NSECloud()
-        self._knowledge = NSECloud()
-        self._evaluation = NSECloud()
-        self._inlet = NSECloud()
-        self._outlet = NSECloud()
+        self._learning = NSEMesh()
+        self._knowledge = NSEMesh()
+        self._evaluation = NSEMesh()
+        self._inlet = NSEMesh()
+        self._outlet = NSEMesh()
 
         if foam or supervised:
             self.__foam = foam
 
     @property
-    def learning(self) -> NSECloud:
+    def learning(self) -> NSEMesh:
         return self._learning
 
     @property
-    def knowledge(self) -> NSECloud:
+    def knowledge(self) -> NSEMesh:
         return self._knowledge
 
     @property
-    def evaluation(self) -> NSECloud:
+    def evaluation(self) -> NSEMesh:
         return self._evaluation
 
     @property
@@ -61,11 +61,11 @@ class NSEExperiment:
         return self._in
 
     @property
-    def inlet(self) -> NSECloud:
+    def inlet(self) -> NSEMesh:
         return self._inlet
 
     @property
-    def outlet(self) -> NSECloud:
+    def outlet(self) -> NSEMesh:
         return self._outlet
 
     @property
@@ -79,6 +79,10 @@ class NSEExperiment:
     @property
     def y(self) -> Axis:
         return self.__y
+
+    @property
+    def shape(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        return self.__x.shape, self.__y.shape
 
     @property
     def nu(self) -> float:

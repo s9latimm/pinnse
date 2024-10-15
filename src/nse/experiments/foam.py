@@ -5,7 +5,7 @@ import numpy as np
 
 from src import OUTPUT_DIR, FOAM_DIR
 from src.base.mesh import Grid, Axis
-from src.base.plot import plot_heatmaps
+from src.base.plot import plot_seismic
 from src.base.shape import Figure, Rectangle
 from src.nse.experiments.experiment import NSEExperiment
 
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     )
     d = m.transform(f.knowledge)
 
-    plot_heatmaps(
+    plot_seismic(
         'OpenFOAM',
         m.x,
         m.y,
