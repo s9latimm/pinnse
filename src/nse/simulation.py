@@ -9,7 +9,7 @@ from src.nse.experiments.experiment import Experiment
 from src.nse.record import Record
 
 
-class Simulation(SequentialModel):
+class Simulation(SequentialModel[Record]):
 
     def __init__(self, experiment: Experiment, device: str, steps: int, layers: list[int]) -> None:
 
@@ -77,7 +77,7 @@ class Simulation(SequentialModel):
     def rho(self) -> float:
         return self.__rho.detach().cpu()
 
-    def train(self, callback: tp.Any) -> None:
+    def train(self, callback: tp.Callable[[tp.Any], None]) -> None:
 
         def closure():
             callback(self.history)
@@ -144,7 +144,7 @@ class Simulation(SequentialModel):
     def predict(self, mesh: Mesh) -> Mesh[Record]:
         coordinates = [k for k, _ in mesh.detach()]
 
-        u, v, p, psi = self._detach(*self.__forward((
+        u, v, p, _ = self._detach(*self.__forward((
             torch.tensor([[i.x] for i in coordinates], dtype=torch.float64, requires_grad=True, device=self._device),
             torch.tensor([[i.y] for i in coordinates], dtype=torch.float64, requires_grad=True, device=self._device),
         )))

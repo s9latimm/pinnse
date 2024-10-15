@@ -13,6 +13,7 @@ from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
 from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import Experiment
+from src.nse.paper import plot_experiment
 from src.nse.simulation import Simulation
 from src.nse.visualize import plot_prediction, plot_losses
 from src.utils.timer import Stopwatch
@@ -102,9 +103,9 @@ def main(
         logging.info(f'NU: {model.nu:.16f}')
         logging.info(f'RHO: {model.rho:.16f}')
 
-    # if foam:
-    #     logging.info('PLOT: OPENFOAM')
-    #     plot_foam(experiment, identifier)
+    if foam:
+        logging.info('PLOT: OPENFOAM')
+        plot_experiment(experiment)
 
     # if foam:
     #     logging.info('PLOT: DIFFERENCE')
