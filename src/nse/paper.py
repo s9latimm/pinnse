@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
-from src.base.mesh import Grid
+from src.base.mesh import Grid, Mesh
 from src.base.plot import save_fig, draw_shape, COLORS, plot_mesh
 from src.nse.experiments import EXPERIMENTS
 from src.nse.experiments.experiment import Experiment
-from src.nse.record import NSEMesh
+from src.nse.record import Record
 
 SCALE: float = 2.5
 
@@ -53,7 +53,7 @@ def plot_experiment(experiment: Experiment):
     grid = Grid(experiment.x.arrange(1), experiment.y.arrange(1))
     x, y = grid.x, grid.y
 
-    mesh = NSEMesh()
+    mesh = Mesh[Record]()
 
     for k, v in experiment.inlet:
         mesh.insert(k, v)

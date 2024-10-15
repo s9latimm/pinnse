@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from src.base.mesh import Coordinate, arrange, merge, equal, leq
+from src.base.mesh import Coordinate, arrange, merge, Real
 
 
 class Shape:
@@ -122,7 +122,7 @@ class Circle(Shape):
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate) - self.__center
-        return leq(np.sqrt(c.x**2 + c.y**2), self.__radius)
+        return Real(np.sqrt(c.x ** 2 + c.y ** 2)) <= Real(self.__radius)
 
     def __getitem__(self, s: slice) -> _Polygon:
         n = -((2 * np.pi * self.__radius) // -s.step)
@@ -147,7 +147,7 @@ class Line(Shape):
         return Line((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
 
     def __getitem__(self, s: slice) -> _Polygon:
-        if equal(self.__a.x, self.__b.x):
+        if Real(self.__a.x) == Real(self.__b.x):
             return _Polygon(*[Coordinate(self.__a.x, y) for y in arrange(self.__a.y, self.__b.y, s.step)])
         m = (self.__b.y - self.__a.y) / (self.__b.x - self.__a.x)
         coordinates = [Coordinate(x, self.__a.y + m * x) for x in arrange(self.__a.x, self.__b.x, s.step)]
@@ -159,7 +159,7 @@ class Line(Shape):
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate)
-        return equal(self.__a.distance(c) + self.__b.distance(c), self.__a.distance(self.__b))
+        return Real(self.__a.distance(c) + self.__b.distance(c)) == Real(self.__a.distance(self.__b))
 
 
 class Rectangle(Shape):
@@ -174,7 +174,8 @@ class Rectangle(Shape):
 
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate)
-        return leq(self.__a.x, c.x) and leq(c.x, self.__b.x) and leq(self.__a.y, c.y) and leq(c.y, self.__b.y)
+        return Real(self.__a.x) <= Real(c.x) <= Real(self.__b.x) \
+            and Real(self.__a.y) <= Real(c.y) <= Real(self.__b.y)
 
     def __add__(self, summand: float) -> Rectangle:
         return Rectangle((self.__a.x - summand, self.__a.y - summand), (self.__b.x + summand, self.__b.y + summand))
@@ -226,9 +227,9 @@ class Airfoil(Shape):
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         c = (Coordinate(*coordinate) - self.__a) / self.__length
-        if leq(0, c.x) and leq(c.x, 1):
+        if Real(0) <= Real(c.x) <= Real(1):
             upper, lower = self.__f(c.x)
-            return leq(lower.y, c.y + 5e-3) and leq(c.y - 5e-3, upper.y)
+            return Real(lower.y) <= Real(c.y + 5e-3) and Real(c.y - 5e-3) <= Real(upper.y)
         return False
 
     def __getitem__(self, s: slice) -> _Polygon:
