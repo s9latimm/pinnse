@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
 from src.base.view.plot import save_fig, draw_shape, COLORS
-from src.nse.experiments import EXPERIMENTS
-from src.nse.experiments.experiment import Experiment
+from src.nse.model.experiments import EXPERIMENTS
+from src.nse.model.experiments.experiment import Experiment
 
 SCALE: float = 2.5
 
