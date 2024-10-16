@@ -1,9 +1,7 @@
-from src import FOAM_DIR
 from src.base.model.function import Parabola
 from src.base.model.mesh import arrange, Grid, Axis
 from src.base.model.shape import Rectangle, Figure, Line
 from src.nse.model.experiments.experiment import Experiment
-from src.nse.model.experiments.foam import Foam
 
 
 class Block(Experiment):
@@ -15,16 +13,16 @@ class Block(Experiment):
         flow: float = 1,
         _: bool = False,
     ) -> None:
-        grid = Grid(Axis('x', 0, 10).arrange(.01, True), Axis('y', 0, 2).arrange(.01, True))
-        foam = Foam(
-            FOAM_DIR / 'block_01',
-            grid,
-            .01,
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
-            0.01,
-            1.,
-        )
+        # grid = Grid(Axis('x', 0, 10).arrange(.01, True), Axis('y', 0, 2).arrange(.01, True))
+        # foam = Foam(
+        #     FOAM_DIR / 'block_01',
+        #     grid,
+        #     .01,
+        #     Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
+        #     Figure(Rectangle((0, 0), (1, 1))),
+        #     0.01,
+        #     1.,
+        # )
         super().__init__(
             Block.__name__,
             Axis('x', 0, 10),
@@ -34,7 +32,7 @@ class Block(Experiment):
             nu,
             rho,
             Parabola(0, 2, flow),
-            foam,
+            # foam,
         )
 
         t = .1

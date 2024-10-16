@@ -30,11 +30,11 @@ def plot_inlets(experiments: list[Experiment]):
 
         ax.axes.set_aspect('equal')
 
-        ax.set_xlabel('x')
+        ax.set_xlabel('x', fontname='cmmi10')
         ax.set_xticks([0, 1, 2])
         ax.set_xlim([0, 2.2])
 
-        ax.set_ylabel('u')
+        ax.set_ylabel('u', fontname='cmmi10')
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([0, 2.2])
 
@@ -106,7 +106,7 @@ def plot_experiments(experiments: list[Experiment]):
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([-.05, 2.05])
 
-        ax.set_title(experiment.name)
+        ax.set_title(experiment.name, fontname='cmss10')
 
     fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'experiments.pdf')

@@ -1,9 +1,7 @@
-from src import FOAM_DIR
 from src.base.model.function import Parabola
 from src.base.model.mesh import arrange, Grid, Axis
 from src.base.model.shape import Rectangle, Figure, Line
 from src.nse.model.experiments.experiment import Experiment
-from src.nse.model.experiments.foam import Foam
 
 
 class Step(Experiment):
@@ -15,19 +13,19 @@ class Step(Experiment):
         flow: float = 1,
         supervised: bool = False,
     ) -> None:
-        grid = Grid(
-            Axis('x', 0, 10).arrange(.1, True),
-            Axis('y', 0, 2).arrange(.1, True),
-        )
-        foam = Foam(
-            FOAM_DIR / 'step',
-            grid,
-            .1,
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
-            0.08,
-            1.,
-        )
+        # grid = Grid(
+        #     Axis('x', 0, 10).arrange(.1, True),
+        #     Axis('y', 0, 2).arrange(.1, True),
+        # )
+        # foam = Foam(
+        #     FOAM_DIR / 'step',
+        #     grid,
+        #     .1,
+        #     Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
+        #     Figure(Rectangle((0, 0), (1, 1))),
+        #     0.08,
+        #     1.,
+        # )
         super().__init__(
             Step.__name__,
             Axis('x', 0, 10),
@@ -37,8 +35,8 @@ class Step(Experiment):
             nu,
             rho,
             Parabola(1, 2, flow),
-            foam,
-            supervised,
+            # foam,
+            supervised=supervised,
         )
 
         t = .1

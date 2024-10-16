@@ -11,15 +11,14 @@ from matplotlib.ticker import FuncFormatter
 from src.base.model.mesh import Coordinate, Mesh
 from src.base.model.shape import Shape, Figure
 
-# plt.rcParams['text.usetex'] = True
-# pprint(sorted(matplotlib.font_manager.get_font_names()))
-plt.rcParams['font.family'] = 'DejaVu Sans'
+# print(sorted(mpl.font_manager.get_font_names()))
+plt.rcParams['font.family'] = 'cmr10'
+plt.rcParams['axes.formatter.use_mathtext'] = True
 plt.rcParams['axes.linewidth'] = 1
 plt.rcParams['xtick.major.width'] = 1
 plt.rcParams['xtick.minor.width'] = .5
 plt.rcParams['ytick.major.width'] = 1
 plt.rcParams['ytick.minor.width'] = .5
-# plt.switch_backend('Agg')
 
 COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
 
@@ -85,10 +84,10 @@ def plot_history(
     plt.close()
 
 
-seismic = colors.LinearSegmentedColormap.from_list('seismic', plt.get_cmap('seismic')(np.linspace(0, 1., 100)))
-seismic_neg = colors.LinearSegmentedColormap.from_list('seismic_neg', plt.get_cmap('seismic')(np.linspace(0., .5, 50)))
-seismic_pos = colors.LinearSegmentedColormap.from_list('seismic_pos', plt.get_cmap('seismic')(np.linspace(.5, 1., 50)))
-seismic_dis = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cmap('seismic')(np.linspace(.55, 1., 45)))
+SEISMIC = colors.LinearSegmentedColormap.from_list('seismic', plt.get_cmap('seismic')(np.linspace(0, 1., 100)))
+SEISMIC_N = colors.LinearSegmentedColormap.from_list('seismic_neg', plt.get_cmap('seismic')(np.linspace(0., .5, 50)))
+SEISMIC_P = colors.LinearSegmentedColormap.from_list('seismic_pos', plt.get_cmap('seismic')(np.linspace(.5, 1., 50)))
+SEISMIC_D = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cmap('seismic')(np.linspace(.55, 1., 45)))
 
 
 class Plot(plt.Figure):
@@ -120,11 +119,11 @@ class Plot(plt.Figure):
         ax.spines['left'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
-        ax.set_xlabel('x')
+        ax.set_xlabel('x', fontname='cmmi10')
         ax.set_xticks([0, 1, int(np.round(self.__x.max()))])
         ax.set_xlim([int(np.round(self.__x.min())) - .05, int(np.round(self.__x.max())) + .05])
 
-        ax.set_ylabel('y')
+        ax.set_ylabel('y', fontname='cmmi10')
         ax.set_yticks([0, 1, int(np.round(self.__y.max()))])
         ax.set_ylim([int(np.round(self.__y.min())) - .05, int(np.round(self.__y.max())) + .05])
 
@@ -138,7 +137,7 @@ class Plot(plt.Figure):
             for shape in figure:
                 draw_shape(ax, shape)
 
-        ax.set_title(title)
+        ax.set_title(title, fontname='cmss10')
 
     def __enter__(self, *_) -> Plot:
         return self
@@ -168,7 +167,7 @@ def plot_seismic(
         assert len(plots) == len(masks)
 
     with Plot(x, y, path, len(plots)) as fig:
-        fig.suptitle(title)
+        fig.suptitle(title, fontname='cmss10')
 
         for i, plot in enumerate(plots):
             label, z = plot
@@ -178,16 +177,16 @@ def plot_seismic(
 
             if z.min() < 0 < z.max():
                 slope = colors.TwoSlopeNorm(vmin=z.min(), vcenter=0, vmax=z.max())
-                cmap = seismic
+                cmap = SEISMIC
             elif z.min() == z.max():
                 slope = colors.Normalize(vmin=z.min(), vmax=z.max())
-                cmap = seismic
+                cmap = SEISMIC
             elif z.max() < 0:
                 slope = colors.Normalize(vmin=z.min(), vmax=0)
-                cmap = seismic_neg
+                cmap = SEISMIC_N
             else:
                 slope = colors.Normalize(vmin=0, vmax=z.max())
-                cmap = seismic_pos
+                cmap = SEISMIC_P
 
             img = ax.pcolormesh(
                 x,
@@ -236,7 +235,7 @@ def plot_seismic(
                     [j.y for j in ps],
                     marker='o',
                     c=vs,
-                    cmap=seismic_pos,
+                    cmap=SEISMIC_P,
                     norm=colors.Normalize(vmin=0, vmax=max(vs)),
                     zorder=3,
                 )
@@ -247,7 +246,7 @@ def plot_seismic(
                 orientation='vertical',
                 fraction=0.046,
                 pad=0.04,
-                format=FuncFormatter(lambda j, pos: f'{j:.3f}'),
+                format=FuncFormatter(lambda j, pos: f'{j:.3f}' if j != 0 else '0'),
             )
 
             ticks = []
