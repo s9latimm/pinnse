@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from src import OUTPUT_DIR
@@ -86,21 +88,42 @@ def plot_diff(n, experiment: Experiment, model: Simulation, identifier: str):
     prediction = grid.transform(model.predict(grid.mesh()))
     u, v, p = prediction.u, prediction.v, prediction.p
 
+    u_err, v_err, p_err, norm = 0, 0, 0, 0
+
+    p_min = np.infty
+    f_min = np.infty
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
             if (x[i, j], y[i, j]) in experiment.obstruction:
                 u[i, j] = 0
                 v[i, j] = 0
+            else:
+                u[i, j] = np.abs(u[i, j] - foam.u[i, j])
+                v[i, j] = np.abs(v[i, j] - foam.v[i, j])
+                u_err += u[i, j]
+                v_err += v[i, j]
+                p_min = min(p_min, float(p[i, j]))
+                f_min = min(f_min, float(foam.p[i, j]))
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if (x[i, j], y[i, j]) in experiment.obstruction:
                 p[i, j] = 0
+            else:
+                norm += 1
+                p[i, j] = np.abs(p[i, j] - p_min - foam.p[i, j] + f_min)
+                p_err += p[i, j]
+
+    logging.info(f'ERROR: u:{u_err / norm:.3E}, v:{v_err / norm:.3E}, p:{p_err / norm:.3E}')
 
     plot_seismic(
         f'OpenFOAM vs. Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         x,
         y,
         [
-            ('u', np.abs(u - foam.u)),
-            ('v', np.abs(v - foam.v)),
-            ('p', np.abs(p - foam.p)),
+            ('u', u),
+            ('v', v),
+            ('p', p),
         ],
         path=OUTPUT_DIR / identifier / 'grading' / 'diff_uvp.pdf',
         boundary=experiment.boundary,

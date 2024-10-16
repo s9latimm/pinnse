@@ -247,7 +247,7 @@ def plot_seismic(
                 orientation='vertical',
                 fraction=0.046,
                 pad=0.04,
-                format=FuncFormatter(lambda j, pos: f'{j:.1f}'),
+                format=FuncFormatter(lambda j, pos: f'{j:.3f}'),
             )
 
             ticks = []
