@@ -4,7 +4,7 @@ from src import OUTPUT_DIR
 from src.base.model.mesh import Grid, Mesh
 from src.base.view.plot import plot_seismic, plot_stream, plot_arrows, plot_mesh
 from src.nse.controller.simulation import Simulation
-from src.nse.experiments.experiment import Experiment
+from src.nse.model.experiments.experiment import Experiment
 from src.nse.model.record import Record
 
 
@@ -85,6 +85,13 @@ def plot_diff(n, experiment: Experiment, model: Simulation, identifier: str):
 
     prediction = grid.transform(model.predict(grid.mesh()))
     u, v, p = prediction.u, prediction.v, prediction.p
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if (x[i, j], y[i, j]) in experiment.obstruction:
+                u[i, j] = 0
+                v[i, j] = 0
+                p[i, j] = 0
 
     plot_seismic(
         f'OpenFOAM vs. Prediction [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',

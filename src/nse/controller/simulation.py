@@ -5,7 +5,7 @@ from torch import nn
 
 from src.base.controller.network import SequentialModel, laplace, nabla
 from src.base.model.mesh import Mesh
-from src.nse.experiments.experiment import Experiment
+from src.nse.model.experiments.experiment import Experiment
 from src.nse.model.record import Record
 
 

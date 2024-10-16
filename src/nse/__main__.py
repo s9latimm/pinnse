@@ -12,8 +12,8 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
 from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.controller.simulation import Simulation
-from src.nse.experiments import EXPERIMENTS
-from src.nse.experiments.experiment import Experiment
+from src.nse.model.experiments import EXPERIMENTS
+from src.nse.model.experiments.experiment import Experiment
 from src.nse.view.grading import plot_diff, plot_setup, plot_foam
 from src.nse.view.prediction import plot_prediction, plot_losses
 from src.utils.timer import Stopwatch
