@@ -17,9 +17,9 @@ class Step(Experiment):
     ) -> None:
         grid = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
         foam = Foam(
-            FOAM_DIR / 'step_01',
+            FOAM_DIR / 'step',
             grid,
-            [(0, 0, 1, 1), (1, 1, 10, 2), (1, 0, 10, 1)],
+            [(0,0,1,1),(1,1,4.5,2),(1,0,4.5,1),(4.5,1,5.5,2),(4.5,0,5.5,1),(5.5,1,9,2),(5.5,0,9,1),(9,1,10,2),(9,0,10,1)],
             10,
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
