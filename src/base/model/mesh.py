@@ -7,8 +7,8 @@ import numpy as np
 
 
 class Real:
-    EPS: float = 1e-6
-    DELTA: float = 1e-7
+    EPS: float = 1e-4
+    DELTA: float = 1e-5
 
     def __init__(self, value: float) -> None:
         self.__value: int = int((value + self.DELTA) / self.EPS)
@@ -79,8 +79,13 @@ def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
     return merged
 
 
-def arrange(start: float, stop: float, step: float) -> list[float]:
+def arrange(start: float, stop: float, step: float, center=False) -> list[float]:
     start, stop, step = Real(start), Real(stop), Real(step)
+
+    if center:
+        start = start + step / 2
+        stop = stop - step / 2
+
     r = []
     if not step.is_positive():
         return r
@@ -125,15 +130,22 @@ class Coordinate:
         c = Coordinate(*coordinate)
         return Coordinate(self.x + c.x, self.y + c.y)
 
+    def __radd__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
+        return self.__add__(coordinate)
+
     def __sub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
         c = Coordinate(*coordinate)
         return Coordinate(self.x - c.x, self.y - c.y)
+
+    def __rsub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
+        c = Coordinate(*coordinate)
+        return Coordinate(c.x - self.x, c.y - self.y)
 
     def __mul__(self, factor: float) -> Coordinate:
         return Coordinate(self.x * factor, self.y * factor)
 
     def __rmul__(self, factor: float) -> Coordinate:
-        return self * factor
+        return self.__mul__(factor)
 
     def __truediv__(self, factor: float) -> Coordinate:
         if Real(factor).is_zero():
@@ -189,8 +201,7 @@ class Axis:
 
     def arrange(self, step: float, center=False, padding=0) -> list[float]:
         assert step > 0
-        c = step / 2 if center else 0
-        return arrange(self.__start + c - padding, self.__stop - c + padding, step)
+        return arrange(self.__start - padding, self.__stop + padding, step, center)
 
 
 class Grid:

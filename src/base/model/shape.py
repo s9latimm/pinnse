@@ -172,6 +172,10 @@ class Rectangle(Shape):
         self.__a = Coordinate(*a)
         self.__b = Coordinate(*b)
 
+    @property
+    def shape(self):
+        return self.__a, self.__b
+
     def __contains__(self, coordinate: tuple | Coordinate) -> bool:
         c = Coordinate(*coordinate)
         return Real(self.__a.x) <= c.x <= Real(self.__b.x) and Real(self.__a.y) <= c.y <= Real(self.__b.y)

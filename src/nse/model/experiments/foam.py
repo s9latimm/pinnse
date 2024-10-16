@@ -1,29 +1,29 @@
 import re
 from pathlib import Path
 
-import numpy as np
-
 from src import OUTPUT_DIR, FOAM_DIR
-from src.base.model.mesh import Grid, Axis
+from src.base.model.mesh import Grid, Axis, Coordinate, arrange
 from src.base.model.shape import Figure, Rectangle
 from src.base.view.plot import plot_seismic
 from src.nse.model.experiments.experiment import Experiment
+from src.nse.model.record import Record
 
 
 class Foam(Experiment):
+    __REGEX = r'([-+]?\d*\.?\d+[eE]?[+\-]?\d*)'
 
     def __init__(
         self,
         path: Path,
         grid: Grid,
-        model: list[tuple[float, float, float, float]],
-        scale: float,
+        step: float,
         boundary: Figure = None,
         obstruction: Figure = None,
         nu: float = 1.,
         rho: float = 1.,
     ):
         self.__grid = grid
+        self.__step = step
         super().__init__(
             'Foam',
             self.__grid.x,
@@ -34,122 +34,75 @@ class Foam(Experiment):
             rho,
         )
 
-        directory = self.__dir(path)
+        self.__n = self.__dir(path)
 
         # Read data
-        u_raw, v_raw = self.__parse_velocity(path / f'{directory}/U')
-        p_raw = self.__parse_pressure(path / f'{directory}/p')
+        self.__u, self.__v, self.__p = [], [], []
+        self.__blocks = []
 
-        model = self.__scale(model, scale)
-        u = self.__convert(u_raw, model)
-        v = self.__convert(v_raw, model)
-        p = self.__convert(p_raw, model)
+        self.__parse_velocity(path / f'{self.__n}/U')
+        self.__parse_pressure(path / f'{self.__n}/p')
+        self.__parse_blocks(path / 'system' / 'blockMeshDict')
 
-        u = np.flip(u, 0).transpose().flatten()
-        v = np.flip(v, 0).transpose().flatten()
-        p = np.flip(p, 0).transpose().flatten()
-
-        for i, c in enumerate(self.__grid):
-            self._knowledge.emplace(c, u=u[i], v=v[i], p=p[i])
+        self.__blockify()
 
     @property
     def grid(self) -> Grid:
         return self.__grid
 
     @staticmethod
-    def __parse_velocity(path: Path) -> tuple[list[float], list[float]]:
-        u, v = [], []
+    def __parse_statement(text: str, keyword: str) -> str:
+        statement = re.search(keyword + r'.*?;', text, flags=re.DOTALL).group()
+        return re.search(r'\(.*\)', statement, flags=re.DOTALL).group()
 
-        with open(path, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
+    def __parse_blocks(self, path: Path) -> None:
+        text = path.read_text()
 
-        # Flag to start collecting data
-        munch = False
+        statement = Foam.__parse_statement(text, 'vertices')
+        token = re.findall(r'\(\s*([-+]?\d*\.*\d+)\s+([-+]?\d*\.*\d+)\s+([-+]?\d*\.*\d+)\s*\)', statement)
 
-        for line in lines:
-            line = line.strip()
+        vertices = []
+        for x, y, _ in token:
+            vertices.append((0, 1) + Coordinate(float(x), float(y)))
 
-            # Start of data section
-            if line.startswith("internalField"):
-                munch = True
-                continue
+        statement = Foam.__parse_statement(text, 'blocks')
+        token = re.findall(r'\(\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\)', statement)
 
-            # End of data section
-            if munch and line.startswith(";"):
-                munch = False
-                continue
+        for a, _, b, _, *_ in token:
+            self.__blocks.append(Rectangle(vertices[int(a)], vertices[int(b)]))
 
-            if munch:
-                # Extract tuples using regular expression
-                matches = re.findall(r'\(([^)]+)\)', line)
-                for match in matches:
-                    # Convert list string to list of floats
-                    data = list(map(float, match.split()))
-                    u.append(data[0])
-                    v.append(data[1])
+    def __parse_velocity(self, path: Path) -> None:
+        text = path.read_text()
 
-        return u, v
+        statement = Foam.__parse_statement(text, 'internalField')
+        token = re.findall(r'\(\s*' + self.__REGEX + r'\s+' + self.__REGEX + r'\s+' + self.__REGEX + r'\s*\)',
+                           statement)
 
-    @staticmethod
-    def __parse_pressure(path: Path) -> list[float]:
-        p = []
+        for u, v, _ in token:
+            self.__u.append(float(u))
+            self.__v.append(float(v))
 
-        with open(path, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
+    def __parse_pressure(self, path: Path) -> None:
+        text = path.read_text()
 
-        # Flag to start collecting data
-        munch = False
+        statement = Foam.__parse_statement(text, 'internalField')
+        token = re.findall(self.__REGEX, statement)
 
-        for line in lines:
-            line = line.strip()
+        for p in token:
+            self.__p.append(float(p))
 
-            # End of data section
-            if munch and line.startswith(")"):
-                munch = False
-                continue
+    def __blockify(self) -> None:
+        i = 0
+        for block in self.__blocks:
+            a, b = block.shape
+            for y in arrange(a.y, b.y, self.__step, True):
+                for x in arrange(a.x, b.x, self.__step, True):
+                    self._knowledge.insert((x, y), Record(self.__u[i], self.__v[i], self.__p[i]))
+                    i += 1
 
-            if munch:
-                # match = []
-                # match = re.findall(r'-?\d+\.\d+', line)
-                # # Extract tuples using regular expression
-                # if match != []:
-                #     data.append(float(match[0]))
-                p.append(float(line))
-
-            # Start of data section
-            if line.startswith("("):
-                munch = True
-                continue
-
-        return p
-
-    @staticmethod
-    def __convert(data: list[float], model: list[tuple[int, int, int, int]]) -> np.ndarray:
-        """
-        model: a list of tuples, describes the parts of the model (start_x, start_y, end_x, end_y)
-        """
-        min_x = min(tup[0] for tup in model)
-        min_y = min(tup[1] for tup in model)
-        size_x = max(tup[2] for tup in model) - min_x
-        size_y = max(tup[3] for tup in model) - min_y
-
-        values = np.zeros((size_y, size_x))
-
-        head = 0
-        for mode in model:
-            px = mode[2] - mode[0]
-            py = mode[3] - mode[1]
-
-            tail = head + px * py
-            part = data[head:tail]
-
-            for y in range(py):
-                for x in range(px):
-                    values[mode[1] + y - min_y][mode[0] + x - min_x] = part[(py - 1 - y) * px + x]
-
-            head = tail
-
-        return values
+        for c in self.__grid:
+            if c not in self._knowledge:
+                self._knowledge.insert(c, Record(0, 0, 0))
 
     @staticmethod
     def __dir(path: Path) -> int | None:
@@ -161,36 +114,38 @@ class Foam(Experiment):
             return max(indices)
         return None
 
-    @staticmethod
-    def __scale(model, scale) -> list[tuple[int, int, int, int]]:
-        # scales every value in every tuple
-        return [(int(i[0] * scale), int(i[1] * scale), int(i[2] * scale), int(i[3] * scale)) for i in model]
-
 
 if __name__ == '__main__':
-    m = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
-    f = Foam(
-        FOAM_DIR / 'step_01',
-        m,
-        [(0, 0, 1, 1), (1, 1, 10, 2), (1, 0, 10, 1)],
-        10,
-        Figure(Rectangle((0, 0), (10, 2))),
-        Figure(Rectangle((0, 0), (1, 1))),
-        0.08,
-        1.,
-    )
-    d = m.transform(f.knowledge)
 
-    plot_seismic(
-        'OpenFOAM',
-        m.x,
-        m.y,
-        [
-            ('u', d.u),
-            ('v', d.v),
-            ('p', d.p),
-        ],
-        path=OUTPUT_DIR / 'foam' / 'foam_uvp.pdf',
-        boundary=f.boundary,
-        figure=f.obstruction,
-    )
+    def main():
+        m = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
+        f = Foam(
+            FOAM_DIR / 'slalom',
+            m,
+            .1,
+            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(
+                Rectangle((0, 0), (1, 1)),
+                Rectangle((4.5, 1), (5.5, 2)),
+                Rectangle((9, 0), (10, 1)),
+            ),
+            0.08,
+            1.,
+        )
+        d = m.transform(f.knowledge)
+
+        plot_seismic(
+            'OpenFOAM',
+            m.x,
+            m.y,
+            [
+                ('u', d.u),
+                ('v', d.v),
+                ('p', d.p),
+            ],
+            path=OUTPUT_DIR / 'foam' / 'foam_uvp.pdf',
+            boundary=f.boundary,
+            figure=f.obstruction,
+        )
+
+    main()

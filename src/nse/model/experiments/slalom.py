@@ -19,9 +19,7 @@ class Slalom(Experiment):
         foam = Foam(
             FOAM_DIR / 'slalom',
             grid,
-            [(0, 0, 1, 1), (1, 1, 4.5, 2), (1, 0, 4.5, 1), (4.5, 1, 5.5, 2), (5.5, 1, 9, 2), (5.5, 0, 9, 1),
-             (9, 0, 10, 1)],
-            10,
+            .1,
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
             0.08,
