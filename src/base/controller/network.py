@@ -74,9 +74,12 @@ class SequentialModel(tp.Generic[T]):
     def eval(self) -> None:
         self._model.eval()
 
-    def save(self, path: Path) -> None:
+    def save(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(self._model.state_dict(), path)
+        with path.open("w", encoding="utf-8") as f:
+            for i, loss in enumerate(self._losses):
+                s = ",".join(f'{j:.16f}' for j in loss)
+                f.write(f'{i:d},{s}\n')
 
     def load(self, path: Path) -> None:
         self._model.load_state_dict(torch.load(path))

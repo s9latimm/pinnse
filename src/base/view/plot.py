@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import colors
 from matplotlib.ticker import FuncFormatter
 
-from src.base.model.mesh import Coordinate, Mesh
+from src.base.model.mesh import Coordinate
 from src.base.model.shape import Shape, Figure
 
 # print(sorted(mpl.font_manager.get_font_names()))
@@ -92,18 +92,23 @@ SEISMIC_D = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cmap
 
 class Plot(plt.Figure):
 
-    def __init__(self, x: np.ndarray, y: np.ndarray, path: Path = None, n: int = 1) -> None:
+    def __init__(self,
+                 x: np.ndarray[np.ndarray[float]],
+                 y: np.ndarray[np.ndarray[float]],
+                 path: Path = None,
+                 n: int = 1) -> None:
         self.__x = x
         self.__y = y
         self.__path = path
-        q = (int(np.round(x.max())) - int(np.round(x.min()))) / (int(np.round(y.max())) - int(np.round(y.min())))
+        q = (int(np.round(np.max(x))) - int(np.round(np.min(x)))) / (int(np.round(np.max(y))) -
+                                                                     int(np.round(np.min(y))))
         super().__init__(figsize=(q * SCALE, n * SCALE))
 
     def setup(self, ax: plt.Axes, title: str, boundary: Figure = None, figure: Figure = None) -> None:
         ax.pcolormesh(
             self.__x,
             self.__y,
-            np.zeros(self.__x.shape, dtype=bool),
+            np.full(self.__x.shape, fill_value=False),
             shading='nearest',
             alpha=0.1,
             cmap='binary',
@@ -137,7 +142,7 @@ class Plot(plt.Figure):
             for shape in figure:
                 draw_shape(ax, shape)
 
-        ax.set_title(title, fontname='cmss10')
+        ax.set_title(title, fontname='cmmi10')
 
     def __enter__(self, *_) -> Plot:
         return self
@@ -229,7 +234,7 @@ def plot_seismic(
                 vs = []
                 for k, v in mesh:
                     ps.append(k)
-                    vs.append(v[i])
+                    vs.append(list(v)[i])
                 ax.scatter(
                     [j.x for j in ps],
                     [j.y for j in ps],
@@ -256,27 +261,6 @@ def plot_seismic(
             if z.max() > 0:
                 ticks.append(z.max())
             cbar.set_ticks(ticks)
-
-
-def plot_mesh(
-        title: str,
-        x: np.ndarray,
-        y: np.ndarray,
-        mesh: Mesh,
-        labels=(),
-        path: Path = None,
-        marker: tp.Sequence[Coordinate] = (),
-        boundary: Figure = None,
-        figure: Figure = None,
-) -> None:
-    plots = []
-    masks = []
-
-    for label, in labels:
-        plots.append((label, np.full(x.shape, np.nan)))
-        masks.append(np.full(x.shape, .5))
-
-    plot_seismic(title, x, y, plots, masks=masks, mesh=mesh, marker=marker, path=path, boundary=boundary, figure=figure)
 
 
 def plot_stream(

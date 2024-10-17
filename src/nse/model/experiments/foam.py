@@ -1,3 +1,4 @@
+import logging
 import re
 from pathlib import Path
 
@@ -14,18 +15,18 @@ class Foam(Experiment):
 
     def __init__(
         self,
-        path: Path,
+        name: str,
         grid: Grid,
         step: float,
         boundary: Figure = None,
         obstruction: Figure = None,
         nu: float = 1.,
         rho: float = 1.,
-    ):
+    ) -> None:
         self.__grid = grid
         self.__step = step
         super().__init__(
-            'Foam',
+            name,
             self.__grid.x,
             self.__grid.y,
             boundary,
@@ -34,17 +35,21 @@ class Foam(Experiment):
             rho,
         )
 
-        self.__n = self.__dir(path)
+        path = FOAM_DIR / self._name
+        if path.exists():
+            self.__u, self.__v, self.__p = [], [], []
+            self.__blocks = []
 
-        # Read data
-        self.__u, self.__v, self.__p = [], [], []
-        self.__blocks = []
+            self.__n = self.__dir(path)
 
-        self.__parse_velocity(path / f'{self.__n}/U')
-        self.__parse_pressure(path / f'{self.__n}/p')
-        self.__parse_blocks(path / 'system' / 'blockMeshDict')
+            self.__parse_velocity(path / f'{self.__n}/U')
+            self.__parse_pressure(path / f'{self.__n}/p')
+            self.__parse_blocks(path / 'system' / 'blockMeshDict')
 
-        self.__blockify()
+            self.__blockify()
+
+        else:
+            logging.error(f'ERROR: foam/{name} not found')
 
     @property
     def grid(self) -> Grid:
@@ -58,14 +63,14 @@ class Foam(Experiment):
     def __parse_blocks(self, path: Path) -> None:
         text = path.read_text()
 
-        statement = Foam.__parse_statement(text, 'vertices')
+        statement = self.__parse_statement(text, 'vertices')
         token = re.findall(r'\(\s*([-+]?\d*\.*\d+)\s+([-+]?\d*\.*\d+)\s+([-+]?\d*\.*\d+)\s*\)', statement)
 
         vertices = []
         for x, y, _ in token:
             vertices.append((0, 1) + Coordinate(float(x), float(y)))
 
-        statement = Foam.__parse_statement(text, 'blocks')
+        statement = self.__parse_statement(text, 'blocks')
         token = re.findall(r'\(\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\)', statement)
 
         for a, _, b, _, *_ in token:
@@ -74,7 +79,7 @@ class Foam(Experiment):
     def __parse_velocity(self, path: Path) -> None:
         text = path.read_text()
 
-        statement = Foam.__parse_statement(text, 'internalField')
+        statement = self.__parse_statement(text, 'internalField')
         token = re.findall(r'\(\s*' + self.__REGEX + r'\s+' + self.__REGEX + r'\s+' + self.__REGEX + r'\s*\)',
                            statement)
 
@@ -85,7 +90,7 @@ class Foam(Experiment):
     def __parse_pressure(self, path: Path) -> None:
         text = path.read_text()
 
-        statement = Foam.__parse_statement(text, 'internalField')
+        statement = self.__parse_statement(text, 'internalField')
         token = re.findall(self.__REGEX, statement)
 
         for p in token:
@@ -118,24 +123,26 @@ class Foam(Experiment):
 if __name__ == '__main__':
 
     def main():
-        m = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
+        step = .1
+        nu = 0.01
+        inlet = 1
+
+        name = f'step-{step:.3f}-{nu:.3f}-{inlet:.3f}'.replace('.', '_')
+
+        m = Grid(Axis('x', 0, 10).arrange(step, True), Axis('y', 0, 2).arrange(step, True))
         f = Foam(
-            FOAM_DIR / 'slalom',
+            name,
             m,
             .1,
             Figure(Rectangle((0, 0), (10, 2))),
-            Figure(
-                Rectangle((0, 0), (1, 1)),
-                Rectangle((4.5, 1), (5.5, 2)),
-                Rectangle((9, 0), (10, 1)),
-            ),
-            0.08,
-            1.,
+            Figure(Rectangle((0, 0), (1, 1))),
         )
         d = m.transform(f.knowledge)
 
+        f.knowledge.save(OUTPUT_DIR / 'foam' / 'foam_uvp.csv')
+
         plot_seismic(
-            'OpenFOAM',
+            name,
             m.x,
             m.y,
             [

@@ -12,11 +12,12 @@ class Record:
         self.__v = v
         self.__p = p
 
-    def __getitem__(self, key) -> float:
-        return [self.u, self.v, self.p][key]
-
     def __iter__(self) -> tp.Iterator[float]:
         return iter((self.u, self.v, self.p))
+
+    @property
+    def labels(self) -> list[str]:
+        return ['u', 'v', 'p']
 
     def __repr__(self) -> str:
         return f'Fact(u={str(self.u)}, v={str(self.v)}, p={str(self.p)})'
@@ -35,3 +36,6 @@ class Record:
     @property
     def v(self) -> float:
         return self.__v
+
+    def __sub__(self, other: Record) -> Record:
+        return Record(abs(self.u - other.u), abs(self.v - other.v), abs(self.p - other.p))

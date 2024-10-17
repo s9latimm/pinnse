@@ -23,7 +23,7 @@ class Experiment:
             foam: Foam = None,
             supervised: bool = False,
     ) -> None:
-        self.__name = name
+        self._name = name
         self.__x = x
         self.__y = y
         self.__boundary = boundary
@@ -69,7 +69,7 @@ class Experiment:
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self._name
 
     @property
     def x(self) -> Axis:

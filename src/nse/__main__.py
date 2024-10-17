@@ -14,7 +14,7 @@ from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
 from src.nse.controller.simulation import Simulation
 from src.nse.model.experiments import EXPERIMENTS
 from src.nse.model.experiments.experiment import Experiment
-from src.nse.view.grading import plot_diff, plot_setup, plot_foam
+from src.nse.view.grading import plot_setup, plot_foam, grade, export
 from src.nse.view.prediction import plot_prediction, plot_losses
 from src.utils.timer import Stopwatch
 
@@ -27,7 +27,6 @@ def main(
     device: str,
     foam: bool,
     hires: bool,
-    save: bool,
     layers: list[int],
     grading: bool,
 ) -> None:
@@ -40,12 +39,16 @@ def main(
     logging.info(f'STEPS:      {n}')
     logging.info(f'TIMESTAMP:  {TIMESTAMP}')
     logging.info(f'OUTPUT:     {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
+    logging.info(f'EXPERIMENT: {experiment.name}')
+
+    if foam:
+        logging.info(f'FOAM:       {experiment.foam.name}')
 
     if torch.cpu.is_available():
         info = cpuinfo.get_cpu_info()
         logging.info(f'CPU:        {info["brand_raw"]}')
         logging.info(f'LOGICAL:    {info["count"]}')
-        l2 = -(info["l2_cache_line_size"] * 1000) // -1024
+        l2 = -(info['l2_cache_line_size'] * 1000) // -1024
         logging.info(f'L2:         {(-(info["l2_cache_size"]) // -1024) // l2} x {l2} KB')
         logging.info(f'L3:         {-(info["l3_cache_size"] // -(1024 ** 2))} MB')
         logging.info(f'RAM:        {-(psutil.virtual_memory().total // -(1024 ** 3))} GB')
@@ -61,12 +64,13 @@ def main(
     logging.info(model)
     logging.info(f'PARAMETERS: {len(model)}')
 
-    if grading:
-        logging.info('PLOT: SETUP')
+    if grade:
+        logging.info('PLOT: Setup')
         plot_setup(experiment, identifier)
 
+    timer = Stopwatch()
     if n > 0:
-        with Stopwatch(lambda t: logging.info(f'TIME: {t}')):
+        with Stopwatch(lambda t: logging.info(f'TIME: {t}')) as timer:
             with tqdm(total=n, position=0, leave=True) as pbar, logging_redirect_tqdm():
 
                 def callback(history: list[list[float]]) -> None:
@@ -76,45 +80,46 @@ def main(
                                 change = np.mean(history[-1]) - np.mean(history[-2])
                                 logging.info(f'  {pbar.n:{len(str(n))}d}: {np.mean(history[-1]):18.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
-                                logging.info('PLOT: PREDICTION')
+                                logging.info('PLOT: Prediction')
                                 plot_prediction(pbar.n, experiment, model, identifier)
-                                logging.info('PLOT: LOSS')
+                                logging.info('PLOT: Loss')
                                 plot_losses(pbar.n, model, identifier)
                             if hires and pbar.n % 1e4 == 0:
-                                logging.info('PLOT: HIRES PREDICTION')
+                                logging.info('PLOT: HiRes Prediction')
                                 plot_prediction(pbar.n, experiment, model, identifier, hires=True)
                         pbar.update(1)
 
-                logging.info(f'TRAINING: START {n}')
+                logging.info(f'TRAINING: Start {n}')
                 model.train(callback)
-                logging.info(f'TRAINING: END {pbar.n}')
+                logging.info(f'TRAINING: End {pbar.n}')
 
-        if save:
-            model.save(OUTPUT_DIR / identifier / 'model.pt')
+        model.eval()
 
-    model.eval()
+        if plot:
+            logging.info('PLOT: Prediction')
+            plot_prediction(n, experiment, model, identifier)
+            logging.info('PLOT: Loss')
+            plot_losses(pbar.n, model, identifier)
 
-    if plot:
-        logging.info('PLOT: PREDICTION')
-        plot_prediction(n, experiment, model, identifier)
-        logging.info('PLOT: LOSS')
-        plot_losses(pbar.n, model, identifier)
+            if hires:
+                logging.info('PLOT: HiRes Prediction')
+                plot_prediction(n, experiment, model, identifier, hires=True)
 
-    if hires:
-        logging.info('PLOT: HIRES PREDICTION')
-        plot_prediction(n, experiment, model, identifier, hires=True)
+        if experiment.supervised:
+            logging.info(f'NU: {model.nu:.16f}')
+            logging.info(f'RHO: {model.rho:.16f}')
 
-    if experiment.supervised:
-        logging.info(f'NU: {model.nu:.16f}')
-        logging.info(f'RHO: {model.rho:.16f}')
+        if grading:
+            logging.info('EXPORT')
+            export(timer, experiment, model, identifier)
 
     if foam:
-        logging.info('PLOT: OPENFOAM')
+        logging.info('PLOT: openFOAM')
         plot_foam(experiment, identifier)
 
     if grading:
-        logging.info('PLOT: DIFFERENCE')
-        plot_diff(n, experiment, model, identifier)
+        logging.info('GRADING')
+        grade(experiment, identifier)
 
 
 def parse_cmd() -> argparse.Namespace:
@@ -123,7 +128,6 @@ def parse_cmd() -> argparse.Namespace:
     initialization = parser.add_argument_group('initialization')
     initialization.add_argument(
         '-e',
-        '--experiment',
         type=str,
         choices=EXPERIMENTS.keys(),
         required=True,
@@ -131,21 +135,20 @@ def parse_cmd() -> argparse.Namespace:
     )
     initialization.add_argument(
         '-i',
-        '--intake',
         type=float,
         metavar='<intake>',
         default=DEFAULT_INTAKE,
         help=f'set intake [m/s] (default: {DEFAULT_INTAKE})',
     )
     initialization.add_argument(
-        '--nu',
+        '-n',
         type=float,
         metavar='<nu>',
         default=DEFAULT_NU,
         help=f'set viscosity [m^2/s] (default: {DEFAULT_NU})',
     )
     initialization.add_argument(
-        '--rho',
+        '-r',
         type=float,
         metavar='<rho>',
         default=DEFAULT_RHO,
@@ -161,8 +164,7 @@ def parse_cmd() -> argparse.Namespace:
         help=f'identifier / prefix for output directory (default: timestamp, example: {TIMESTAMP})',
     )
     optimization.add_argument(
-        '-n',
-        '--train',
+        '-N',
         type=int,
         metavar='<train>',
         default=DEFAULT_STEPS,
@@ -173,15 +175,14 @@ def parse_cmd() -> argparse.Namespace:
         try:
             layers = [int(i.strip()) for i in arg.split(':') if len(i.strip()) > 0]
             if len(layers) < 1 or min(layers) < 1:
-                parser.error(f"argument -l/--layers: invalid value: '{arg}'")
+                parser.error(f'argument -l/--layers: invalid value: \'{arg}\'')
             return layers
         except (TypeError, ValueError):
-            parser.error(f"argument -l/--layers: invalid value: '{arg}'")
+            parser.error(f'argument -l/--layers: invalid value: \'{arg}\'')
         return []
 
     parser.add_argument(
-        '-l',
-        '--layers',
+        '-L',
         type=layers_type,
         metavar='<layers>',
         default='100:100:100',
@@ -189,7 +190,6 @@ def parse_cmd() -> argparse.Namespace:
     )
     optimization.add_argument(
         '-d',
-        '--device',
         type=str,
         choices=['cpu', 'cuda'],
         default='cpu',
@@ -205,45 +205,38 @@ def parse_cmd() -> argparse.Namespace:
     output = parser.add_argument_group('output')
     output.add_argument(
         '-p',
-        '--plot',
         action='store_true',
         default=False,
         help='plot NSE in output directory',
     )
     output.add_argument(
-        '-f',
-        '--foam',
+        '-F',
         action='store_true',
         default=False,
         help='initialize OpenFOAM experiment',
     )
     output.add_argument(
-        '-g',
-        '--grading',
+        '-G',
         action='store_true',
         default=False,
         help='grade prediction (requires --foam and --plot)',
     )
     output.add_argument(
-        '-r',
-        '--hires',
+        '-R',
         action='store_true',
         default=False,
         help='plot NSE with high resolution grid in output directory (requires --plot)',
     )
-    output.add_argument(
-        '--save',
-        action='store_true',
-        default=False,
-        help='store model parameters in output directory',
-    )
 
     args = parser.parse_args()
 
-    if (args.hires or args.grading) and not args.plot:
+    if args.n < 0:
+        parser.error(f'argument -n/--train: invalid value: \'{args.train}\'')
+
+    if (args.R or args.G) and not args.p:
         parser.error('the following arguments are required: --plot')
 
-    if (args.supervised or args.grading) and not args.foam:
+    if (args.supervised or args.G) and not args.F:
         parser.error('the following arguments are required: --foam')
 
     return args
@@ -251,7 +244,7 @@ def parse_cmd() -> argparse.Namespace:
 
 if __name__ == '__main__':
     cmd = parse_cmd()
-    if cmd.plot:
+    if cmd.p:
         (OUTPUT_DIR / cmd.id).mkdir(parents=True, exist_ok=cmd.id != TIMESTAMP)
         logging.basicConfig(format='%(message)s',
                             handlers=[
@@ -268,22 +261,21 @@ if __name__ == '__main__':
 
     try:
         main(
-            EXPERIMENTS[cmd.experiment](
-                cmd.nu,
-                cmd.rho,
-                cmd.intake,
+            EXPERIMENTS[cmd.e](
+                cmd.n,
+                cmd.r,
+                cmd.i,
                 cmd.supervised,
             ),
-            cmd.train,
-            cmd.plot,
+            cmd.N,
+            cmd.p,
             cmd.id,
-            cmd.device,
-            cmd.foam,
-            cmd.hires,
-            cmd.save,
-            cmd.layers,
-            cmd.grading,
+            cmd.d,
+            cmd.F,
+            cmd.R,
+            cmd.L,
+            cmd.G,
         )
-        logging.info('EXIT: SUCCESS')
+        logging.info('EXIT: Success')
     except KeyboardInterrupt:
-        logging.info('EXIT: ABORT')
+        logging.info('EXIT: Abort')

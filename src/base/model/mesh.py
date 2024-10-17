@@ -2,60 +2,64 @@ from __future__ import annotations
 
 import typing as tp
 from abc import abstractmethod
+from pathlib import Path
 
 import numpy as np
 
 
-class Real:
-    EPS: float = 1e-4
+class RealNumber:
+    EPS: float = 1e-3
     DELTA: float = 1e-5
 
     def __init__(self, value: float) -> None:
-        self.__value: int = int((value + self.DELTA) / self.EPS)
+        if value < 0:
+            self.__value: int = int((value - self.DELTA) / self.EPS)
+        else:
+            self.__value: int = int((value + self.DELTA) / self.EPS)
 
-    def __eq__(self, other: Real | float) -> bool:
+    def __eq__(self, other: RealNumber | float) -> bool:
         # pylint: disable=protected-access
-        return self.__value == Real(float(other)).__value
+        return self.__value == RealNumber(float(other)).__value
 
-    def __gt__(self, other: Real | float) -> bool:
+    def __gt__(self, other: RealNumber | float) -> bool:
         # pylint: disable=protected-access
-        return self.__value > Real(float(other)).__value
+        return self.__value > RealNumber(float(other)).__value
 
-    def __ge__(self, other: Real | float) -> bool:
+    def __ge__(self, other: RealNumber | float) -> bool:
         # pylint: disable=protected-access
-        return self.__value >= Real(float(other)).__value
+        return self.__value >= RealNumber(float(other)).__value
 
-    def __lt__(self, other: Real | float) -> bool:
+    def __lt__(self, other: RealNumber | float) -> bool:
         # pylint: disable=protected-access
-        return self.__value <= Real(float(other)).__value
+        return self.__value <= RealNumber(float(other)).__value
 
-    def __le__(self, other: Real | float) -> bool:
+    def __le__(self, other: RealNumber | float) -> bool:
         # pylint: disable=protected-access
-        return self.__value <= Real(float(other)).__value
+        return self.__value <= RealNumber(float(other)).__value
 
-    def __add__(self, other: Real | float) -> Real:
-        return Real(float(self) + float(other))
+    def __add__(self, other: RealNumber | float) -> RealNumber:
+        return RealNumber(float(self) + float(other))
 
-    def __radd__(self, other) -> Real:
+    def __radd__(self, other) -> RealNumber:
         return self.__add__(other)
 
-    def __sub__(self, other: Real | float) -> Real:
-        return Real(float(self) - float(other))
+    def __sub__(self, other: RealNumber | float) -> RealNumber:
+        return RealNumber(float(self) - float(other))
 
-    def __rsub__(self, other) -> Real:
-        return Real(float(other) - float(self))
+    def __rsub__(self, other) -> RealNumber:
+        return RealNumber(float(other) - float(self))
 
-    def __mul__(self, other: Real | float) -> Real:
-        return Real(float(self) * float(other))
+    def __mul__(self, other: RealNumber | float) -> RealNumber:
+        return RealNumber(float(self) * float(other))
 
-    def __rmul__(self, other: Real | float) -> Real:
+    def __rmul__(self, other: RealNumber | float) -> RealNumber:
         return self.__mul__(other)
 
-    def __truediv__(self, other: Real | float) -> Real:
-        return Real(float(self) / float(other))
+    def __truediv__(self, other: RealNumber | float) -> RealNumber:
+        return RealNumber(float(self) / float(other))
 
-    def __rtruediv__(self, other: Real | float) -> Real:
-        return Real(float(other) / float(self))
+    def __rtruediv__(self, other: RealNumber | float) -> RealNumber:
+        return RealNumber(float(other) / float(self))
 
     def __float__(self) -> float:
         return self.__value * self.EPS
@@ -63,11 +67,12 @@ class Real:
     def __hash__(self) -> int:
         return self.__value
 
-    def is_zero(self) -> bool:
-        return self.__value == 0
+    def __str__(self):
+        s = f'{self.__value:04d}'
+        return f'{s[:-3]}_{s[-3:]}'
 
-    def is_positive(self) -> bool:
-        return self.__value > 0
+    def __repr__(self):
+        return self.__str__()
 
 
 def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
@@ -80,89 +85,89 @@ def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
 
 
 def arrange(start: float, stop: float, step: float, center=False) -> list[float]:
-    start, stop, step = Real(start), Real(stop), Real(step)
+    start, stop, step = RealNumber(start), RealNumber(stop), RealNumber(step)
 
     if center:
         start = start + step / 2
         stop = stop - step / 2
 
+    if not step > 0:
+        return []
+
     r = []
-    if not step.is_positive():
-        return r
     if start < stop:
         while start <= stop:
-            r.append(float(start))
+            r.append(start)
             start += step
     elif start > stop:
         while start >= stop:
-            r.append(float(start))
+            r.append(start)
             start -= step
     else:
-        return [float(start)]
-    return r
+        r.append(start)
+
+    return [float(i) for i in r]
 
 
 class Coordinate:
 
-    def __init__(self, x: float, y: float) -> None:
-        self.__x = x
-        self.__y = y
+    def __init__(self, x: float | RealNumber, y: float | RealNumber) -> None:
+        self.__x = RealNumber(float(x))
+        self.__y = RealNumber(float(y))
 
-    def __eq__(self, other) -> bool:
-        return Real(self.x) == Real(other.x) and Real(self.y) == Real(other.y)
-
-    def __getitem__(self, key) -> float:
-        return [self.x, self.y][key]
+    def __eq__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
+        c = Coordinate(*coordinate)
+        return self.__x == c.__x and self.__y == c.__y
 
     def __hash__(self) -> int:
-        return hash((hash(Real(self.x)), hash(Real(self.y))))
+        return hash((hash(self.__x), hash(self.__y)))
 
     def __iter__(self) -> tp.Iterator[float]:
-        return iter((self.x, self.y))
+        return iter([float(self.__x), float(self.__y)])
 
     def __repr__(self) -> str:
-        return f'Coordinate(x={str(self.x)}, y={str(self.y)})'
+        return f'Coordinate(x={str(self.__x)}, y={str(self.__y)})'
 
     def __str__(self) -> str:
         return self.__repr__()
 
     def __add__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
         c = Coordinate(*coordinate)
-        return Coordinate(self.x + c.x, self.y + c.y)
+        return Coordinate(self.__x + c.__x, self.__y + c.__y)
 
     def __radd__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
         return self.__add__(coordinate)
 
     def __sub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
         c = Coordinate(*coordinate)
-        return Coordinate(self.x - c.x, self.y - c.y)
+        return Coordinate(self.__x - c.__x, self.__y - c.__y)
 
     def __rsub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
         c = Coordinate(*coordinate)
-        return Coordinate(c.x - self.x, c.y - self.y)
+        return Coordinate(c.__x - self.__x, c.__y - self.__y)
 
     def __mul__(self, factor: float) -> Coordinate:
-        return Coordinate(self.x * factor, self.y * factor)
+        return Coordinate(self.__x * factor, self.__y * factor)
 
     def __rmul__(self, factor: float) -> Coordinate:
         return self.__mul__(factor)
 
     def __truediv__(self, factor: float) -> Coordinate:
-        if Real(factor).is_zero():
+        if RealNumber(factor) == 0:
             return Coordinate(np.infty, np.infty)
-        return Coordinate(self.x / factor, self.y / factor)
+        return Coordinate(self.__x / factor, self.__y / factor)
 
     def distance(self, coordinate: tuple[float, float] | Coordinate) -> float:
         c = Coordinate(*coordinate)
-        return np.sqrt((self.__x - c.x)**2 + (self.__y - c.y)**2)
+        return np.sqrt(float(self.__x - c.__x)**2 + float(self.__y - c.__y)**2)
 
     @property
     def x(self) -> float:
-        return self.__x
+        return float(self.__x)
 
     @property
     def y(self) -> float:
-        return self.__y
+        return float(self.__y)
 
     def rotate(self, angle: float) -> Coordinate:
         angle = angle * np.pi / 180
@@ -204,22 +209,32 @@ class Axis:
         return arrange(self.__start - padding, self.__stop + padding, step, center)
 
 
-class Grid:
+T = tp.TypeVar("T")
+
+
+class Grid(tp.Generic[T]):
 
     def __init__(self, xs: tp.Sequence[float], ys: tp.Sequence[float]) -> None:
         self.__width = len(xs)
         self.__height = len(ys)
 
-        self.__grid = np.zeros((self.__width, self.__height), dtype="object")
+        self.__grid = np.full((self.__width, self.__height), fill_value=None)
         for i, x in enumerate(xs):
             for j, y in enumerate(ys):
                 self.__grid[i][j] = Coordinate(x, y)
 
-    def __getattr__(self, item) -> np.ndarray:
+    def __getattr__(self, item) -> np.ndarray[np.ndarray[float]]:
         # pylint: disable=protected-access
-        return self.map(lambda i: i.__getattribute__(item)).__grid
+        grid = np.full(self.shape, fill_value=np.nan)
 
-    def __iter__(self) -> tp.Iterator:
+        for x in range(self.__width):
+            for y in range(self.__height):
+                if self.__grid[x][y] is not None:
+                    grid[x][y] = self.__grid[x][y].__getattribute__(item)
+
+        return grid
+
+    def __iter__(self) -> tp.Iterator[T]:
         return iter(self.__grid.flatten())
 
     def __len__(self) -> int:
@@ -235,18 +250,22 @@ class Grid:
     def shape(self) -> tuple[int, int]:
         return self.__width, self.__height
 
-    def flatten(self) -> list[Coordinate]:
+    def flatten(self) -> list[T]:
         return list(self.__grid.flatten())
 
-    def transform(self, mesh: Mesh):
-        return self.map(lambda i: mesh[i])
-
-    def map(self, f) -> Grid:
+    def transform(self, mesh: Mesh[T]) -> Grid[T]:
         # pylint: disable=protected-access
         copy = Grid([], [])
-        copy.__grid = np.array(list(map(lambda i: np.array(list(map(f, i))), self.__grid.copy())))
         copy.__width = self.__width
         copy.__height = self.__height
+        copy.__grid = np.full(copy.shape, fill_value=None)
+
+        for x in range(copy.__width):
+            for y in range(copy.__height):
+                c = Coordinate(*self.__grid[x][y])
+                if c in mesh:
+                    copy.__grid[x][y] = mesh[c]
+
         return copy
 
     def mesh(self) -> Mesh:
@@ -256,13 +275,10 @@ class Grid:
         return mesh
 
 
-T = tp.TypeVar("T")
-
-
 class Mesh(tp.Generic[T]):
 
     def __init__(self, value_type: type[T] | None = None) -> None:
-        self.__value_type = value_type
+        self._value_type = value_type
         self.__mesh: dict[Coordinate, T] = {}
 
     def __contains__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
@@ -292,6 +308,23 @@ class Mesh(tp.Generic[T]):
     def __str__(self) -> str:
         return self.__repr__()
 
+    def __sub__(self, other: Mesh[T]) -> Mesh[T]:
+        mesh = Mesh(self._value_type)
+        for k, v in self:
+            if v is not None:
+                mesh.insert(k, v - other[k])
+        return mesh
+
+    def __add__(self, other: Mesh[T]) -> Mesh[T]:
+        mesh = Mesh(self._value_type)
+        for k, v in self:
+            if v is not None:
+                mesh.insert(k, v)
+        for k, v in other:
+            if v is not None:
+                mesh.insert(k, other[k])
+        return mesh
+
     def insert(self, coordinate: tuple[float, float] | Coordinate, value: T | None = None) -> T:
         c = Coordinate(*coordinate)
         if c in self.__mesh:
@@ -301,17 +334,32 @@ class Mesh(tp.Generic[T]):
 
     @abstractmethod
     def emplace(self, key: tuple | Coordinate, **kwargs) -> T:
-        assert self.__value_type is not None
-        return self.insert(key, self.__value_type(**kwargs))
+        assert self._value_type is not None
+        return self.insert(key, self._value_type(**kwargs))
 
     def clear(self) -> None:
         self.__mesh.clear()
 
     def copy(self) -> Mesh[T]:
         # pylint: disable=protected-access
-        mesh = Mesh(self.__value_type)
+        mesh = Mesh(self._value_type)
         mesh.__mesh = self.__mesh.copy()
         return mesh
 
     def detach(self) -> list[tuple[Coordinate, T]]:
         return list(self.__mesh.copy().items())
+
+    def save(self, path: Path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as f:
+            for k, v in self.__mesh.items():
+                c = ",".join(f'{i:.3f}' for i in k)
+                r = ",".join(f'{i:.16f}' for i in v)
+                f.write(f'{c},{r}\n')
+
+    def load(self, path: Path) -> None:
+        if path.exists():
+            lines = path.read_text(encoding='utf-8').strip().split('\n')
+            for line in lines:
+                token = line.split(',')
+                self.insert((float(token[0]), float(token[1])), self._value_type(*[float(i) for i in token[2:]]))

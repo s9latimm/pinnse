@@ -18,5 +18,6 @@ ROOT_DIR: Path = Path(__file__).parents[1].absolute()
 OUTPUT_DIR: Path = ROOT_DIR / 'output'
 RESOURCES_DIR: Path = ROOT_DIR / 'resources'
 FOAM_DIR: Path = RESOURCES_DIR / 'foam'
+RESULT_DIR: Path = RESOURCES_DIR / 'nse'
 
 DEVELOP_MODE: bool = True

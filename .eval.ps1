@@ -1,6 +1,11 @@
-python -m src.nse -e slalom --id "eval/slalom_1" -l 20:20:20:20:20 -i 1 --nu .1 -d cuda -pr -fg -n 30000
-python -m src.nse -e slalom --id "eval/slalom_2" -l 50:50:50:50 -i 1 --nu .1 -d cuda -pr -fg -n 30000
-python -m src.nse -e slalom --id "eval/slalom_3" -l 80:80:80 -i 1 --nu .1 -d cuda -pr -fg -n 30000
-python -m src.nse -e slalom --id "eval/slalom_4" -l 100:100:100 -i 1 --nu .1 -d cuda -pr -fg -n 30000
-python -m src.nse -e slalom --id "eval/slalom_5" -l 100:100:100:100 -i 1 --nu .1 -d cuda -pr -fg -n 30000
-python -m src.nse -e slalom --id "eval/slalom_6" -l 200:200:200 -i 1 --nu .1 -d cuda -pr -fg -n 30000
+python -m src.nse -e step --id "eval/step_01" -i 1 -d cuda -pr -n 10000 --nu .02 -l 20:20:20:20:20
+python -m src.nse -e step --id "eval/step_02" -i 1 -d cuda -pr -n 10000 --nu .02 -l 20:20:20
+python -m src.nse -e step --id "eval/step_03" -i 1 -d cuda -pr -n 10000 --nu .02 -l 20:20
+python -m src.nse -e step --id "eval/step_04" -i 1 -d cuda -pr -n 10000 --nu .02 -l 50:50:50
+python -m src.nse -e step --id "eval/step_05" -i 1 -d cuda -pr -n 10000 --nu .02 -l 75:75:75
+python -m src.nse -e step --id "eval/step_06" -i 1 -d cuda -pr -n 10000 --nu .02 -l 100
+python -m src.nse -e step --id "eval/step_07" -i 1 -d cuda -pr -n 10000 --nu .02 -l 100:100
+python -m src.nse -e step --id "eval/step_08" -i 1 -d cuda -pr -n 10000 --nu .02 -l 100:100:100
+python -m src.nse -e step --id "eval/step_09" -i 1 -d cuda -pr -n 10000 --nu .02 -l 100:100:100:100
+python -m src.nse -e step --id "eval/step_10" -i 1 -d cuda -pr -n 10000 --nu .02 -l 200:200
+python -m src.nse -e step --id "eval/step_11" -i 1 -d cuda -pr -n 10000 --nu .02 -l 200:200:200

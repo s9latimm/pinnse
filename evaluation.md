@@ -15,22 +15,6 @@ pinNSE:
 - CUDA:    68
 - MEMORY:  10 GB
 
-## Point-Of-Failure
-
-- fixed grid
-- decrease viscosity until no longer convergence or able to predict
-
-| experiment | inlet | nu  |            FOAM             |            pinNSE 3x100            | pinNSE 4x80 |
-|:-----------|-------|-----|:---------------------------:|:----------------------------------:|-------------|
-| empty      | 1     | .01 | convergence (100 it, 9 min) | convergence (200 it, 10 min, += 4) |             |
-|            | 1     | .02 |         x (20 min)          |                                    |             |
-|            | 1     |     |                             |                                    |             |
-|            |       |     |                             |                                    |             |
-|            |       |     |                             |                                    |             |
-|            |       |     |                             |                                    |             |
-|            |       |     |                             |                                    |             |
-|            |       |     |                             |                                    |             |
-
 
 ## Precision
 
@@ -48,3 +32,20 @@ pinNSE:
 |            |       |     |                      |                         |             |
 |            |       |     |                      |                         |             |
 |            |       |     |                      |                         |             |
+
+
+## Point-Of-Failure
+
+- fixed grid
+- decrease viscosity until no longer convergence or able to predict
+
+| experiment | inlet | nu  |            FOAM             |            pinNSE 3x100            | pinNSE 4x80 |
+|:-----------|-------|-----|:---------------------------:|:----------------------------------:|-------------|
+| empty      | 1     | .01 | convergence (100 it, 9 min) | convergence (200 it, 10 min, += 4) |             |
+|            | 1     | .02 |         x (20 min)          |                                    |             |
+|            | 1     |     |                             |                                    |             |
+|            |       |     |                             |                                    |             |
+|            |       |     |                             |                                    |             |
+|            |       |     |                             |                                    |             |
+|            |       |     |                             |                                    |             |
+|            |       |     |                             |                                    |             |
