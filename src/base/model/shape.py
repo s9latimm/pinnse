@@ -5,7 +5,8 @@ from abc import abstractmethod
 
 import numpy as np
 
-from src.base.model.mesh import Coordinate, arrange, merge, RealNumber
+from src.base.model.algebra import RealNumber
+from src.base.model.mesh import Coordinate, arrange, merge
 
 
 class Shape:

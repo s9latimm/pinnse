@@ -23,10 +23,10 @@ plt.rcParams['ytick.minor.width'] = .5
 COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
 
 DPI: int = 1000
-SCALE: float = 4.
+SCALE: float = 2.5
 
 
-def draw_shape(ax: plt.Axes, shape: Shape, style: str = '--', width: float = 1) -> None:
+def draw_shape(ax: plt.Axes, shape: Shape, style: str = '-', width: float = 2.5) -> None:
     polygon = shape[::.05]
     x = polygon.x
     y = polygon.y
@@ -57,7 +57,7 @@ def plot_history(
 
             ax.plot(np.arange(1, len(y) + 1, 1), y, label=l, color=COLORS[j])
             ax.axhline(y=float(y[-1]), color=COLORS[j], linestyle='--')
-            y_min, y_max = min(y), max(y)
+            y_min, y_max = np.nanmin(y), np.nanmax(y)
             t_min, t_max = min(t_min, y_min), max(t_max, y_max)
 
         ax.set_xlabel('iter')
@@ -125,11 +125,11 @@ class Plot(plt.Figure):
         ax.spines['right'].set_visible(False)
 
         ax.set_xlabel('x', fontname='cmmi10')
-        ax.set_xticks([0, 1, int(np.round(self.__x.max()))])
+        ax.set_xticks([0, 1, int(np.round(self.__x.max())) // 2, int(np.round(self.__x.max()))])
         ax.set_xlim([int(np.round(self.__x.min())) - .05, int(np.round(self.__x.max())) + .05])
 
         ax.set_ylabel('y', fontname='cmmi10')
-        ax.set_yticks([0, 1, int(np.round(self.__y.max()))])
+        ax.set_yticks([0, 1, int(np.round(self.__y.max())) // 2, int(np.round(self.__y.max()))])
         ax.set_ylim([int(np.round(self.__y.min())) - .05, int(np.round(self.__y.max())) + .05])
 
         # ax.spines['top'].set_visible(False)
@@ -180,17 +180,17 @@ def plot_seismic(
             ax = fig.add_subplot(len(plots), 1, i + 1)
             fig.setup(ax, label, boundary, figure)
 
-            if z.min() < 0 < z.max():
-                slope = colors.TwoSlopeNorm(vmin=z.min(), vcenter=0, vmax=z.max())
+            if np.nanmin(z) < 0 < np.nanmax(z):
+                slope = colors.TwoSlopeNorm(vmin=np.nanmin(z), vcenter=0, vmax=np.nanmax(z))
                 cmap = SEISMIC
-            elif z.min() == z.max():
-                slope = colors.Normalize(vmin=z.min(), vmax=z.max())
+            elif np.nanmin(z) == np.nanmax(z):
+                slope = colors.Normalize(vmin=np.nanmin(z), vmax=np.nanmax(z))
                 cmap = SEISMIC
-            elif z.max() < 0:
-                slope = colors.Normalize(vmin=z.min(), vmax=0)
+            elif np.nanmax(z) < 0:
+                slope = colors.Normalize(vmin=np.nanmin(z), vmax=0)
                 cmap = SEISMIC_N
             else:
-                slope = colors.Normalize(vmin=0, vmax=z.max())
+                slope = colors.Normalize(vmin=0, vmax=np.nanmax(z))
                 cmap = SEISMIC_P
 
             img = ax.pcolormesh(
@@ -255,11 +255,11 @@ def plot_seismic(
             )
 
             ticks = []
-            if z.min() < 0:
-                ticks.append(z.min())
+            if np.nanmin(z) < 0:
+                ticks.append(np.nanmin(z))
             ticks.append(0)
-            if z.max() > 0:
-                ticks.append(z.max())
+            if np.nanmax(z) > 0:
+                ticks.append(np.nanmax(z))
             cbar.set_ticks(ticks)
 
 
@@ -278,7 +278,7 @@ def plot_stream(
         fig.setup(ax, title, boundary, figure)
 
         speed = np.sqrt(np.square(u) + np.square(v))
-        speed = 1 + 4 * speed / speed.max()
+        speed = 1 + 4 * speed / np.nanmax(speed)
 
         ax.streamplot(
             x.transpose(),
