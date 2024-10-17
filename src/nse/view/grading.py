@@ -81,8 +81,8 @@ def plot_foam(experiment: Experiment, identifier: str):
     )
 
 
-def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifier: str):
-    path = OUTPUT_DIR / identifier / experiment.foam.name
+def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifier: str, suffix: str):
+    path = OUTPUT_DIR / identifier / f'{experiment.foam.name}_{suffix}'
 
     mesh = Mesh(Record)
     for k, v in experiment.foam.knowledge:
@@ -101,8 +101,8 @@ def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifi
     timer.save(path / 'time.csv')
 
 
-def grade(experiment: Experiment, identifier: str):
-    path = OUTPUT_DIR / identifier / experiment.foam.name
+def grade(experiment: Experiment, identifier: str, suffix: str):
+    path = OUTPUT_DIR / identifier / f'{experiment.foam.name}_{suffix}'
 
     boundary_init = Mesh(Record)
     boundary_pred = Mesh(Record)
@@ -147,10 +147,10 @@ def grade(experiment: Experiment, identifier: str):
     Record(u_diff, v_diff, p_diff).save(path / 'mesh_mean.csv')
 
     plot_mesh(mesh_pred, experiment, OUTPUT_DIR / identifier, 'pred')
-    plot_mesh(mesh_diff, experiment, OUTPUT_DIR / identifier, 'diff')
+    plot_mesh(mesh_diff, experiment, OUTPUT_DIR / identifier, 'diff', r'$\Delta$')
 
 
-def plot_mesh(mesh: Mesh[Record], experiment: Experiment, path: Path, suffix: str):
+def plot_mesh(mesh: Mesh[Record], experiment: Experiment, path: Path, suffix: str, label: str = ''):
     grid = mesh.grid()
     x, y = grid.x, grid.y
 
@@ -160,7 +160,7 @@ def plot_mesh(mesh: Mesh[Record], experiment: Experiment, path: Path, suffix: st
         '',
         x,
         y,
-        [('u', data.u)],
+        [(f'{label}u', data.u)],
         path=path / 'images' / f'u_{suffix}.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
@@ -170,7 +170,7 @@ def plot_mesh(mesh: Mesh[Record], experiment: Experiment, path: Path, suffix: st
         '',
         x,
         y,
-        [('v', data.v)],
+        [(f'{label}v', data.v)],
         path=path / 'images' / f'v_{suffix}.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
@@ -181,7 +181,7 @@ def plot_mesh(mesh: Mesh[Record], experiment: Experiment, path: Path, suffix: st
         '',
         x,
         y,
-        [('p', p - np.nanmin(p))],
+        [(f'{label}p', p - np.nanmin(p))],
         path=path / 'images' / f'p_{suffix}.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,

@@ -13,6 +13,8 @@ from src.base.model.shape import Shape, Figure
 
 # print(sorted(mpl.font_manager.get_font_names()))
 plt.rcParams['font.family'] = 'cmr10'
+plt.rcParams['mathtext.fontset'] = 'cm'
+plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['axes.formatter.use_mathtext'] = True
 plt.rcParams['axes.linewidth'] = 1
 plt.rcParams['xtick.major.width'] = 1
@@ -285,7 +287,7 @@ def plot_stream(
             y.transpose(),
             u.transpose(),
             v.transpose(),
-            broken_streamlines=True,
+            broken_streamlines=False,
             arrowsize=2,
             color=COLORS[0],
             density=.5,

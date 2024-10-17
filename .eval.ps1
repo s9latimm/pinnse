@@ -1,11 +1,10 @@
-python -m src.nse -e step --id "eval/00" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 1
-python -m src.nse -e step --id "eval/01" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 100
-python -m src.nse -e step --id "eval/02" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 200
-python -m src.nse -e step --id "eval/03" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 300
-python -m src.nse -e step --id "eval/04" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 400
-python -m src.nse -e step --id "eval/05" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 500
-python -m src.nse -e step --id "eval/06" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 600
-python -m src.nse -e step --id "eval/07" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 700
-python -m src.nse -e step --id "eval/08" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 800
-python -m src.nse -e step --id "eval/09" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 900
-python -m src.nse -e step --id "eval/10" -L 100:100:100 -i 1 -n .03 -d cuda -pFGN 1000
+python -m src.nse -e step --id "eval_nn/02" -L 20:20:20:20     -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/04" -L 40:40:40:40     -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/06" -L 60:60:60:60     -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/08" -L 80:80:80:80     -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/10" -L 100:100:100:100 -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/12" -L 120:120:120:120 -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/14" -L 140:140:140:140 -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/16" -L 160:160:160:160 -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/18" -L 180:180:180:180 -i 1 -n .01 -d cuda -pFG -N 10000
+python -m src.nse -e step --id "eval_nn/20" -L 200:200:200:200 -i 1 -n .01 -d cuda -pFG -N 10000

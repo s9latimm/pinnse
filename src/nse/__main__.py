@@ -44,6 +44,10 @@ def main(
     if foam:
         logging.info(f'FOAM:       {experiment.foam.name}')
 
+    suffix = f'{device}_{layers[0]:03d}-{len(layers):02d}_{n:06d}'
+    if grading:
+        logging.info(f'SUFFIX:     {suffix}')
+
     if torch.cpu.is_available():
         info = cpuinfo.get_cpu_info()
         logging.info(f'CPU:        {info["brand_raw"]}')
@@ -111,7 +115,7 @@ def main(
 
         if grading:
             logging.info('EXPORT')
-            export(timer, experiment, model, identifier)
+            export(timer, experiment, model, identifier, suffix)
 
     if foam:
         logging.info('PLOT: openFOAM')
@@ -119,7 +123,7 @@ def main(
 
     if grading:
         logging.info('GRADING')
-        grade(experiment, identifier)
+        grade(experiment, identifier, suffix)
 
 
 def parse_cmd() -> argparse.Namespace:
