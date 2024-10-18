@@ -80,7 +80,7 @@ class Simulation(SequentialModel[Record]):
     def train(self, callback: tp.Callable[[list[list[float]]], None]) -> None:
 
         def closure():
-            callback(self.history)
+            callback(self._losses)
             return self.__loss()
 
         self._model.train()
@@ -105,7 +105,7 @@ class Simulation(SequentialModel[Record]):
 
         loss = f_loss + g_loss + u_loss + v_loss
 
-        self._losses.append(self._detach(f_loss, g_loss, u_loss, v_loss, loss))
+        self._losses.append(self._detach(loss, f_loss, g_loss, u_loss, v_loss))
 
         loss.backward()
         return loss

@@ -3,7 +3,6 @@ import logging
 import sys
 
 import cpuinfo
-import numpy as np
 import psutil
 import torch
 from tqdm import tqdm
@@ -77,12 +76,12 @@ def main(
         with Stopwatch(lambda t: logging.info(f'TIME: {t}')) as timer:
             with tqdm(total=n, position=0, leave=True) as pbar, logging_redirect_tqdm():
 
-                def callback(history: list[list[float]]) -> None:
+                def callback(loss: list[list[float]]) -> None:
                     if pbar.n < n:
                         if pbar.n > 0:
                             if pbar.n % 1e2 == 0:
-                                change = np.mean(history[-1]) - np.mean(history[-2])
-                                logging.info(f'  {pbar.n:{len(str(n))}d}: {np.mean(history[-1]):18.16f} {change:+.3E}')
+                                change = loss[-1][0] - loss[-2][0]
+                                logging.info(f'  {pbar.n:{len(str(n))}d}: {loss[-1][0]:18.16f} {change:+.3E}')
                             if plot and pbar.n % 1e3 == 0:
                                 logging.info('PLOT: Prediction')
                                 plot_prediction(pbar.n, experiment, model, identifier)

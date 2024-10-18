@@ -127,15 +127,15 @@ def plot_losses(n, model: Simulation, identifier: str):
         f'Loss [n={n}, $\\nu$={model.nu:.3E}, $\\rho$={model.rho:.3E}]',
         [
             ('Border', [
-                ('u', [i[3] for i in model.history[1:]]),
-                ('v', [i[4] for i in model.history[1:]]),
+                ('u', [i[3] for i in model.losses[1:]]),
+                ('v', [i[4] for i in model.losses[1:]]),
             ]),
             ('PDE', [
-                ('f', [i[0] for i in model.history[1:]]),
-                ('g', [i[1] for i in model.history[1:]]),
+                ('f', [i[1] for i in model.losses[1:]]),
+                ('g', [i[2] for i in model.losses[1:]]),
             ]),
             ('Sum', [
-                ('$\\Sigma$', [i[2] for i in model.history[1:]]),
+                ('$\\Sigma$', [i[0] for i in model.losses[1:]]),
             ]),
         ],
         path=OUTPUT_DIR / identifier / 'err.pdf',

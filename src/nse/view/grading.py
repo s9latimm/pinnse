@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 
 from src import OUTPUT_DIR
-from src.base.model.algebra import Integer
 from src.base.model.mesh import Grid, Mesh
 from src.base.view.plot import plot_seismic, plot_stream, plot_arrows
 from src.nse.controller.simulation import Simulation
@@ -119,8 +118,8 @@ def grade(experiment: Experiment, identifier: str, suffix: str):
     reverse = 0
     for _, v in mesh_pred:
         if v.u < 0:
-            reverse += 1
-    Integer(reverse).save(path / 'reverse.csv')
+            reverse += abs(v.u)
+    Record(reverse).save(path / 'reverse.csv')
 
     u_diff = 0
     v_diff = 0

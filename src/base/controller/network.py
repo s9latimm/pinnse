@@ -60,7 +60,7 @@ class SequentialModel(tp.Generic[T]):
         return str(self._model)
 
     @property
-    def history(self) -> list[list[tp.Any]]:
+    def losses(self) -> list[list[tp.Any]]:
         return self._losses
 
     @abstractmethod
