@@ -115,11 +115,27 @@ def grade(experiment: Experiment, identifier: str, suffix: str):
     mesh_diff = mesh_pred - mesh_init
     mesh_diff.save(path / 'mesh_diff.csv')
 
-    reverse = 0
+    u_neg = 0
+    v_neg = 0
     for _, v in mesh_pred:
         if v.u < 0:
-            reverse += abs(v.u)
-    Record(reverse).save(path / 'reverse.csv')
+            u_neg += abs(v.u)
+        if v.v < 0:
+            v_neg += abs(v.u)
+    Record(u_neg, v_neg, 0).save(path / 'reverse.csv')
+
+    u_max, u_min = 0, 0
+    v_max, v_min = 0, 0
+    p_max, p_min = 0, 0
+    for _, v in mesh_pred:
+        v_max = max(v_max, v.v)
+        v_min = min(v_min, v.v)
+        u_max = max(u_max, v.u)
+        u_min = min(u_min, v.u)
+        p_max = max(p_max, v.p)
+        p_min = min(p_min, v.p)
+    Record(u_min, v_min, p_min).save(path / 'min.csv')
+    Record(u_max, v_max, p_max).save(path / 'max.csv')
 
     u_diff = 0
     v_diff = 0
