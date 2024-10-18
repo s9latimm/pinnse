@@ -73,11 +73,7 @@ def plot_history(
 
 class Plot(plt.Figure):
 
-    def __init__(self,
-                 x: np.ndarray[np.ndarray[float]],
-                 y: np.ndarray[np.ndarray[float]],
-                 path: Path = None,
-                 n: int = 1) -> None:
+    def __init__(self, x: np.ndarray, y: np.ndarray, path: Path = None, n: int = 1) -> None:
         self.__x = x
         self.__y = y
         self.__path = path
@@ -258,8 +254,8 @@ def plot_stream(
         ax = fig.add_subplot()
         fig.setup(ax, title, boundary, figure)
 
-        speed = np.sqrt(np.square(u) + np.square(v))
-        speed = 1 + 4 * speed / np.nanmax(speed)
+        # speed = np.sqrt(np.square(u) + np.square(v))
+        # speed = 4 * speed / np.nanmax(speed)
 
         ax.streamplot(
             x.transpose(),
@@ -267,9 +263,9 @@ def plot_stream(
             u.transpose(),
             v.transpose(),
             broken_streamlines=False,
-            arrowsize=1,
+            arrowsize=.5,
             color=COLORS[1],
-            density=.5,
+            density=.4,
             linewidth=1,
         )
 

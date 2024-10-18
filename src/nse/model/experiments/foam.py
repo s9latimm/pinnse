@@ -2,10 +2,12 @@ import logging
 import re
 from pathlib import Path
 
+import numpy as np
+
 from src import OUTPUT_DIR, FOAM_DIR
 from src.base.model.mesh import Grid, Axis, Coordinate, arrange
 from src.base.model.shape import Figure, Rectangle
-from src.base.view.plot import plot_seismic
+from src.base.view.plot import plot_seismic, plot_arrows, plot_stream
 from src.nse.model.experiments.experiment import Experiment
 from src.nse.model.record import Record
 
@@ -107,7 +109,7 @@ class Foam(Experiment):
 
         for c in self.__grid:
             if c not in self._knowledge:
-                self._knowledge.insert(c, Record(0, 0, 0))
+                self._knowledge.insert(c, Record(np.nan, np.nan, np.nan))
 
     @staticmethod
     def __dir(path: Path) -> int | None:
@@ -133,7 +135,7 @@ if __name__ == '__main__':
         f = Foam(
             name,
             m,
-            .1,
+            step,
             Figure(Rectangle((0, 0), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
         )
@@ -151,6 +153,28 @@ if __name__ == '__main__':
                 ('p', d.p),
             ],
             path=OUTPUT_DIR / 'foam' / 'foam_uvp.pdf',
+            boundary=f.boundary,
+            figure=f.obstruction,
+        )
+
+        plot_stream(
+            'OpenFOAM Streamlines',
+            m.x,
+            m.y,
+            d.u,
+            d.v,
+            path=OUTPUT_DIR / 'foam' / 'foam_str.pdf',
+            boundary=f.boundary,
+            figure=f.obstruction,
+        )
+
+        plot_arrows(
+            'OpenFOAM Arrows',
+            m.x,
+            m.y,
+            d.u,
+            d.v,
+            path=OUTPUT_DIR / 'foam' / 'foam_arw.pdf',
             boundary=f.boundary,
             figure=f.obstruction,
         )

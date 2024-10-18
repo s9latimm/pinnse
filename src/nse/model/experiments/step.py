@@ -22,7 +22,7 @@ class Step(Experiment):
         foam = Foam(
             f'step-{step:.3f}-{nu:.3f}-{flow:.3f}'.replace('.', '_'),
             grid,
-            .1,
+            step,
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
             0.08,
@@ -62,9 +62,8 @@ class Step(Experiment):
             self._knowledge.emplace((1, y), u=0, v=0)
 
         # training
-        grid = Grid(self.x.arrange(t), self.y.arrange(t))
         for c in grid:
-            if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
+            if c not in self._knowledge and c not in self.obstruction:
                 self._learning.emplace(c)
 
         if supervised:

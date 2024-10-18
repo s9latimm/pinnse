@@ -13,7 +13,7 @@ from src.utils.timer import Stopwatch
 
 
 def plot_setup(experiment: Experiment, identifier: str):
-    grid = Grid(experiment.x.arrange(1), experiment.y.arrange(1))
+    grid = Grid([0, 10], [0, 2])
     x, y = grid.x, grid.y
 
     mesh = Mesh[Record]()
@@ -31,6 +31,8 @@ def plot_setup(experiment: Experiment, identifier: str):
         x,
         y,
         [('u', data.u), ('v', data.u), ('p', data.u)],
+        mesh=mesh,
+        marker=experiment.learning.keys(),
         path=OUTPUT_DIR / identifier / 'setup.pdf',
         boundary=experiment.boundary,
         figure=experiment.obstruction,
@@ -51,7 +53,7 @@ def plot_foam(experiment: Experiment, identifier: str):
         [
             ('u', u),
             ('v', v),
-            ('p', p - p.min()),
+            ('p', p - np.nanmin(p)),
         ],
         path=OUTPUT_DIR / identifier / 'grading' / 'foam_uvp.pdf',
         boundary=experiment.boundary,
