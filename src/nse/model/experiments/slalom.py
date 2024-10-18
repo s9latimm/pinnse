@@ -44,6 +44,7 @@ class Slalom(Experiment):
         # inlet
         for y in arrange(1, 2, s):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
+        for y in arrange(0, 2, s):
             self._outlet.emplace((10, y))
 
         # border

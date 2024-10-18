@@ -18,7 +18,7 @@ class Cylinder(Experiment):
             Axis('x', 0, 10),
             Axis('y', 0, 2),
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Circle((5, 1), .3)),
+            Figure(Circle((5, 1), 1 / 3)),
             nu,
             rho,
             Parabola(0, 2, flow),

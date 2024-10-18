@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
 from src.base.view.plot import save_fig, draw_shape, COLORS
-from src.nse.model.experiments import EXPERIMENTS
+from src.nse.model.experiments import Step, EXPERIMENTS
 from src.nse.model.experiments.experiment import Experiment
 
 SCALE: float = 2.5
@@ -38,10 +38,81 @@ def plot_inlets(experiments: list[Experiment]):
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([0, 2.2])
 
-        ax.set_title(str(experiment.inlet_f))
+        # ax.set_title(str(experiment.inlet_f))
 
-    fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'inlets.pdf')
+
+    plt.clf()
+    plt.close()
+
+
+def plot_grid(experiment: Experiment):
+    fig = plt.Figure(figsize=(10 / 2 * SCALE, SCALE))
+
+    ax = fig.add_subplot(1, 1, 1)
+
+    for figure in experiment.obstruction:
+        draw_shape(ax, figure, style='-', width=.5)
+
+    for figure in experiment.boundary:
+        draw_shape(ax, figure, style='-', width=.5)
+
+    xs = []
+    ys = []
+    for x in experiment.x.arrange(.1):
+        for y in experiment.y.arrange(.1):
+            if experiment.x.start < x and experiment.y.start < y < experiment.y.stop:
+                if (x, y) not in experiment.obstruction:
+                    xs.append(x)
+                    ys.append(y)
+
+    ax.scatter(xs, ys, color=COLORS[1], marker='+', s=20, linewidth=.5)
+    ax.scatter(xs, ys, color=COLORS[1], marker='o', s=2.5, linewidth=.5)
+
+    xs = []
+    ys = []
+    for x in experiment.x.arrange(.05):
+        if x > 1.01:
+            xs.append(x)
+            ys.append(0)
+        else:
+            xs.append(x)
+            ys.append(1)
+        xs.append(x)
+        ys.append(2)
+
+    for y in experiment.y.arrange(.05):
+        if y < 1:
+            xs.append(1)
+            ys.append(y)
+
+    ax.scatter(xs, ys, color='k', marker='D', s=2.5, linewidth=.5, zorder=9999)
+
+    xs = []
+    ys = []
+    for y in experiment.y.arrange(.05):
+        if 1.01 < y < 1.99:
+            xs.append(0)
+            ys.append(y)
+
+    ax.scatter(xs, ys, color=COLORS[2], marker='>', s=2.5, linewidth=.5, zorder=999)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    ax.axes.set_aspect('equal')
+
+    ax.set_xlabel('x', fontname='cmmi10')
+    ax.set_xticks([0, 1, 5, 10])
+    ax.set_xlim([-.05, 10.05])
+
+    ax.set_ylabel('y', fontname='cmmi10')
+    ax.set_yticks([0, 1, 2])
+    ax.set_ylim([-.05, 2.05])
+
+    save_fig(fig, OUTPUT_DIR / 'paper' / 'grid.pdf')
 
     plt.clf()
     plt.close()
@@ -100,15 +171,16 @@ def plot_experiments(experiments: list[Experiment]):
 
         ax.axes.set_aspect('equal')
 
-        ax.set_xticks([0, 1, 10])
+        ax.set_xlabel('x', fontname='cmmi10')
+        ax.set_xticks([0, 1, 5, 10])
         ax.set_xlim([-.05, 10.05])
 
+        ax.set_ylabel('u', fontname='cmmi10')
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([-.05, 2.05])
 
         ax.set_title(experiment.name, fontname='cmss10')
 
-    fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'experiments.pdf')
 
     plt.clf()
@@ -118,3 +190,4 @@ def plot_experiments(experiments: list[Experiment]):
 if __name__ == '__main__':
     plot_experiments(list(i() for i in EXPERIMENTS.values()))
     plot_inlets(list(i() for i in EXPERIMENTS.values()))
+    plot_grid(Step())

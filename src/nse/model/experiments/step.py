@@ -62,9 +62,11 @@ class Step(Experiment):
             self._knowledge.emplace((1, y), u=0, v=0)
 
         # training
+        grid = Grid(self.x.arrange(t), self.y.arrange(t))
         for c in grid:
-            if c not in self._knowledge and c not in self.obstruction:
-                self._learning.emplace(c)
+            if self.x.start < c.x and self.y.start < c.y < self.y.stop:
+                if c not in self._knowledge and c not in self.obstruction:
+                    self._learning.emplace(c)
 
         if supervised:
             self._knowledge = self.foam.knowledge

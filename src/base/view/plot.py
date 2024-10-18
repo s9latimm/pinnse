@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colors
+from matplotlib.patches import Polygon
 from matplotlib.ticker import FuncFormatter
 
 from src.base.model.mesh import Coordinate
@@ -15,9 +16,14 @@ from src.base.view import SCALE, DPI, COLORS, SEISMIC, SEISMIC_NEGATIVE, SEISMIC
 
 def draw_shape(ax: plt.Axes, shape: Shape, style: str = '-', width: float = 2.5) -> None:
     polygon = shape[::.05]
-    x = polygon.x
-    y = polygon.y
-    ax.plot(x, y, color='k', linestyle=style, linewidth=width, zorder=999)
+    ax.add_patch(
+        Polygon([(c.x, c.y) for c in polygon],
+                hatch='//',
+                facecolor='gray',
+                edgecolor='black',
+                linestyle=style,
+                linewidth=width,
+                zorder=999))
 
 
 def save_fig(fig: plt.Figure, path: Path) -> None:

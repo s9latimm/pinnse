@@ -6,8 +6,8 @@ import numpy as np
 
 from src import OUTPUT_DIR, FOAM_DIR
 from src.base.model.mesh import Grid, Axis, Coordinate, arrange
-from src.base.model.shape import Figure, Rectangle
-from src.base.view.plot import plot_seismic, plot_arrows, plot_stream
+from src.base.model.shape import Figure, Rectangle, Line
+from src.base.view.plot import plot_seismic, plot_stream, plot_arrows
 from src.nse.model.experiments.experiment import Experiment
 from src.nse.model.record import Record
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
             name,
             m,
             step,
-            Figure(Rectangle((0, 0), (10, 2))),
+            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
         )
         d = m.transform(f.knowledge)
@@ -150,7 +150,7 @@ if __name__ == '__main__':
             [
                 ('u', d.u),
                 ('v', d.v),
-                ('p', d.p),
+                ('p', d.p - np.nanmin(d.p)),
             ],
             path=OUTPUT_DIR / 'foam' / 'foam_uvp.pdf',
             boundary=f.boundary,
