@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from src.base.model.algebra import RealNumber
+from src.base.model.algebra import Real
 
 
 def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
@@ -19,7 +19,7 @@ def merge(*lists: tp.Sequence[tp.Any]) -> list[tp.Any]:
 
 
 def arrange(start: float, stop: float, step: float, center=False) -> list[float]:
-    start, stop, step = RealNumber(start), RealNumber(stop), RealNumber(step)
+    start, stop, step = Real(start), Real(stop), Real(step)
 
     if center:
         start = start + step / 2
@@ -45,9 +45,9 @@ def arrange(start: float, stop: float, step: float, center=False) -> list[float]
 
 class Coordinate:
 
-    def __init__(self, x: float | RealNumber, y: float | RealNumber) -> None:
-        self.__x = RealNumber(float(x))
-        self.__y = RealNumber(float(y))
+    def __init__(self, x: float | Real, y: float | Real) -> None:
+        self.__x = Real(float(x))
+        self.__y = Real(float(y))
 
     def __eq__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
         c = Coordinate(*coordinate)
@@ -87,7 +87,7 @@ class Coordinate:
         return self.__mul__(factor)
 
     def __truediv__(self, factor: float) -> Coordinate:
-        if RealNumber(factor) == 0:
+        if Real(factor) == 0:
             return Coordinate(np.infty, np.infty)
         return Coordinate(self.__x / factor, self.__y / factor)
 
@@ -291,9 +291,11 @@ class Mesh(tp.Generic[T]):
                 r = ",".join(f'{i:.16f}' for i in v)
                 f.write(f'{c},{r}\n')
 
-    def load(self, path: Path) -> None:
+    def load(self, path: Path) -> Mesh[T]:
+        mesh = Mesh(self._value_type)
         if path.exists():
-            lines = path.read_text(encoding='utf-8').strip().split('\n')
+            lines = path.read_text(encoding='utf-8').strip().splitlines()
             for line in lines:
-                token = line.split(',')
-                self.insert((float(token[0]), float(token[1])), self._value_type(*[float(i) for i in token[2:]]))
+                token = line.strip().split(',')
+                mesh.insert((float(token[0]), float(token[1])), self._value_type(*[float(i) for i in token[2:]]))
+        return mesh

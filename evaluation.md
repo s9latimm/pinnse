@@ -24,7 +24,7 @@ pinNSE:
 
 | experiment | inlet | nu  |         FOAM         |      pinNSE 3x100       | pinNSE 4x80 |
 |:-----------|-------|-----|:--------------------:|:-----------------------:|-------------|
-| empty      | 1     | .01 | convergence (21 min) | convergence (6 s, += 3) |             |
+| step       | 1     | .01 | convergence (21 min) | convergence (6 s, += 3) |             |
 |            | 4     | .04 |                      |                         |             |
 |            |       |     |                      |                         |             |
 |            |       |     |                      |                         |             |

@@ -10,22 +10,7 @@ from matplotlib.ticker import FuncFormatter
 
 from src.base.model.mesh import Coordinate
 from src.base.model.shape import Shape, Figure
-
-# print(sorted(mpl.font_manager.get_font_names()))
-plt.rcParams['font.family'] = 'cmr10'
-plt.rcParams['mathtext.fontset'] = 'cm'
-plt.rcParams['axes.unicode_minus'] = False
-plt.rcParams['axes.formatter.use_mathtext'] = True
-plt.rcParams['axes.linewidth'] = 1
-plt.rcParams['xtick.major.width'] = 1
-plt.rcParams['xtick.minor.width'] = .5
-plt.rcParams['ytick.major.width'] = 1
-plt.rcParams['ytick.minor.width'] = .5
-
-COLORS = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
-
-DPI: int = 1000
-SCALE: float = 2.5
+from src.base.view import SCALE, DPI, COLORS, SEISMIC, SEISMIC_NEGATIVE, SEISMIC_POSITIVE
 
 
 def draw_shape(ax: plt.Axes, shape: Shape, style: str = '-', width: float = 2.5) -> None:
@@ -36,6 +21,7 @@ def draw_shape(ax: plt.Axes, shape: Shape, style: str = '-', width: float = 2.5)
 
 
 def save_fig(fig: plt.Figure, path: Path) -> None:
+    fig.tight_layout()
     if path is not None:
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, format=path.suffix[1:], bbox_inches='tight', transparent=True, dpi=DPI / SCALE)
@@ -79,17 +65,10 @@ def plot_history(
 
     fig.suptitle(title)
 
-    fig.tight_layout()
     save_fig(fig, path)
 
     plt.clf()
     plt.close()
-
-
-SEISMIC = colors.LinearSegmentedColormap.from_list('seismic', plt.get_cmap('seismic')(np.linspace(0, 1., 100)))
-SEISMIC_N = colors.LinearSegmentedColormap.from_list('seismic_neg', plt.get_cmap('seismic')(np.linspace(0., .5, 50)))
-SEISMIC_P = colors.LinearSegmentedColormap.from_list('seismic_pos', plt.get_cmap('seismic')(np.linspace(.5, 1., 50)))
-SEISMIC_D = colors.LinearSegmentedColormap.from_list('seismic_dis', plt.get_cmap('seismic')(np.linspace(.55, 1., 45)))
 
 
 class Plot(plt.Figure):
@@ -190,10 +169,10 @@ def plot_seismic(
                 cmap = SEISMIC
             elif np.nanmax(z) < 0:
                 slope = colors.Normalize(vmin=np.nanmin(z), vmax=0)
-                cmap = SEISMIC_N
+                cmap = SEISMIC_NEGATIVE
             else:
                 slope = colors.Normalize(vmin=0, vmax=np.nanmax(z))
-                cmap = SEISMIC_P
+                cmap = SEISMIC_POSITIVE
 
             img = ax.pcolormesh(
                 x,
@@ -242,7 +221,7 @@ def plot_seismic(
                     [j.y for j in ps],
                     marker='o',
                     c=vs,
-                    cmap=SEISMIC_P,
+                    cmap=SEISMIC_POSITIVE,
                     norm=colors.Normalize(vmin=0, vmax=max(vs)),
                     zorder=3,
                 )
@@ -288,10 +267,10 @@ def plot_stream(
             u.transpose(),
             v.transpose(),
             broken_streamlines=False,
-            arrowsize=2,
-            color=COLORS[0],
+            arrowsize=1,
+            color=COLORS[1],
             density=.5,
-            linewidth=speed.transpose(),
+            linewidth=1,
         )
 
 
@@ -321,5 +300,5 @@ def plot_arrows(
                     head_width=.015,
                     head_length=.02,
                     length_includes_head=True,
-                    color=COLORS[0],
+                    color=COLORS[1],
                 )

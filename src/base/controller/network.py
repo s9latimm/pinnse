@@ -80,6 +80,3 @@ class SequentialModel(tp.Generic[T]):
             for i, loss in enumerate(self._losses):
                 s = ",".join(f'{j:.16f}' for j in loss)
                 f.write(f'{i:d},{s}\n')
-
-    def load(self, path: Path) -> None:
-        self._model.load_state_dict(torch.load(path))

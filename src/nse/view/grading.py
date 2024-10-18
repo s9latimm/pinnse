@@ -104,17 +104,13 @@ def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifi
 def grade(experiment: Experiment, identifier: str, suffix: str):
     path = OUTPUT_DIR / identifier / f'{experiment.foam.name}_{suffix}'
 
-    boundary_init = Mesh(Record)
-    boundary_pred = Mesh(Record)
-    boundary_init.load(path / 'boundary_init.csv')
-    boundary_pred.load(path / 'boundary_pred.csv')
+    boundary_init = Mesh(Record).load(path / 'boundary_init.csv')
+    boundary_pred = Mesh(Record).load(path / 'boundary_pred.csv')
     boundary_diff = boundary_pred - boundary_init
     boundary_diff.save(path / 'boundary_diff.csv')
 
-    mesh_init = Mesh(Record)
-    mesh_pred = Mesh(Record)
-    mesh_init.load(path / 'mesh_init.csv')
-    mesh_pred.load(path / 'mesh_pred.csv')
+    mesh_init = Mesh(Record).load(path / 'mesh_init.csv')
+    mesh_pred = Mesh(Record).load(path / 'mesh_pred.csv')
     mesh_diff = mesh_pred - mesh_init
     mesh_diff.save(path / 'mesh_diff.csv')
 

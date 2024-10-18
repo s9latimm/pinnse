@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import typing as tp
 from pathlib import Path
 
@@ -20,11 +21,11 @@ class Record:
     def labels(self) -> list[str]:
         return ['u', 'v', 'p']
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return f'Fact(u={str(self.u)}, v={str(self.v)}, p={str(self.p)})'
 
-    def __str__(self) -> str:
-        return self.__repr__()
+    def __repr__(self) -> str:
+        return self.__str__()
 
     @property
     def p(self) -> float:
@@ -48,3 +49,11 @@ class Record:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as f:
             f.write(f'{self.u:.16f},{self.v:.16f},{self.p:.16f}\n')
+
+    @staticmethod
+    def load(path: Path) -> Record:
+        if path.exists():
+            u, v, p = path.read_text(encoding='utf-8').strip().split(',')
+            return Record(float(u), float(v), float(p))
+        else:
+            logging.error(f'{path} does not exist')
