@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from src import OUTPUT_DIR
+from src.base.model.algebra import Integer
 from src.base.model.mesh import Grid, Mesh
 from src.base.view.plot import plot_seismic, plot_stream, plot_arrows
 from src.nse.controller.simulation import Simulation
@@ -100,6 +101,8 @@ def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifi
     mesh.save(path / 'mesh_init.csv')
     prediction.save(path / 'mesh_pred.csv')
     timer.save(path / 'time.csv')
+
+    Integer(len(model)).save(path / 'parameter.csv')
 
 
 def grade(experiment: Experiment, identifier: str, suffix: str):

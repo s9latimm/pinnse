@@ -39,7 +39,7 @@ class Sinus(Function):
 
     def __init__(self, start: float, end: float, scale: float = 1.) -> None:
         self.__scale = scale
-        self.__a = 20 / (end - start) / np.pi
+        self.__a = 2 * np.pi * (end - start)
 
     def __call__(self, x: float) -> float:
         return self.__scale * np.sin(self.__a * x)

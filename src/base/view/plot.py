@@ -27,7 +27,6 @@ def draw_shape(ax: plt.Axes, shape: Shape, style: str = '-', width: float = 2.5)
 
 
 def save_fig(fig: plt.Figure, path: Path) -> None:
-    fig.tight_layout()
     if path is not None:
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, format=path.suffix[1:], bbox_inches='tight', transparent=True, dpi=DPI / SCALE)
@@ -208,7 +207,7 @@ def plot_seismic(
                 [j.x for j in marker],
                 [j.y for j in marker],
                 marker='.',
-                c=COLORS[0],
+                color=COLORS[0],
                 zorder=3,
             )
 

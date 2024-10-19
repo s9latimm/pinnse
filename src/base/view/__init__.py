@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colors
 
-COLORS: list[str] = ['black'] + list(colors.TABLEAU_COLORS.keys())[1:]
-DEFAULT_COLOR: str = COLORS[1]
+COLORS: list[tuple[float, float, float, float]] = [plt.get_cmap('tab10')(i) for i in range(10)]
 
 DPI: int = 1000
 SCALE: float = 2.5

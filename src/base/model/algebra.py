@@ -95,6 +95,9 @@ class Integer:
         with path.open("w", encoding="utf-8") as f:
             f.write(f'{self.__value:d}\n')
 
+    def __int__(self) -> int:
+        return self.__value
+
     @staticmethod
     def load(path: Path) -> Integer:
         if path.exists():
