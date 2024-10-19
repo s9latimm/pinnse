@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import colors
+from matplotlib import colors, font_manager
 
 COLORS: list[tuple[float, float, float, float]] = [plt.get_cmap('tab10')(i) for i in range(10)]
 
@@ -18,7 +18,7 @@ SEISMIC_POSITIVE: plt.Colormap = colors.LinearSegmentedColormap.from_list(
 
 PHI = (1. + np.sqrt(5.)) / 2.
 
-# print(sorted(mpl.font_manager.get_font_names()))
+print(sorted(font_manager.get_font_names()))
 plt.rcParams['font.family'] = 'cmr10'
 plt.rcParams['mathtext.fontset'] = 'cm'
 plt.rcParams['axes.unicode_minus'] = False

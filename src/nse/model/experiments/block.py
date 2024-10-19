@@ -28,7 +28,7 @@ class Block(Experiment):
             Axis('x', 0, 10),
             Axis('y', 0, 2),
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((4 + 2 / 3, 2 / 3), (5 + 1 / 3, 4 / 3))),
+            Figure(Rectangle((4.7, .7), (5.3, 1.3))),
             nu,
             rho,
             Parabola(0, 2, flow),

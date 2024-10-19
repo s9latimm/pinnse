@@ -38,8 +38,11 @@ def plot_inlets(experiments: list[Experiment]):
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([0, 2.2])
 
-        # ax.set_title(str(experiment.inlet_f))
+        ax.tick_params(axis='y', labelrotation=90)
+        for t in ax.get_yticklabels():
+            t.set_verticalalignment('center')
 
+    fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'inlets.pdf')
 
     plt.clf()
@@ -67,7 +70,18 @@ def plot_grid(experiment: Experiment):
                     ys.append(y)
 
     ax.scatter(xs, ys, color=COLORS[1], marker='+', s=20, linewidth=.5)
-    ax.scatter(xs, ys, color=COLORS[1], marker='o', s=2.5, linewidth=.5)
+    ax.scatter(xs, ys, color=COLORS[1], marker='o', s=2.5, linewidth=.5, label='training')
+
+    xs = []
+    ys = []
+    for x in experiment.x.arrange(.1, True):
+        for y in experiment.y.arrange(.1, True):
+            if experiment.x.start < x and experiment.y.start < y < experiment.y.stop:
+                if (x, y) not in experiment.obstruction:
+                    xs.append(x)
+                    ys.append(y)
+
+    ax.scatter(xs, ys, color='k', marker='x', s=10, linewidth=.5, label='evaluation')
 
     xs = []
     ys = []
@@ -86,7 +100,7 @@ def plot_grid(experiment: Experiment):
             xs.append(1)
             ys.append(y)
 
-    ax.scatter(xs, ys, color='k', marker='D', s=2.5, linewidth=.5, zorder=9999)
+    ax.scatter(xs, ys, color='k', marker='D', s=2.5, linewidth=.5, zorder=9999, label='boundary')
 
     xs = []
     ys = []
@@ -95,7 +109,7 @@ def plot_grid(experiment: Experiment):
             xs.append(0)
             ys.append(y)
 
-    ax.scatter(xs, ys, color=COLORS[2], marker='>', s=2.5, linewidth=.5, zorder=999)
+    ax.scatter(xs, ys, color=COLORS[2], marker='>', s=2.5, linewidth=.5, zorder=999, label='inlet')
 
     ax.spines['top'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -112,7 +126,13 @@ def plot_grid(experiment: Experiment):
     ax.set_yticks([0, 1, 2])
     ax.set_ylim([-.05, 2.05])
 
-    save_fig(fig, OUTPUT_DIR / 'paper' / 'grid.pdf')
+    ax.tick_params(axis='y', labelrotation=90)
+    for t in ax.get_yticklabels():
+        t.set_verticalalignment('center')
+
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=True, fancybox=False).get_frame().set_edgecolor('k')
+
+    save_fig(fig, OUTPUT_DIR / 'paper' / 'step_mesh.pdf')
 
     plt.clf()
     plt.close()
@@ -175,12 +195,17 @@ def plot_experiments(experiments: list[Experiment]):
         ax.set_xticks([0, 1, 5, 10])
         ax.set_xlim([-.05, 10.05])
 
-        ax.set_ylabel('u', fontname='cmmi10')
+        ax.set_ylabel('y', fontname='cmmi10')
         ax.set_yticks([0, 1, 2])
         ax.set_ylim([-.05, 2.05])
 
-        ax.set_title(experiment.name, fontname='cmss10')
+        ax.tick_params(axis='y', labelrotation=90)
+        for t in ax.get_yticklabels():
+            t.set_verticalalignment('center')
 
+        ax.set_title(experiment.name.lower(), fontname='cmtt10')
+
+    fig.tight_layout()
     save_fig(fig, OUTPUT_DIR / 'paper' / 'experiments.pdf')
 
     plt.clf()
