@@ -1,6 +1,6 @@
 import typing as tp
 
-from src.base.model.function import Function, Null
+from src.base.model.function import Function
 from src.base.model.mesh import Axis, Mesh
 from src.base.model.shape import Figure
 from src.nse.model.record import Record
@@ -11,17 +11,17 @@ Foam: tp.TypeAlias = 'Foam'
 class Experiment:
 
     def __init__(
-            self,
-            name: str,
-            x: Axis,
-            y: Axis,
-            boundary: Figure = None,
-            obstruction: Figure = None,
-            nu: float = 1,
-            rho: float = 1,
-            inlet: Function = Null(),
-            foam: Foam = None,
-            supervised: bool = False,
+        self,
+        name: str,
+        x: Axis,
+        y: Axis,
+        boundary: Figure,
+        obstruction: Figure,
+        nu: float,
+        rho: float,
+        inlet: Function,
+        foam: Foam,
+        supervised: bool = False,
     ) -> None:
         self._name = name
         self.__x = x

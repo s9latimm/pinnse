@@ -2,6 +2,7 @@ from src.base.model.function import Parabola
 from src.base.model.mesh import arrange, Grid, Axis
 from src.base.model.shape import Figure, Line
 from src.nse.model.experiments.experiment import Experiment
+from src.nse.model.experiments.foam import Foam
 
 
 class Empty(Experiment):
@@ -13,32 +14,51 @@ class Empty(Experiment):
         flow: float = 1,
         _: bool = False,
     ) -> None:
+        step = .1
+        xs = Axis('x', 0, 10)
+        ys = Axis('y', 0, 2)
+        boundary = Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2)))
+        obstruction = Figure()
+
+        foam = Foam(
+            xs,
+            ys,
+            step,
+            boundary,
+            obstruction,
+            nu,
+            rho,
+            flow,
+        )
+
         super().__init__(
             Empty.__name__,
-            Axis('x', 0, 10),
-            Axis('y', 0, 2),
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(),
+            xs,
+            ys,
+            boundary,
+            obstruction,
             nu,
             rho,
             Parabola(0, 2, flow),
+            foam,
         )
 
-        t = .1
-        s = t / 2
+        step = step
+        stride = step / 2
 
         # inlet
-        for y in arrange(0, 2, s):
+        for y in arrange(0, 2, stride):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
             self._outlet.emplace((10, y))
 
         # border
-        for x in arrange(s, 10 - s, s):
+        for x in arrange(stride, 10, stride):
             self._knowledge.emplace((x, 0), u=0, v=0)
             self._knowledge.emplace((x, 2), u=0, v=0)
 
         # training
-        grid = Grid(self.x.arrange(t), self.y.arrange(t))
+        grid = Grid(self.x.arrange(step), self.y.arrange(step))
         for c in grid:
-            if c not in self._knowledge and c not in self._learning:
-                self._learning.emplace(c)
+            if self.x.start < c.x and self.y.start < c.y < self.y.stop:
+                if c not in self._knowledge and c not in self.obstruction:
+                    self._learning.emplace(c)

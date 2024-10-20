@@ -18,7 +18,6 @@ SEISMIC_POSITIVE: plt.Colormap = colors.LinearSegmentedColormap.from_list(
 
 PHI = (1. + np.sqrt(5.)) / 2.
 
-print(sorted(font_manager.get_font_names()))
 plt.rcParams['font.family'] = 'cmr10'
 plt.rcParams['mathtext.fontset'] = 'cm'
 plt.rcParams['axes.unicode_minus'] = False
@@ -28,3 +27,6 @@ plt.rcParams['xtick.major.width'] = 1
 plt.rcParams['xtick.minor.width'] = .5
 plt.rcParams['ytick.major.width'] = 1
 plt.rcParams['ytick.minor.width'] = .5
+
+if __name__ == '__main__':
+    print(sorted(font_manager.get_font_names()))

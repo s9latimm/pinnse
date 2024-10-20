@@ -114,9 +114,6 @@ class Plot(plt.Figure):
         ax.set_yticks([0, 1, int(np.round(self.__y.max())) // 2, int(np.round(self.__y.max()))])
         ax.set_ylim([int(np.round(self.__y.min())) - .05, int(np.round(self.__y.max())) + .05])
 
-        # ax.spines['top'].set_visible(False)
-        # ax.spines['right'].set_visible(False)
-
         if boundary is not None:
             for shape in boundary:
                 draw_shape(ax, shape)
@@ -208,7 +205,8 @@ def plot_seismic(
                 [j.y for j in marker],
                 marker='.',
                 color=COLORS[0],
-                zorder=3,
+                zorder=999999,
+                clip_on=False,
             )
 
             if mesh is not None:
@@ -220,11 +218,13 @@ def plot_seismic(
                 ax.scatter(
                     [j.x for j in ps],
                     [j.y for j in ps],
-                    marker='o',
+                    marker='D',
+                    edgecolor='k',
                     c=vs,
                     cmap=SEISMIC_POSITIVE,
                     norm=colors.Normalize(vmin=0, vmax=max(vs)),
-                    zorder=3,
+                    zorder=99999,
+                    clip_on=False,
                 )
 
             cbar = fig.colorbar(

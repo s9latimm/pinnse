@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 
 from src import OUTPUT_DIR, FOAM_DIR
+from src.base.model.function import Null
 from src.base.model.mesh import Grid, Axis, Coordinate, arrange
 from src.base.model.shape import Figure, Rectangle, Line
 from src.base.view.plot import plot_seismic, plot_stream, plot_arrows
@@ -17,24 +18,31 @@ class Foam(Experiment):
 
     def __init__(
         self,
-        name: str,
-        grid: Grid,
+        x: Axis,
+        y: Axis,
         step: float,
-        boundary: Figure = None,
-        obstruction: Figure = None,
-        nu: float = 1.,
-        rho: float = 1.,
+        boundary: Figure,
+        obstruction: Figure,
+        nu: float,
+        rho: float,
+        flow: float,
     ) -> None:
-        self.__grid = grid
+        name = f'step-{step:.3f}-{nu:.3f}-{flow:02.0f}'.replace('.', '_')
+        self.__grid = Grid(
+            x.arrange(step, True),
+            y.arrange(step, True),
+        )
         self.__step = step
         super().__init__(
             name,
-            self.__grid.x,
-            self.__grid.y,
+            x,
+            y,
             boundary,
             obstruction,
             nu,
             rho,
+            Null(),
+            self,
         )
 
         path = FOAM_DIR / self._name

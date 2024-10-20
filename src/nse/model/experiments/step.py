@@ -15,25 +15,28 @@ class Step(Experiment):
         supervised: bool = False,
     ) -> None:
         step = .1
-        grid = Grid(
-            Axis('x', 0, 10).arrange(step, True),
-            Axis('y', 0, 2).arrange(step, True),
-        )
+        xs = Axis('x', 0, 10)
+        ys = Axis('y', 0, 2)
+        boundary = Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2)))
+        obstruction = Figure(Rectangle((0, 0), (1, 1)))
+
         foam = Foam(
-            f'step-{step:.3f}-{nu:.3f}-{flow:.3f}'.replace('.', '_'),
-            grid,
+            xs,
+            ys,
             step,
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
-            0.08,
-            1.,
+            boundary,
+            obstruction,
+            nu,
+            rho,
+            flow,
         )
+
         super().__init__(
             Step.__name__,
-            Axis('x', 0, 10),
-            Axis('y', 0, 2),
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
+            xs,
+            ys,
+            boundary,
+            obstruction,
             nu,
             rho,
             Parabola(1, 2, flow),
@@ -41,28 +44,28 @@ class Step(Experiment):
             supervised,
         )
 
-        t = .1
-        s = t / 2
+        step = .1
+        stride = step / 2
 
         # inlet
-        for y in arrange(1, 2, s):
+        for y in arrange(1, 2, stride):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
-        for y in arrange(0, 2, s):
+        for y in arrange(0, 2, stride):
             self._outlet.emplace((10, y))
 
         # border
-        for x in arrange(1, 10, s):
+        for x in arrange(1, 10, stride):
             self._knowledge.emplace((x, 0), u=0, v=0)
-        for x in arrange(s, 10, s):
+        for x in arrange(stride, 10, stride):
             self._knowledge.emplace((x, 2), u=0, v=0)
 
-        for x in arrange(s, 1, s):
+        for x in arrange(stride, 1, stride):
             self._knowledge.emplace((x, 1), u=0, v=0)
-        for y in arrange(s, 1 - s, s):
+        for y in arrange(stride, 1 - stride, stride):
             self._knowledge.emplace((1, y), u=0, v=0)
 
         # training
-        grid = Grid(self.x.arrange(t), self.y.arrange(t))
+        grid = Grid(self.x.arrange(step), self.y.arrange(step))
         for c in grid:
             if self.x.start < c.x and self.y.start < c.y < self.y.stop:
                 if c not in self._knowledge and c not in self.obstruction:

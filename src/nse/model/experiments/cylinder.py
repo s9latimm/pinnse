@@ -22,28 +22,30 @@ class Cylinder(Experiment):
             nu,
             rho,
             Parabola(0, 2, flow),
+            None,
         )
 
-        t = .1
-        s = t / 2
+        step = .1
+        stride = step / 2
 
         # inlet
-        for y in arrange(0, 2, s):
+        for y in arrange(0, 2, stride):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
             self._outlet.emplace((10, y))
 
         # border
-        for x in arrange(s, 10, s):
+        for x in arrange(stride, 10, stride):
             self._knowledge.emplace((x, 0), u=0, v=0)
             self._knowledge.emplace((x, 2), u=0, v=0)
 
         for figure in self.obstruction:
-            for c in figure[::s]:
+            for c in figure[::stride]:
                 if c not in self._knowledge:
                     self._knowledge.emplace(c, u=0, v=0)
 
         # training
-        grid = Grid(self.x.arrange(t), self.y.arrange(t))
+        grid = Grid(self.x.arrange(step), self.y.arrange(step))
         for c in grid:
-            if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
-                self._learning.emplace(c)
+            if self.x.start < c.x and self.y.start < c.y < self.y.stop:
+                if c not in self._knowledge and c not in self.obstruction:
+                    self._learning.emplace(c)

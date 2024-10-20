@@ -1,4 +1,3 @@
-from src import FOAM_DIR
 from src.base.model.function import Parabola
 from src.base.model.mesh import arrange, Grid, Axis
 from src.base.model.shape import Rectangle, Figure, Line
@@ -15,66 +14,66 @@ class Slalom(Experiment):
         flow: float = 1,
         supervised: bool = False,
     ) -> None:
-        grid = Grid(Axis('x', 0, 10).arrange(.1, True), Axis('y', 0, 2).arrange(.1, True))
+        step = .1
+        xs = Axis('x', 0, 10)
+        ys = Axis('y', 0, 2)
+        boundary = Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2)))
+        obstruction = Figure(Rectangle((0, 0), (1, 1)), Rectangle((4.5, 1), (5.5, 2)))
+
         foam = Foam(
-            FOAM_DIR / 'slalom',
-            grid,
-            .1,
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
-            0.08,
-            1.,
+            xs,
+            ys,
+            step,
+            boundary,
+            obstruction,
+            nu,
+            rho,
+            flow,
         )
+
         super().__init__(
             Slalom.__name__,
-            Axis('x', 0, 10),
-            Axis('y', 0, 2),
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1)), Rectangle((4.5, 1), (5.5, 2))),
+            xs,
+            ys,
+            boundary,
+            obstruction,
             nu,
             rho,
             Parabola(1, 2, flow),
             foam,
-            supervised,
         )
 
-        t = .1
-        s = t / 2
+        step = .1
+        stride = step / 2
 
         # inlet
-        for y in arrange(1, 2, s):
+        for y in arrange(1, 2, stride):
             self._inlet.emplace((0, y), u=self._in(y), v=0)
-        for y in arrange(0, 2, s):
+        for y in arrange(0, 2, stride):
             self._outlet.emplace((10, y))
 
         # border
-        for x in arrange(1, 9, s):
+        for x in arrange(1, 10, stride):
             self._knowledge.emplace((x, 0), u=0, v=0)
-        for x in arrange(s, 4.5, s):
+        for x in arrange(stride, 4.5, stride):
             self._knowledge.emplace((x, 2), u=0, v=0)
-        for x in arrange(5.5, 10, s):
+        for x in arrange(5.5, 10, stride):
             self._knowledge.emplace((x, 2), u=0, v=0)
 
-        for x in arrange(s, 1, s):
+        for x in arrange(stride, 1, stride):
             self._knowledge.emplace((x, 1), u=0, v=0)
-        for y in arrange(s, 1 - s, s):
+        for y in arrange(stride, 1 - stride, stride):
             self._knowledge.emplace((1, y), u=0, v=0)
-            self._knowledge.emplace((9, y), u=0, v=0)
 
-        for x in arrange(4.5, 5.5, s):
+        for x in arrange(4.5, 5.5, stride):
             self._knowledge.emplace((x, 1), u=0, v=0)
-        for y in arrange(1 + s, 2 - s, s):
+        for y in arrange(1 + stride, 2 - stride, stride):
             self._knowledge.emplace((4.5, y), u=0, v=0)
             self._knowledge.emplace((5.5, y), u=0, v=0)
 
-        for x in arrange(9, 10, s):
-            self._knowledge.emplace((x, 1), u=0, v=0)
-
         # training
-        grid = Grid(self.x.arrange(t), self.y.arrange(t))
+        grid = Grid(self.x.arrange(step), self.y.arrange(step))
         for c in grid:
-            if c not in self._knowledge and c not in self._learning and c not in self.obstruction:
-                self._learning.emplace(c)
-
-        if supervised:
-            self._knowledge = self.foam.knowledge
+            if self.x.start < c.x and self.y.start < c.y < self.y.stop:
+                if c not in self._knowledge and c not in self.obstruction:
+                    self._learning.emplace(c)
