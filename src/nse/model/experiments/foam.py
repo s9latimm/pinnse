@@ -135,24 +135,25 @@ if __name__ == '__main__':
     def main():
         step = .1
         nu = 0.01
-        inlet = 1
-
-        name = f'step-{step:.3f}-{nu:.3f}-{inlet:.3f}'.replace('.', '_')
+        flow = 1
 
         m = Grid(Axis('x', 0, 10).arrange(step, True), Axis('y', 0, 2).arrange(step, True))
         f = Foam(
-            name,
-            m,
+            m.x,
+            m.y,
             step,
             Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
             Figure(Rectangle((0, 0), (1, 1))),
+            nu,
+            1,
+            flow,
         )
         d = m.transform(f.knowledge)
 
         f.knowledge.save(OUTPUT_DIR / 'foam' / 'foam_uvp.csv')
 
         plot_seismic(
-            name,
+            f.name,
             m.x,
             m.y,
             [
@@ -166,7 +167,7 @@ if __name__ == '__main__':
         )
 
         plot_stream(
-            'OpenFOAM Streamlines',
+            f.name,
             m.x,
             m.y,
             d.u,
@@ -177,7 +178,7 @@ if __name__ == '__main__':
         )
 
         plot_arrows(
-            'OpenFOAM Arrows',
+            f.name,
             m.x,
             m.y,
             d.u,

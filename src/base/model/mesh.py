@@ -25,7 +25,7 @@ def arrange(start: float, stop: float, step: float, center=False) -> list[float]
         start = start + step / 2
         stop = stop - step / 2
 
-    if not step > 0:
+    if step <= 0:
         return []
 
     r = []
@@ -50,6 +50,7 @@ class Coordinate:
         self.__y = Real(float(y))
 
     def __eq__(self, coordinate: tuple[float, float] | Coordinate) -> bool:
+        # pylint: disable=protected-access
         c = Coordinate(*coordinate)
         return self.__x == c.__x and self.__y == c.__y
 
@@ -66,6 +67,7 @@ class Coordinate:
         return self.__repr__()
 
     def __add__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
+        # pylint: disable=protected-access
         c = Coordinate(*coordinate)
         return Coordinate(self.__x + c.__x, self.__y + c.__y)
 
@@ -73,10 +75,12 @@ class Coordinate:
         return self.__add__(coordinate)
 
     def __sub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
+        # pylint: disable=protected-access
         c = Coordinate(*coordinate)
         return Coordinate(self.__x - c.__x, self.__y - c.__y)
 
     def __rsub__(self, coordinate: tuple[float, float] | Coordinate) -> Coordinate:
+        # pylint: disable=protected-access
         c = Coordinate(*coordinate)
         return Coordinate(c.__x - self.__x, c.__y - self.__y)
 
@@ -92,6 +96,7 @@ class Coordinate:
         return Coordinate(self.__x / factor, self.__y / factor)
 
     def distance(self, coordinate: tuple[float, float] | Coordinate) -> float:
+        # pylint: disable=protected-access
         c = Coordinate(*coordinate)
         return np.sqrt(float(self.__x - c.__x)**2 + float(self.__y - c.__y)**2)
 

@@ -44,7 +44,6 @@ class Step(Experiment):
             supervised,
         )
 
-        step = .1
         stride = step / 2
 
         # inlet

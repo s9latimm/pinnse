@@ -81,8 +81,8 @@ class Real:
         if path.exists():
             value = path.read_text(encoding='utf-8').strip()
             return Real(float(value))
-        else:
-            logging.error(f'{path} does not exist')
+        logging.error(f'{path} does not exist')
+        raise FileNotFoundError
 
 
 class Integer:
@@ -103,5 +103,5 @@ class Integer:
         if path.exists():
             value = path.read_text(encoding='utf-8').strip()
             return Integer(int(value))
-        else:
-            logging.error(f'{path} does not exist')
+        logging.error(f'{path} does not exist')
+        raise FileNotFoundError

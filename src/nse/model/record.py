@@ -55,5 +55,5 @@ class Record:
         if path.exists():
             u, v, p = path.read_text(encoding='utf-8').strip().split(',')
             return Record(float(u), float(v), float(p))
-        else:
-            logging.error(f'{path} does not exist')
+        logging.error(f'{path} does not exist')
+        raise FileNotFoundError

@@ -43,7 +43,6 @@ class Block(Experiment):
             foam,
         )
 
-        step = .1
         stride = step / 2
 
         # inlet

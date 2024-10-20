@@ -71,11 +71,12 @@ class Losses:
 
     @staticmethod
     def load(path: Path) -> Losses:
+        # pylint: disable=protected-access
         if path.exists():
             loss = Losses()
             lines = path.read_text(encoding='utf-8').strip().splitlines()
             for line in lines:
                 loss.__losses.append(Loss(*line.strip().split(',')))
             return loss
-        else:
-            logging.error(f'{path} does not exist')
+        logging.error(f'{path} does not exist')
+        raise FileNotFoundError

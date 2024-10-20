@@ -43,7 +43,6 @@ class Empty(Experiment):
             foam,
         )
 
-        step = step
         stride = step / 2
 
         # inlet

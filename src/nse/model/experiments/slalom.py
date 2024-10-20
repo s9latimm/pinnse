@@ -43,7 +43,6 @@ class Slalom(Experiment):
             foam,
         )
 
-        step = .1
         stride = step / 2
 
         # inlet

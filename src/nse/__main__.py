@@ -67,9 +67,8 @@ def main(
     logging.info(model)
     logging.info(f'PARAMETERS: {len(model)}')
 
-    if grade:
-        logging.info('PLOT: Setup')
-        plot_setup(experiment, identifier)
+    logging.info('PLOT: Setup')
+    plot_setup(experiment, identifier)
 
     timer = Stopwatch()
     if n > 0:
