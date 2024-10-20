@@ -2,3 +2,4 @@
 	path = resources
 	url = https://github.com/s9latimm/pinnse-resources.git
 	branch = master
+	shallow = true
