@@ -18,6 +18,7 @@ class Foam(Experiment):
 
     def __init__(
         self,
+        name: str,
         x: Axis,
         y: Axis,
         step: float,
@@ -27,7 +28,7 @@ class Foam(Experiment):
         rho: float,
         flow: float,
     ) -> None:
-        name = f'step-{step:.3f}-{nu:.3f}-{flow:02.0f}'.replace('.', '_')
+        name = f'{name.lower()}-{step:.3f}-{nu:.3f}-{flow:02.0f}'.replace('.', '_')
         self.__grid = Grid(
             x.arrange(step, True),
             y.arrange(step, True),

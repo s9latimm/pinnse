@@ -14,6 +14,7 @@ class Step(Experiment):
         flow: float = 1,
         supervised: bool = False,
     ) -> None:
+        name = Step.__name__
         step = .1
         xs = Axis('x', 0, 10)
         ys = Axis('y', 0, 2)
@@ -21,6 +22,7 @@ class Step(Experiment):
         obstruction = Figure(Rectangle((0, 0), (1, 1)))
 
         foam = Foam(
+            name,
             xs,
             ys,
             step,
@@ -32,7 +34,7 @@ class Step(Experiment):
         )
 
         super().__init__(
-            Step.__name__,
+            name,
             xs,
             ys,
             boundary,

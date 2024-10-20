@@ -14,6 +14,7 @@ class Slit(Experiment):
         flow: float = 1,
         _: bool = False,
     ) -> None:
+        name = Slit.__name__
         step = .1
         xs = Axis('x', 0, 10)
         ys = Axis('y', 0, 2)
@@ -21,6 +22,7 @@ class Slit(Experiment):
         obstruction = Figure(Rectangle((4.7, 0), (5.3, .7)), Rectangle((4.7, 1.3), (5.3, 2)))
 
         foam = Foam(
+            name,
             xs,
             ys,
             step,
@@ -32,7 +34,7 @@ class Slit(Experiment):
         )
 
         super().__init__(
-            Slit.__name__,
+            name,
             xs,
             ys,
             boundary,

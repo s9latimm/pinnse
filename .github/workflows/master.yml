@@ -93,3 +93,4 @@ jobs:
           prerelease: false
           files: |
             classes.pdf
+            packages.pdf

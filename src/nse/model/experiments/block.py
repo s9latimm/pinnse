@@ -21,6 +21,7 @@ class Block(Experiment):
         obstruction = Figure(Rectangle((4.7, .7), (5.3, 1.3)))
 
         foam = Foam(
+            'block',
             xs,
             ys,
             step,
