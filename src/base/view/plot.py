@@ -114,6 +114,10 @@ class Plot(plt.Figure):
         ax.set_yticks([0, 1, int(np.round(self.__y.max())) // 2, int(np.round(self.__y.max()))])
         ax.set_ylim([int(np.round(self.__y.min())) - .05, int(np.round(self.__y.max())) + .05])
 
+        ax.tick_params(axis='y', labelrotation=90)
+        for label in ax.get_yticklabels():
+            label.set_verticalalignment('center')
+
         if boundary is not None:
             for shape in boundary:
                 draw_shape(ax, shape)
@@ -157,7 +161,7 @@ def plot_seismic(
             label, z = plot
 
             ax = fig.add_subplot(len(plots), 1, i + 1)
-            fig.setup(ax, label, boundary, figure)
+            fig.setup(ax, '', boundary, figure)
 
             if np.nanmin(z) < 0 < np.nanmax(z):
                 slope = colors.TwoSlopeNorm(vmin=np.nanmin(z), vcenter=0, vmax=np.nanmax(z))
@@ -243,6 +247,7 @@ def plot_seismic(
             if np.nanmax(z) > 0:
                 ticks.append(np.nanmax(z))
             cbar.set_ticks(ticks)
+            cbar.set_label(label, rotation=0, fontname='cmmi10')
 
 
 def plot_stream(

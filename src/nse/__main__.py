@@ -9,7 +9,7 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from src import OUTPUT_DIR, TIMESTAMP, ROOT_DIR, HIRES
-from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_INTAKE
+from src.nse import DEFAULT_NU, DEFAULT_STEPS, DEFAULT_RHO, DEFAULT_U
 from src.nse.controller.simulation import Simulation
 from src.nse.model.experiments import EXPERIMENTS
 from src.nse.model.experiments.experiment import Experiment
@@ -29,6 +29,10 @@ def main(
     layers: list[int],
     grading: bool,
 ) -> None:
+    if experiment.supervised:
+        logging.warning(f'running supervised experiment')
+    if foam:
+        logging.info(f'FOAM:       {experiment.foam.name}')
     logging.info(f'NU:         {experiment.nu:.3E}')
     logging.info(f'RHO:        {experiment.rho:.3E}')
     logging.info(f'INLET:      {experiment.inlet_f}')
@@ -40,10 +44,7 @@ def main(
     logging.info(f'OUTPUT:     {(OUTPUT_DIR / identifier).relative_to(ROOT_DIR)}')
     logging.info(f'EXPERIMENT: {experiment.name}')
 
-    if foam:
-        logging.info(f'FOAM:       {experiment.foam.name}')
-
-    suffix = f'{device}_{layers[0]:03d}-{len(layers):02d}_{n:06d}'
+    suffix = f'{device}__{layers[0]}__{len(layers)}__{n}'
     if grading:
         logging.info(f'SUFFIX:     {suffix}')
 
@@ -81,14 +82,14 @@ def main(
                             if pbar.n % 1e2 == 0:
                                 change = loss[-1][0] - loss[-2][0]
                                 logging.info(f'  {pbar.n:{len(str(n))}d}: {loss[-1][0]:18.16f} {change:+.3E}')
-                            if plot and pbar.n % 1e3 == 0:
+                            if plot and pbar.n % 1e4 == 0:
                                 logging.info('PLOT: Prediction')
                                 plot_prediction(pbar.n, experiment, model, identifier)
                                 logging.info('PLOT: Loss')
                                 plot_losses(pbar.n, model, identifier)
-                            if hires and pbar.n % 1e4 == 0:
-                                logging.info('PLOT: HiRes Prediction')
-                                plot_prediction(pbar.n, experiment, model, identifier, hires=True)
+                            # if hires and pbar.n % 1e4 == 0:
+                            #     logging.info('PLOT: HiRes Prediction')
+                            #     plot_prediction(pbar.n, experiment, model, identifier, hires=True)
                         pbar.update(1)
 
                 logging.info(f'TRAINING: Start {n}')
@@ -129,28 +130,28 @@ def parse_cmd() -> argparse.Namespace:
 
     initialization = parser.add_argument_group('initialization')
     initialization.add_argument(
-        '-e',
+        '-E',
         type=str,
         choices=EXPERIMENTS.keys(),
         required=True,
         help='choose experiment',
     )
     initialization.add_argument(
-        '-i',
+        '--inlet',
         type=float,
-        metavar='<intake>',
-        default=DEFAULT_INTAKE,
-        help=f'set intake [m/s] (default: {DEFAULT_INTAKE})',
+        metavar='<u>',
+        default=DEFAULT_U,
+        help=f'set intake [m/s] (default: {DEFAULT_U})',
     )
     initialization.add_argument(
-        '-n',
+        '--nu',
         type=float,
         metavar='<nu>',
         default=DEFAULT_NU,
         help=f'set viscosity [m^2/s] (default: {DEFAULT_NU})',
     )
     initialization.add_argument(
-        '-r',
+        '--rho',
         type=float,
         metavar='<rho>',
         default=DEFAULT_RHO,
@@ -191,7 +192,7 @@ def parse_cmd() -> argparse.Namespace:
         help='size of layers seperated by colon (default: 100:100:100)',
     )
     optimization.add_argument(
-        '-d',
+        '-D',
         type=str,
         choices=['cpu', 'cuda'],
         default='cpu',
@@ -203,10 +204,16 @@ def parse_cmd() -> argparse.Namespace:
         default=False,
         help='set training method to supervised approach (requires --foam)',
     )
+    optimization.add_argument(
+        '--dry',
+        action='store_true',
+        default=False,
+        help='dry run',
+    )
 
     output = parser.add_argument_group('output')
     output.add_argument(
-        '-p',
+        '-P',
         action='store_true',
         default=False,
         help='plot NSE in output directory',
@@ -232,23 +239,24 @@ def parse_cmd() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    if args.n < 0:
-        parser.error(f'argument -n/--train: invalid value: \'{args.train}\'')
+    if args.N < 0:
+        parser.error(f'argument -N: invalid value: \'{args.train}\'')
 
-    if (args.R or args.G) and not args.p:
-        parser.error('the following arguments are required: --plot')
+    if (args.R or args.G) and not args.P:
+        parser.error('the following arguments are required: -P')
 
     if (args.supervised or args.G) and not args.F:
-        parser.error('the following arguments are required: --foam')
+        parser.error('the following arguments are required: -F')
 
     return args
 
 
 if __name__ == '__main__':
     cmd = parse_cmd()
-    if cmd.p:
+    handler = cmd.id.split('/')[-1]
+    if cmd.P:
         (OUTPUT_DIR / cmd.id).mkdir(parents=True, exist_ok=cmd.id != TIMESTAMP)
-        logging.basicConfig(format='%(message)s',
+        logging.basicConfig(format=f'{handler}: %(message)s',
                             handlers=[
                                 logging.FileHandler(OUTPUT_DIR / cmd.id / 'log.txt', mode='w'),
                                 logging.StreamHandler(sys.stdout)
@@ -256,23 +264,24 @@ if __name__ == '__main__':
                             encoding='utf-8',
                             level=logging.INFO)
     else:
-        logging.basicConfig(format='%(message)s',
+        logging.basicConfig(format=f'{handler}: %(message)s',
                             handlers=[logging.StreamHandler(sys.stdout)],
                             encoding='utf-8',
                             level=logging.INFO)
+    # logging.info(f'CMD: {cmd}')
 
     try:
         main(
-            EXPERIMENTS[cmd.e](
-                cmd.n,
-                cmd.r,
-                cmd.i,
+            EXPERIMENTS[cmd.E](
+                cmd.nu,
+                cmd.rho,
+                cmd.inlet,
                 cmd.supervised,
             ),
-            cmd.N,
-            cmd.p,
+            1 if cmd.dry else cmd.N,
+            cmd.P,
             cmd.id,
-            cmd.d,
+            cmd.D,
             cmd.F,
             cmd.R,
             cmd.L,

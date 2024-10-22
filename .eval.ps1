@@ -1,29 +1,29 @@
-# python -m src.nse -e step --id "eval_4/2.1" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.005 -i 1  
-# python -m src.nse -e step --id "eval_4/2.2" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 1  
-# python -m src.nse -e step --id "eval_4/2.3" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 2  
-python -m src.nse -e step --id "eval_4/2.4" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 5  
-python -m src.nse -e step --id "eval_4/2.5" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.02  -i 1  
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E empty  --id "eval_5/empty__0_100__0_020__0_500"  --nu 0.02 --inlet .5
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E empty  --id "eval_5/empty__0_100__0_010__1_000"  --nu 0.01 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E empty  --id "eval_5/empty__0_100__0_020__1_000"  --nu 0.02 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E empty  --id "eval_5/empty__0_100__0_020__2_000"  --nu 0.02 --inlet 2
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E empty  --id "eval_5/empty__0_100__0_040__1_000"  --nu 0.04 --inlet 1
 
-python -m src.nse -e empty --id "eval_4/1.1" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.005 -i 1
-python -m src.nse -e empty --id "eval_4/1.2" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 1 
-python -m src.nse -e empty --id "eval_4/1.3" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 2  
-# python -m src.nse -e empty --id "eval_4/1.4" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 5  
-# python -m src.nse -e empty --id "eval_4/1.5" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.02  -i 1  
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E step   --id "eval_5/step__0_100__0_010__0_500"   --nu 0.01  --inlet .5
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E step   --id "eval_5/step__0_100__0_005__1_000"   --nu 0.005 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E step   --id "eval_5/step__0_100__0_010__1_000"   --nu 0.01  --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E step   --id "eval_5/step__0_100__0_010__2_000"   --nu 0.01  --inlet 2
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E step   --id "eval_5/step__0_100__0_020__1_000"   --nu 0.02  --inlet 1
 
-python -m src.nse -e slalom --id "eval_4/3.1" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.005 -i 1  
-python -m src.nse -e slalom --id "eval_4/3.2" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 1  
-python -m src.nse -e slalom --id "eval_4/3.3" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 2  
-# python -m src.nse -e slalom --id "eval_4/3.4" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 5  
-# python -m src.nse -e slalom --id "eval_4/3.5" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.02  -i 1  
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slalom --id "eval_5/slalom__0_100__0_010__0_500" --nu 0.01  --inlet .5
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slalom --id "eval_5/slalom__0_100__0_005__1_000" --nu 0.005 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slalom --id "eval_5/slalom__0_100__0_010__1_000" --nu 0.01  --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slalom --id "eval_5/slalom__0_100__0_010__2_000" --nu 0.01  --inlet 2
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slalom --id "eval_5/slalom__0_100__0_020__1_000" --nu 0.02  --inlet 1
 
-python -m src.nse -e block --id "eval_4/4.1" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.005 -i 1  
-python -m src.nse -e block --id "eval_4/4.2" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 1  
-python -m src.nse -e block --id "eval_4/4.3" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 2  
-# python -m src.nse -e block --id "eval_4/4.4" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 5  
-# python -m src.nse -e block --id "eval_4/4.5" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.02  -i 1  
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E block  --id "eval_5/block__0_100__0_020__0_500"  --nu 0.02 --inlet .5
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E block  --id "eval_5/block__0_100__0_010__1_000"  --nu 0.01 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E block  --id "eval_5/block__0_100__0_020__1_000"  --nu 0.02 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E block  --id "eval_5/block__0_100__0_020__2_000"  --nu 0.02 --inlet 2
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E block  --id "eval_5/block__0_100__0_040__1_000"  --nu 0.04 --inlet 1
 
-python -m src.nse -e slit --id "eval_4/5.1" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.005 -i 1  
-python -m src.nse -e slit --id "eval_4/5.2" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 1  
-python -m src.nse -e slit --id "eval_4/5.3" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 2  
-# python -m src.nse -e slit --id "eval_4/5.4" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.01  -i 5  
-# # python -m src.nse -e slit --id "eval_4/5.5" -d cuda -pFG -N 50000 -L 150:150:150 -n 0.02  -i 1  
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slit   --id "eval_5/slit__0_100__0_020__0_500"   --nu 0.02 --inlet .5
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slit   --id "eval_5/slit__0_100__0_010__1_000"   --nu 0.01 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slit   --id "eval_5/slit__0_100__0_020__1_000"   --nu 0.02 --inlet 1
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slit   --id "eval_5/slit__0_100__0_020__2_000"   --nu 0.02 --inlet 2
+python -m src.nse -D cuda -PFGN 200000 -L 150:150:150 -E slit   --id "eval_5/slit__0_100__0_040__1_000"   --nu 0.04 --inlet 1

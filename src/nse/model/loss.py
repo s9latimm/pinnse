@@ -7,22 +7,26 @@ from pathlib import Path
 
 class Loss:
 
-    def __init__(self, n: float, f: float, g: float, u: float, v: float, loss: float) -> None:
+    def __init__(self, n: float, loss: float, f: float, g: float, u: float, v: float) -> None:
         self.__n = int(n)
+        self.__loss = float(loss)
         self.__f = float(f)
         self.__g = float(g)
         self.__u = float(u)
         self.__v = float(v)
-        self.__loss = float(loss)
 
     def __iter__(self) -> tp.Iterator[float]:
-        return iter((self.__n, self.__f, self.__g, self.__u, self.__v, self.__loss))
+        return iter((self.__loss, self.__n, self.__f, self.__g, self.__u, self.__v))
 
     def __str__(self) -> str:
-        return f'Loss(n={self.__n}, f={self.__f}, g={self.__g}, u={self.__u}, v={self.__v}, loss={self.__loss})'
+        return f'Loss(n={self.__n}, loss={self.__loss}, f={self.__f}, g={self.__g}, u={self.__u}, v={self.__v})'
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    @property
+    def loss(self) -> float:
+        return self.__loss
 
     @property
     def n(self) -> float:
@@ -68,6 +72,9 @@ class Losses:
 
     def __iter__(self) -> tp.Iterator[Loss]:
         return iter(self.__losses)
+
+    def __len__(self) -> int:
+        return len(self.__losses)
 
     @staticmethod
     def load(path: Path) -> Losses:

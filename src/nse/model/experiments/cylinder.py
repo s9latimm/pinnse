@@ -2,6 +2,7 @@ from src.base.model.function import Parabola
 from src.base.model.mesh import arrange, Grid, Axis
 from src.base.model.shape import Figure, Circle, Line
 from src.nse.model.experiments.experiment import Experiment
+from src.nse.model.experiments.foam import Foam
 
 
 class Cylinder(Experiment):
@@ -13,19 +14,37 @@ class Cylinder(Experiment):
         flow: float = 1,
         _: bool = False,
     ) -> None:
-        super().__init__(
-            Cylinder.__name__,
-            Axis('x', 0, 10),
-            Axis('y', 0, 2),
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Circle((5, 1), 1 / 3)),
-            nu,
+        name = 'empty'
+        step = .1
+        xs = Axis('x', 0, 10)
+        ys = Axis('y', 0, 2)
+        boundary = Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2)))
+        obstruction = Figure(Circle((5, 1), 1 / 3))
+
+        foam = Foam(
+            name,
+            xs,
+            ys,
+            step,
+            boundary,
+            obstruction,
+            nu * 2,
             rho,
-            Parabola(0, 2, flow),
-            None,
+            flow,
         )
 
-        step = .1
+        super().__init__(
+            Cylinder.__name__,
+            xs,
+            ys,
+            boundary,
+            obstruction,
+            nu * 2,
+            rho,
+            Parabola(0, 2, flow),
+            foam,
+        )
+
         stride = step / 2
 
         # inlet

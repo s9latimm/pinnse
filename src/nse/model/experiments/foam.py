@@ -5,10 +5,11 @@ from pathlib import Path
 import numpy as np
 
 from src import OUTPUT_DIR, FOAM_DIR
+from src.base.model.algebra import Real
 from src.base.model.function import Null
 from src.base.model.mesh import Grid, Axis, Coordinate, arrange
-from src.base.model.shape import Figure, Rectangle, Line
-from src.base.view.plot import plot_seismic, plot_stream, plot_arrows
+from src.base.model.shape import Figure, Rectangle
+from src.base.view.plot import plot_seismic
 from src.nse.model.experiments.experiment import Experiment
 from src.nse.model.record import Record
 
@@ -28,14 +29,14 @@ class Foam(Experiment):
         rho: float,
         flow: float,
     ) -> None:
-        name = f'{name.lower()}-{step:.3f}-{nu:.3f}-{flow:02.0f}'.replace('.', '_')
+        uid = f'{name.lower()}__{Real(step)}__{Real(nu)}__{Real(flow)}'
         self.__grid = Grid(
             x.arrange(step, True),
             y.arrange(step, True),
         )
         self.__step = step
         super().__init__(
-            name,
+            uid,
             x,
             y,
             boundary,
@@ -60,7 +61,7 @@ class Foam(Experiment):
             self.__blockify()
 
         else:
-            logging.error(f'ERROR: foam/{name} not found')
+            logging.error(f'ERROR: foam/{uid} not found')
 
     @property
     def grid(self) -> Grid:
@@ -135,58 +136,66 @@ if __name__ == '__main__':
 
     def main():
         step = .1
-        nu = 0.01
+        nu = 0.02
         flow = 1
 
-        m = Grid(Axis('x', 0, 10).arrange(step, True), Axis('y', 0, 2).arrange(step, True))
-        f = Foam(
-            m.x,
-            m.y,
-            step,
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Rectangle((0, 0), (1, 1))),
-            nu,
-            1,
-            flow,
-        )
-        d = m.transform(f.knowledge)
+        xs = Axis('x', 0, 10)
+        ys = Axis('y', 0, 2)
+        m = Grid(xs.arrange(step, True), ys.arrange(step, True))
 
-        f.knowledge.save(OUTPUT_DIR / 'foam' / 'foam_uvp.csv')
+        from nse.model.experiments import EXPERIMENTS
+        for experiment in EXPERIMENTS.keys():
+            f = Foam(
+                experiment,
+                xs,
+                ys,
+                step,
+                Figure(),
+                Figure(),
+                nu,
+                1,
+                flow,
+            )
+            d = m.transform(f.knowledge)
 
-        plot_seismic(
-            f.name,
-            m.x,
-            m.y,
-            [
-                ('u', d.u),
-                ('v', d.v),
-                ('p', d.p - np.nanmin(d.p)),
-            ],
-            path=OUTPUT_DIR / 'foam' / 'foam_uvp.pdf',
-            boundary=f.boundary,
-            figure=f.obstruction,
-        )
+            # f.knowledge.save(OUTPUT_DIR / 'foam' / f'{experiment}_uvp.csv')
 
-        plot_stream(
-            f.name,
-            m.x,
-            m.y,
-            d.u,
-            d.v,
-            path=OUTPUT_DIR / 'foam' / 'foam_str.pdf',
-            boundary=f.boundary,
-            figure=f.obstruction,
-        )
+            print(len(f.knowledge))
 
-        plot_arrows(
-            f.name,
-            m.x,
-            m.y,
-            d.u,
-            d.v,
-            path=OUTPUT_DIR / 'foam' / 'foam_arw.pdf',
-            boundary=f.boundary,
-            figure=f.obstruction,
-        )
+            plot_seismic(
+                f.name,
+                m.x,
+                m.y,
+                [
+                    ('u', d.u),
+                    ('v', d.v),
+                    ('p', d.p - np.nanmin(d.p)),
+                ],
+                path=OUTPUT_DIR / 'foam' / f'{experiment}_uvp.pdf',
+                boundary=f.boundary,
+                figure=f.obstruction,
+            )
+
+            # plot_stream(
+            #     f.name,
+            #     m.x,
+            #     m.y,
+            #     d.u,
+            #     d.v,
+            #     path=OUTPUT_DIR / 'foam' / f'{experiment}_str.pdf',
+            #     boundary=f.boundary,
+            #     figure=f.obstruction,
+            # )
+            #
+            # plot_arrows(
+            #     f.name,
+            #     m.x,
+            #     m.y,
+            #     d.u,
+            #     d.v,
+            #     path=OUTPUT_DIR / 'foam' / f'{experiment}_arw.pdf',
+            #     boundary=f.boundary,
+            #     figure=f.obstruction,
+            # )
 
     main()

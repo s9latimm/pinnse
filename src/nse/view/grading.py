@@ -84,7 +84,7 @@ def plot_foam(experiment: Experiment, identifier: str):
 
 
 def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifier: str, suffix: str):
-    path = OUTPUT_DIR / identifier / f'{experiment.foam.name}_{suffix}'
+    path = OUTPUT_DIR / identifier / f'{experiment.foam.name}.{suffix}'
 
     mesh = Mesh(Record)
     for k, v in experiment.foam.knowledge:
@@ -106,7 +106,7 @@ def export(timer: Stopwatch, experiment: Experiment, model: Simulation, identifi
 
 
 def grade(experiment: Experiment, identifier: str, suffix: str):
-    path = OUTPUT_DIR / identifier / f'{experiment.foam.name}_{suffix}'
+    path = OUTPUT_DIR / identifier / f'{experiment.foam.name}.{suffix}'
 
     boundary_init = Mesh(Record).load(path / 'boundary_init.csv')
     boundary_pred = Mesh(Record).load(path / 'boundary_pred.csv')
