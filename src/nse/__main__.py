@@ -30,7 +30,7 @@ def main(
     grading: bool,
 ) -> None:
     if experiment.supervised:
-        logging.warning(f'running supervised experiment')
+        logging.warning('running supervised experiment')
     if foam:
         logging.info(f'FOAM:       {experiment.foam.name}')
     logging.info(f'NU:         {experiment.nu:.3E}')

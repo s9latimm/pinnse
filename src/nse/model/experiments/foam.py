@@ -143,8 +143,9 @@ if __name__ == '__main__':
         ys = Axis('y', 0, 2)
         m = Grid(xs.arrange(step, True), ys.arrange(step, True))
 
-        from nse.model.experiments import EXPERIMENTS
-        for experiment in EXPERIMENTS.keys():
+        # pylint: disable=import-outside-toplevel,cyclic-import
+        from src.nse.model.experiments import EXPERIMENTS
+        for experiment in EXPERIMENTS:
             f = Foam(
                 experiment,
                 xs,
