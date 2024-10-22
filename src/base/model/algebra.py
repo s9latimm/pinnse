@@ -71,11 +71,6 @@ class Real:
     def __repr__(self):
         return self.__str__()
 
-    def save(self, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w", encoding="utf-8") as f:
-            f.write(f'{str(self)}\n')
-
     @staticmethod
     def load(path: Path) -> Real:
         if path.exists():

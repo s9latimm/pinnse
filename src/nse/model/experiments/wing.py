@@ -2,6 +2,7 @@ from src.base.model.function import Parabola
 from src.base.model.mesh import arrange, Grid, Axis
 from src.base.model.shape import Airfoil, Figure, Line
 from src.nse.model.experiments.experiment import Experiment
+from src.nse.model.experiments.foam import Foam
 
 
 class Wing(Experiment):
@@ -13,19 +14,37 @@ class Wing(Experiment):
         flow: float = 1,
         _: bool = False,
     ):
+        name = 'empty'
+        step = .1
+        xs = Axis('x', 0, 10)
+        ys = Axis('y', 0, 2)
+        boundary = Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2)))
+        obstruction = Figure(Airfoil((3, 1.2), 4, -8))
+
+        foam = Foam(
+            name,
+            xs,
+            ys,
+            step,
+            boundary,
+            obstruction,
+            nu,
+            rho,
+            flow,
+        )
+
         super().__init__(
             Wing.__name__,
-            Axis('x', 0, 10),
-            Axis('y', 0, 2),
-            Figure(Line((0, 0), (10, 0)), Line((0, 2), (10, 2))),
-            Figure(Airfoil((3.05, 1), 3, -10)),
+            xs,
+            ys,
+            boundary,
+            obstruction,
             nu,
             rho,
             Parabola(0, 2, flow),
-            None,
+            foam,
         )
 
-        step = .1
         stride = step / 2
 
         # inlet

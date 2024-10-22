@@ -28,7 +28,7 @@ class Cylinder(Experiment):
             step,
             boundary,
             obstruction,
-            nu * 2,
+            nu,
             rho,
             flow,
         )
@@ -39,7 +39,7 @@ class Cylinder(Experiment):
             ys,
             boundary,
             obstruction,
-            nu * 2,
+            nu,
             rho,
             Parabola(0, 2, flow),
             foam,

@@ -233,7 +233,7 @@ class Airfoil(Shape):
         c = (Coordinate(*coordinate) - self.__a) / self.__length
         if 0 <= Real(c.x) <= 1:
             upper, lower = self.__f(c.x)
-            return Real(lower.y) <= Real(c.y + 5e-3) and Real(c.y - 5e-3) <= Real(upper.y)
+            return Real(lower.y) <= Real(c.y + 1.5e-2) and Real(c.y - 1.5e-2) <= Real(upper.y)
         return False
 
     def __getitem__(self, s: slice) -> _Polygon:

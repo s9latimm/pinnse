@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
 from src.base.view.plot import save_fig, draw_shape, COLORS
-from src.nse.model.experiments import Step, EXPERIMENTS
+from src.nse.model.experiments import Step
 from src.nse.model.experiments.experiment import Experiment
 
 SCALE: float = 2.5
@@ -55,22 +55,23 @@ def plot_grid(experiment: Experiment):
     ax = fig.add_subplot(1, 1, 1)
 
     for figure in experiment.obstruction:
-        draw_shape(ax, figure, style='-', width=.5)
+        draw_shape(ax, figure, style='-', width=1)
 
     for figure in experiment.boundary:
-        draw_shape(ax, figure, style='-', width=.5)
+        draw_shape(ax, figure, style='-', width=1)
 
     xs = []
     ys = []
     for x in experiment.x.arrange(.1):
         for y in experiment.y.arrange(.1):
             if experiment.x.start < x and experiment.y.start < y < experiment.y.stop:
-                if (x, y) not in experiment.obstruction:
-                    xs.append(x)
-                    ys.append(y)
+                if .5 <= x <= 1.5 and .5 <= y <= 1.5:
+                    if (x, y) not in experiment.obstruction:
+                        xs.append(x)
+                        ys.append(y)
 
-    ax.scatter(xs, ys, color=COLORS[1], marker='+', s=20, linewidth=.5)
-    ax.scatter(xs, ys, color=COLORS[1], marker='o', s=2.5, linewidth=.5, label='training')
+    ax.scatter(xs, ys, color=COLORS[1], marker='+', s=50, linewidth=1, clip_on=False)
+    ax.scatter(xs, ys, color=COLORS[1], marker='o', s=8, linewidth=1, label='training', clip_on=False)
 
     xs = []
     ys = []
@@ -78,38 +79,42 @@ def plot_grid(experiment: Experiment):
         for y in experiment.y.arrange(.1, True):
             if experiment.x.start < x and experiment.y.start < y < experiment.y.stop:
                 if (x, y) not in experiment.obstruction:
-                    xs.append(x)
-                    ys.append(y)
+                    if .5 < x < 1.5 and .5 < y < 1.5:
+                        xs.append(x)
+                        ys.append(y)
 
-    ax.scatter(xs, ys, color='k', marker='x', s=10, linewidth=.5, label='evaluation')
+    ax.scatter(xs, ys, color='k', marker='x', s=20, linewidth=1, label='evaluation')
 
     xs = []
     ys = []
     for x in experiment.x.arrange(.05):
-        if x > 1.01:
+        if .5 <= x <= 1.5:
+            if x > 1.01:
+                xs.append(x)
+                ys.append(0)
+            else:
+                xs.append(x)
+                ys.append(1)
             xs.append(x)
-            ys.append(0)
-        else:
-            xs.append(x)
-            ys.append(1)
-        xs.append(x)
-        ys.append(2)
+            ys.append(2)
 
     for y in experiment.y.arrange(.05):
-        if y < 1:
-            xs.append(1)
-            ys.append(y)
+        if .5 <= y <= 1.5:
+            if y < 1:
+                xs.append(1)
+                ys.append(y)
 
-    ax.scatter(xs, ys, color='k', marker='D', s=2.5, linewidth=.5, zorder=9999, label='boundary')
+    ax.scatter(xs, ys, color='k', marker='D', s=10, linewidth=1, zorder=9999, label='boundary', clip_on=False)
 
     xs = []
     ys = []
     for y in experiment.y.arrange(.05):
-        if 1.01 < y < 1.99:
-            xs.append(0)
-            ys.append(y)
+        if .5 < y < 1.5:
+            if 1.01 <= y <= 1.99:
+                xs.append(0)
+                ys.append(y)
 
-    ax.scatter(xs, ys, color=COLORS[2], marker='>', s=2.5, linewidth=.5, zorder=999, label='inlet')
+    ax.scatter(xs, ys, color=COLORS[2], marker='>', s=5, linewidth=1, zorder=999, label='inlet')
 
     ax.spines['top'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
@@ -118,21 +123,21 @@ def plot_grid(experiment: Experiment):
 
     ax.axes.set_aspect('equal')
 
-    ax.set_xlabel('x', fontname='cmmi10')
-    ax.set_xticks([0, 1, 5, 10])
-    ax.set_xlim([-.05, 10.05])
+    # ax.set_xlabel('x', fontname='cmmi10')
+    ax.set_xticks([])
+    ax.set_xlim([.5, 1.5])
 
-    ax.set_ylabel('y', fontname='cmmi10')
-    ax.set_yticks([0, 1, 2])
-    ax.set_ylim([-.05, 2.05])
+    # ax.set_ylabel('y', fontname='cmmi10')
+    ax.set_yticks([])
+    ax.set_ylim([.5, 1.5])
 
-    ax.tick_params(axis='y', labelrotation=90)
-    for t in ax.get_yticklabels():
-        t.set_verticalalignment('center')
+    # ax.tick_params(axis='y', labelrotation=90)
+    # for t in ax.get_yticklabels():
+    #     t.set_verticalalignment('center')
 
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=True, fancybox=False).get_frame().set_edgecolor('k')
+    ax.legend(loc='center left', bbox_to_anchor=(1.1, 0.5), frameon=True, fancybox=False).get_frame().set_edgecolor('k')
 
-    save_fig(fig, OUTPUT_DIR / 'paper' / 'step_mesh.pdf')
+    save_fig(fig, OUTPUT_DIR / 'paper' / 'zoom.pdf')
 
     plt.clf()
     plt.close()
@@ -213,6 +218,6 @@ def plot_experiments(experiments: list[Experiment]):
 
 
 if __name__ == '__main__':
-    plot_experiments(list(i() for i in EXPERIMENTS.values()))
-    plot_inlets(list(i() for i in EXPERIMENTS.values()))
+    # plot_experiments(list(i() for i in EXPERIMENTS.values()))
+    # plot_inlets(list(i() for i in EXPERIMENTS.values()))
     plot_grid(Step())
