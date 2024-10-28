@@ -31,5 +31,5 @@
 python -m src.nse -D cuda -PFGN 1000000 -L 150:150:150 -E cylinder  --id "eval_7/0.1" --nu 0.02  --inlet 1  # --dry
 python -m src.nse -D cuda -PFGN 1000000 -L 150:150:150 -E wing      --id "eval_7/0.2" --nu 0.02  --inlet 1  # --dry
 
-python -m src.nse -D cuda -PFGN 1000000 -L 150:150:150 -E block  --id "eval_7/4.4" --nu 0.02  --inlet 2     # --dry
 python -m src.nse -D cuda -PFGN 1000000 -L 150:150:150 -E block  --id "eval_7/4.5" --nu 0.04  --inlet 1     # --dry
+python -m src.nse -D cuda -PFGN 1000000 -L 150:150:150 -E block  --id "eval_7/4.4" --nu 0.02  --inlet 2     # --dry

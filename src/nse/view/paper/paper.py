@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from src import OUTPUT_DIR
 from src.base.view.plot import save_fig, draw_shape, COLORS
-from src.nse.model.experiments import Step
+from src.nse.model.experiments import EXPERIMENTS
 from src.nse.model.experiments.experiment import Experiment
 
 SCALE: float = 2.5
@@ -218,6 +218,6 @@ def plot_experiments(experiments: list[Experiment]):
 
 
 if __name__ == '__main__':
-    # plot_experiments(list(i() for i in EXPERIMENTS.values()))
+    plot_experiments(list(i() for i in EXPERIMENTS.values()))
     # plot_inlets(list(i() for i in EXPERIMENTS.values()))
-    plot_grid(Step())
+    # plot_grid(Step())
