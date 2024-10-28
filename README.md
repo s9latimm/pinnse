@@ -48,44 +48,45 @@ $ python -m pip install -r requirements.txt
 - [Wikipedia](https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_equations#Incompressible_flow)
 
 ```text
-usage: nse [-h] -e {empty,step,slalom,block,slit,cylinder,wing} [-i <intake>] [-n <nu>] [-r <rho>] [--id <id>] [-N <train>] [-L <layers>] [-d {cpu,cuda}] [--supervised] [-p] [-F] [-G] [-R]
+usage: nse [-h] -E {empty,step,slalom,block,slit,cylinder,wing} [--inlet <u>] [--nu <nu>] [--rho <rho>] [--id <id>] [-N <train>] [-L <layers>] [-D {cpu,cuda}] [--supervised] [--dry] [-P] [-F] [-G] [-R]
 
 options:
   -h, --help            show this help message and exit
   -L <layers>           size of layers seperated by colon (default: 100:100:100)
 
 initialization:
-  -e {empty,step,slalom,block,slit,cylinder,wing}
+  -E {empty,step,slalom,block,slit,cylinder,wing}
                         choose experiment
-  -i <intake>           set intake [m/s] (default: 1.0)
-  -n <nu>               set viscosity [m^2/s] (default: 0.1)
-  -r <rho>              set density [kg/m^2] (default: 1.0)
+  --inlet <u>           set intake (default: 1.0)
+  --nu <nu>             set viscosity (default: 0.1)
+  --rho <rho>           set density (default: 1.0)
 
 optimization:
-  --id <id>             identifier / prefix for output directory (default: timestamp, example: 2024-10-20_16-16-36)
+  --id <id>             identifier / prefix for output directory (default: timestamp, example: 2024-10-28_09-26-09)
   -N <train>            number of optimization steps (default: 0)
-  -d {cpu,cuda}         device used for training (default: cpu)
+  -D {cpu,cuda}         device used for training (default: cpu)
   --supervised          set training method to supervised approach (requires -F)
+  --dry                 dry run
 
 output:
-  -p                    plot NSE in output directory
+  -P                    plot NSE in output directory
   -F                    initialize OpenFOAM experiment
-  -G                    grade prediction (requires -pF)
-  -R                    plot NSE with high resolution grid in output directory (requires -p)
+  -G                    grade prediction (requires -F and -P)
+  -R                    plot NSE with high resolution grid in output directory (requires -P)
 ```
 
 #### Examples
 
 ```shell
-$ python -m src.nse -e step -i 5 -n .08 -N 100
+$ python -m src.nse -E step --inlet 5 --nu .08 -N 100
 ```
 
 ```shell
-$ python -m src.nse -e wing --id wing -L 100:100:100:100 -i 1 -n .01 -d cuda -pRFGN 30000
+$ python -m src.nse -E wing --id wing -L 100:100:100:100 --inlet 1 --nu .01 -D cuda -PRFGN 30000
 ```
 
 ```shell
-$ python -m src.nse -e block
+$ python -m src.nse -E block
 ```
 
 ## References

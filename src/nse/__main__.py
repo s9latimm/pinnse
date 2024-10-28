@@ -141,21 +141,21 @@ def parse_cmd() -> argparse.Namespace:
         type=float,
         metavar='<u>',
         default=DEFAULT_U,
-        help=f'set intake [m/s] (default: {DEFAULT_U})',
+        help=f'set intake (default: {DEFAULT_U})',
     )
     initialization.add_argument(
         '--nu',
         type=float,
         metavar='<nu>',
         default=DEFAULT_NU,
-        help=f'set viscosity [m^2/s] (default: {DEFAULT_NU})',
+        help=f'set viscosity (default: {DEFAULT_NU})',
     )
     initialization.add_argument(
         '--rho',
         type=float,
         metavar='<rho>',
         default=DEFAULT_RHO,
-        help=f'set density [kg/m^2] (default: {DEFAULT_RHO})',
+        help=f'set density (default: {DEFAULT_RHO})',
     )
 
     optimization = parser.add_argument_group('optimization')
@@ -202,7 +202,7 @@ def parse_cmd() -> argparse.Namespace:
         '--supervised',
         action='store_true',
         default=False,
-        help='set training method to supervised approach (requires --foam)',
+        help='set training method to supervised approach (requires -F)',
     )
     optimization.add_argument(
         '--dry',
@@ -228,13 +228,13 @@ def parse_cmd() -> argparse.Namespace:
         '-G',
         action='store_true',
         default=False,
-        help='grade prediction (requires --foam and --plot)',
+        help='grade prediction (requires -F and -P)',
     )
     output.add_argument(
         '-R',
         action='store_true',
         default=False,
-        help='plot NSE with high resolution grid in output directory (requires --plot)',
+        help='plot NSE with high resolution grid in output directory (requires -P)',
     )
 
     args = parser.parse_args()
