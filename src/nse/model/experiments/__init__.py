@@ -11,7 +11,7 @@ EXPERIMENTS: dict[str, type[Empty | Step | Slalom | Block | Cylinder | Wing | Sl
     'step': Step,
     'slalom': Slalom,
     'block': Block,
-    'slit': Slit,
     'cylinder': Cylinder,
     'wing': Wing,
+    'slit': Slit,
 }
