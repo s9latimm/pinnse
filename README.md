@@ -14,6 +14,9 @@
 
 [![UML](images/classes.svg)](https://github.com/s9latimm/pinnse/releases/latest/download/classes.pdf)
 
+## Paper
+
+[Simulating Incompressible Flow with Physics-Informed Neural Networks](https://raw.githubusercontent.com/s9latimm/pinnse/master/paper_final.pdf)
 
 ## Setup
 
