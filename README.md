@@ -10,13 +10,13 @@
 [![Build (master)](https://github.com/s9latimm/pinnse/actions/workflows/master.yml/badge.svg?branch=master)](https://github.com/s9latimm/pinnse/actions/workflows/master.yml)
 [![Build (develop)](https://github.com/s9latimm/pinnse/actions/workflows/delevop.yml/badge.svg?branch=develop)](https://github.com/s9latimm/pinnse/actions/workflows/delevop.yml)
 
+[Simulating Incompressible Flow with Physics-Informed Neural Networks](https://raw.githubusercontent.com/s9latimm/pinnse/master/paper_final.pdf)
+
+## Codebase
+
 [![UML](images/packages.svg)](https://github.com/s9latimm/pinnse/releases/latest/download/packages.pdf)
 
 [![UML](images/classes.svg)](https://github.com/s9latimm/pinnse/releases/latest/download/classes.pdf)
-
-## Paper
-
-[Simulating Incompressible Flow with Physics-Informed Neural Networks](https://raw.githubusercontent.com/s9latimm/pinnse/master/paper_final.pdf)
 
 ## Setup
 
