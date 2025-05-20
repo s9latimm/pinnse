@@ -94,4 +94,3 @@ jobs:
           files: |
             classes.pdf
             packages.pdf
-            paper_final.pdf
